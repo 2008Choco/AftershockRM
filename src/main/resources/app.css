@@ -1,0 +1,16 @@
+.hyperlink {
+    -fx-border-color: transparent;
+}
+
+.hyperlink:visited {
+    -fx-text-fill: rgb(0, 149, 230);
+}
+
+.columnScoreBlue {
+    -fx-alignment: CENTER-RIGHT;
+}
+
+.split-pane *.split-pane-divider {
+    -fx-padding: 0 1 0 1;
+    -fx-background-color: transparent;
+}
