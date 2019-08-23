@@ -21,15 +21,15 @@
     </rowConstraints>
 
     <Label text="%ui.replay.header.name" />
-    <Label text="Example Title" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
+    <Label fx:id="replayName" text="Example Title" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
 
     <Label text="%ui.replay.header.id" GridPane.rowIndex="1" />
-    <Label text="replay_placeholder_id.replay" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" />
+    <Label fx:id="replayId" text="replay_placeholder_id.replay" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" />
   </GridPane>
 
   <Label fx:id="blueHeader" text="%ui.replay.stats.team.blue" />
 
-  <GridPane>
+  <GridPane fx:id="blueGrid">
     <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" />
       <ColumnConstraints hgrow="SOMETIMES" />
@@ -46,38 +46,38 @@
       <RowConstraints prefHeight="30.0" />
     </rowConstraints>
 
-    <Label text="%ui.replay.stats.player" />
-    <Label text="%ui.replay.stats.score" GridPane.columnIndex="1" />
-    <Label text="%ui.replay.stats.goals" GridPane.columnIndex="2" />
-    <Label text="%ui.replay.stats.assists" GridPane.columnIndex="3" />
-    <Label text="%ui.replay.stats.saves" GridPane.columnIndex="4" />
-    <Label text="%ui.replay.stats.shots" GridPane.columnIndex="5" />
+    <Label id="infoHeader" text="%ui.replay.stats.player" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.score" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.goals" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.assists" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.saves" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.shots" GridPane.columnIndex="5" GridPane.rowIndex="0" />
 
-    <Label fx:id="bluePlayerOne" text="Player 1" GridPane.rowIndex="1" />
-    <Label fx:id="bluePlayerOneScore" text="player_1_score" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-    <Label fx:id="bluePlayerOneGoals" text="player_1_goals" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-    <Label fx:id="bluePlayerOneAssists" text="player_1_assists" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-    <Label fx:id="bluePlayerOneSaves" text="player_1_saves" GridPane.columnIndex="4" GridPane.rowIndex="1" />
-    <Label fx:id="bluePlayerOneShots" text="player_1_shots" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+    <Label fx:id="bluePlayerOne" text="\%unknown_player%" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+    <Label fx:id="bluePlayerOneScore" text="N/A" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+    <Label fx:id="bluePlayerOneGoals" text="N/A" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+    <Label fx:id="bluePlayerOneAssists" text="N/A" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+    <Label fx:id="bluePlayerOneSaves" text="N/A" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+    <Label fx:id="bluePlayerOneShots" text="N/A" GridPane.columnIndex="5" GridPane.rowIndex="1" />
 
-    <Label fx:id="bluePlayerTwo" text="Player 2" GridPane.rowIndex="2" />
-    <Label fx:id="bluePlayerTwoScore" text="player_2_score" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-    <Label fx:id="bluePlayerTwoGoals" text="player_2_goals" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-    <Label fx:id="bluePlayerTwoAssists" text="player_2_assists" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-    <Label fx:id="bluePlayerTwoSaves" text="player_2_saves" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-    <Label fx:id="bluePlayerTwoShots" text="player_2_shots" GridPane.columnIndex="5" GridPane.rowIndex="2" />
+    <Label fx:id="bluePlayerTwo" text="\%unknown_player%" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+    <Label fx:id="bluePlayerTwoScore" text="N/A" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+    <Label fx:id="bluePlayerTwoGoals" text="N/A" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+    <Label fx:id="bluePlayerTwoAssists" text="N/A" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+    <Label fx:id="bluePlayerTwoSaves" text="N/A" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+    <Label fx:id="bluePlayerTwoShots" text="N/A" GridPane.columnIndex="5" GridPane.rowIndex="2" />
 
-    <Label fx:id="bluePlayerThree" text="Player 3" GridPane.rowIndex="3" />
-    <Label fx:id="bluePlayerThreeScore" text="player_3_score" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-    <Label fx:id="bluePlayerThreeGoals" text="player_3_goals" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-    <Label fx:id="bluePlayerThreeAssists" text="player_3_assists" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-    <Label fx:id="bluePlayerThreeSaves" text="player_3_saves" GridPane.columnIndex="4" GridPane.rowIndex="3" />
-    <Label fx:id="bluePlayerThreeShots" text="player_3_shots" GridPane.columnIndex="5" GridPane.rowIndex="3" />
+    <Label fx:id="bluePlayerThree" text="\%unknown_player%" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+    <Label fx:id="bluePlayerThreeScore" text="N/A" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+    <Label fx:id="bluePlayerThreeGoals" text="N/A" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+    <Label fx:id="bluePlayerThreeAssists" text="N/A" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+    <Label fx:id="bluePlayerThreeSaves" text="N/A" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+    <Label fx:id="bluePlayerThreeShots" text="N/A" GridPane.columnIndex="5" GridPane.rowIndex="3" />
   </GridPane>
 
   <Label fx:id="orangeHeader" text="%ui.replay.stats.team.orange" />
 
-  <GridPane>
+  <GridPane fx:id="orangeGrid">
     <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" />
       <ColumnConstraints hgrow="SOMETIMES" />
@@ -94,32 +94,32 @@
       <RowConstraints prefHeight="30.0" />
     </rowConstraints>
 
-    <Label text="%ui.replay.stats.player" />
-    <Label text="%ui.replay.stats.score" GridPane.columnIndex="1" />
-    <Label text="%ui.replay.stats.goals" GridPane.columnIndex="2" />
-    <Label text="%ui.replay.stats.assists" GridPane.columnIndex="3" />
-    <Label text="%ui.replay.stats.saves" GridPane.columnIndex="4" />
-    <Label text="%ui.replay.stats.shots" GridPane.columnIndex="5" />
+    <Label id="infoHeader" text="%ui.replay.stats.player" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.score" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.goals" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.assists" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.saves" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+    <Label id="infoHeader" text="%ui.replay.stats.shots" GridPane.columnIndex="5" GridPane.rowIndex="0" />
 
-    <Label fx:id="orangePlayerOne" text="Player 1" GridPane.rowIndex="1" />
-    <Label fx:id="orangePlayerOneScore" text="player_1_score" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-    <Label fx:id="orangePlayerOneGoals" text="player_1_goals" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-    <Label fx:id="orangePlayerOneAssists" text="player_1_assists" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-    <Label fx:id="orangePlayerOneSaves" text="player_1_saves" GridPane.columnIndex="4" GridPane.rowIndex="1" />
-    <Label fx:id="orangePlayerOneShots" text="player_1_shots" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+    <Label fx:id="orangePlayerOne" text="\%unknown_player%" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+    <Label fx:id="orangePlayerOneScore" text="N/A" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+    <Label fx:id="orangePlayerOneGoals" text="N/A" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+    <Label fx:id="orangePlayerOneAssists" text="N/A" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+    <Label fx:id="orangePlayerOneSaves" text="N/A" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+    <Label fx:id="orangePlayerOneShots" text="N/A" GridPane.columnIndex="5" GridPane.rowIndex="1" />
     
-    <Label fx:id="orangePlayerTwo" text="Player 2" GridPane.rowIndex="2" />
-    <Label fx:id="orangePlayerTwoScore" text="player_2_score" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-    <Label fx:id="orangePlayerTwoGoals" text="player_2_goals" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-    <Label fx:id="orangePlayerTwoAssists" text="player_2_assists" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-    <Label fx:id="orangePlayerTwoSaves" text="player_2_saves" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-    <Label fx:id="orangePlayerTwoShots" text="player_2_shots" GridPane.columnIndex="5" GridPane.rowIndex="2" />
+    <Label fx:id="orangePlayerTwo" text="\%unknown_player%" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+    <Label fx:id="orangePlayerTwoScore" text="N/A" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+    <Label fx:id="orangePlayerTwoGoals" text="N/A" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+    <Label fx:id="orangePlayerTwoAssists" text="N/A" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+    <Label fx:id="orangePlayerTwoSaves" text="N/A" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+    <Label fx:id="orangePlayerTwoShots" text="N/A" GridPane.columnIndex="5" GridPane.rowIndex="2" />
     
-    <Label fx:id="orangePlayerThree" text="Player 3" GridPane.rowIndex="3" />
-    <Label fx:id="orangePlayerThreeScore" text="player_3_score" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-    <Label fx:id="orangePlayerThreeGoals" text="player_3_goals" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-    <Label fx:id="orangePlayerThreeAssists" text="player_3_assists" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-    <Label fx:id="orangePlayerThreeSaves" text="player_3_saves" GridPane.columnIndex="4" GridPane.rowIndex="3" />
-    <Label fx:id="orangePlayerThreeShots" text="player_3_shots" GridPane.columnIndex="5" GridPane.rowIndex="3" />
+    <Label fx:id="orangePlayerThree" text="\%unknown_player%" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+    <Label fx:id="orangePlayerThreeScore" text="N/A" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+    <Label fx:id="orangePlayerThreeGoals" text="N/A" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+    <Label fx:id="orangePlayerThreeAssists" text="N/A" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+    <Label fx:id="orangePlayerThreeSaves" text="N/A" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+    <Label fx:id="orangePlayerThreeShots" text="N/A" GridPane.columnIndex="5" GridPane.rowIndex="3" />
   </GridPane>
 </VBox>

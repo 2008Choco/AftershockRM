@@ -85,7 +85,7 @@ public final class ReplayModifiable implements Replay {
 
     ReplayModifiable addPlayer(PlayerData player) {
         if (playerData == Collections.EMPTY_LIST) {
-            this.playerData = new ArrayList<>((teamSize == 0 ? 6 : teamSize));
+            this.playerData = new ArrayList<>((teamSize == 0 ? 6 : (teamSize * 2)));
         }
 
         this.playerData.add(player);

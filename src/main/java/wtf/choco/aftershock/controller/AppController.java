@@ -1,6 +1,5 @@
 package wtf.choco.aftershock.controller;
 
-import java.io.IOException;
 import java.util.ResourceBundle;
 
 import wtf.choco.aftershock.App;
@@ -9,10 +8,11 @@ import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
 
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
+import javafx.scene.Node;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
@@ -42,15 +42,6 @@ public final class AppController {
 
     @FXML
     public void initialize() {
-        // NOTE: Temporary while working on info panel
-        try {
-            Parent panel = FXMLLoader.load(App.class.getResource("/InfoPanel.fxml"), ResourceBundle.getBundle("/lang/"));
-            this.splitPane.getItems().add(panel);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // END NOTE
-
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
         this.columnLoaded.setCellValueFactory(new ReplayPropertyFetcher<>(ReplayEntry::isLoaded));
         this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getName()));
@@ -63,6 +54,22 @@ public final class AppController {
         this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.ORANGE)));
         this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getPlayerName()));
         this.columnComments.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getComments().orElse("None")));
+
+        this.replayTable.getSelectionModel().getSelectedItems().addListener((ListChangeListener<ReplayEntry>) r -> {
+            if (!r.next() || r.getAddedSize() != 1) {
+                return;
+            }
+
+            ReplayEntry replay = r.getAddedSubList().get(0);
+
+            ObservableList<Node> items = splitPane.getItems();
+            if (items.size() > 1) {
+                items.remove(1, items.size());
+            }
+
+            items.add(InfoPanelController.createInfoPanelFor(replay, resources));
+            this.requestLabelUpdate();
+        });
     }
 
     @FXML

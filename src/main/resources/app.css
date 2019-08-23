@@ -14,3 +14,7 @@
     -fx-padding: 0 1 0 1;
     -fx-background-color: transparent;
 }
+
+#infoHeader {
+    -fx-font-weight: bold;
+}
