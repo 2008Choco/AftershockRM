@@ -32,6 +32,7 @@ public final class App extends Application {
     private Stage stage;
     private Scene scene;
     private AppController controller;
+    private ResourceBundle resources;
 
     private final ReplayManager replayManager = new ReplayManager();
 
@@ -60,7 +61,7 @@ public final class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         this.stage = stage;
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/Root.fxml"), ResourceBundle.getBundle("/lang/"));
+        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/Root.fxml"), resources = ResourceBundle.getBundle("/lang/"));
         this.scene = new Scene(fxmlLoader.load());
         this.controller = fxmlLoader.getController();
 
@@ -143,6 +144,10 @@ public final class App extends Application {
 
     public Stage getStage() {
         return stage;
+    }
+
+    public ResourceBundle getResources() {
+        return resources;
     }
 
     public static App getInstance() {

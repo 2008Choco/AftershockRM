@@ -18,6 +18,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import wtf.choco.aftershock.App;
+
 public final class ReplayModifiable implements Replay {
 
     private final File demoFile, headerFile;
@@ -201,9 +203,10 @@ public final class ReplayModifiable implements Replay {
         this.orangeScore(get(header, "Team1Score", "int", JsonElement::getAsInt, 0));
         this.version(get(header, "ReplayVersion", "int", JsonElement::getAsInt));
 
-        this.name(get(header, "ReplayName", "str", JsonElement::getAsString, "%__UNDEFINED__%"));
+        String mapId = get(header, "MapName", "name", JsonElement::getAsString);
+        this.mapName(mapId != null ? App.getInstance().getResources().getString("map.name." + mapId.toLowerCase()) : "%unknown_map%");
+        this.name(get(header, "ReplayName", "str", JsonElement::getAsString, "[" + getMapName() + " - " + teamSize + "v" + teamSize + "]"));
         this.id(get(header, "Id", "str", JsonElement::getAsString));
-        this.mapName(get(header, "MapName", "name", JsonElement::getAsString, "%__UNDEFINED__%"));
         this.playerName(get(header, "PlayerName", "str", JsonElement::getAsString));
 
         // More complex data
@@ -254,12 +257,7 @@ public final class ReplayModifiable implements Replay {
     }
 
     private <T> T get(JsonObject root, String propertyKey, String type, Function<JsonElement, T> caster) {
-        if (!root.has(propertyKey)) {
-            throw new IllegalStateException("Attempted to grab non-existent key of ID: " + propertyKey);
-        }
-
-        JsonObject element = root.getAsJsonObject(propertyKey);
-        return caster.apply(element.getAsJsonObject("value").get(type));
+        return get(root, propertyKey, type, caster, null);
     }
 
     private <T> T get(JsonObject root, String propertyKey, String type, Function<JsonElement, T> caster, T defaultValue) {
