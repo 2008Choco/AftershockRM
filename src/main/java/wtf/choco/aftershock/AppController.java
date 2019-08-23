@@ -1,5 +1,6 @@
 package wtf.choco.aftershock;
 
+import java.io.IOException;
 import java.util.ResourceBundle;
 
 import wtf.choco.aftershock.replay.Team;
@@ -9,6 +10,8 @@ import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
@@ -38,6 +41,15 @@ public class AppController {
 
     @FXML
     public void initialize() {
+        // NOTE: Temporary while working on info panel
+        try {
+            Parent panel = FXMLLoader.load(App.class.getResource("/InfoPanel.fxml"), ResourceBundle.getBundle("/lang/"));
+            this.splitPane.getItems().add(panel);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // END NOTE
+
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
         this.columnLoaded.setCellValueFactory(new ReplayPropertyFetcher<>(ReplayEntry::isLoaded));
         this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getName()));
