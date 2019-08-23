@@ -1,8 +1,9 @@
-package wtf.choco.aftershock;
+package wtf.choco.aftershock.controller;
 
 import java.io.IOException;
 import java.util.ResourceBundle;
 
+import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
@@ -19,7 +20,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 
-public class AppController {
+public final class AppController {
 
     @FXML private TableView<ReplayEntry> replayTable;
 

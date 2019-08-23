@@ -8,8 +8,10 @@ module wtf.choco.aftershock {
     requires transitive java.logging;
 
     opens wtf.choco.aftershock to javafx.fxml;
+    opens wtf.choco.aftershock.controller to javafx.fxml;
 
     exports wtf.choco.aftershock;
+    exports wtf.choco.aftershock.controller;
     exports wtf.choco.aftershock.manager;
     exports wtf.choco.aftershock.replay;
     exports wtf.choco.aftershock.structure;

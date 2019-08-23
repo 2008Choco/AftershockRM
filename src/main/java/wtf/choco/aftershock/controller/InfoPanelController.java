@@ -1,4 +1,4 @@
-package wtf.choco.aftershock;
+package wtf.choco.aftershock.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

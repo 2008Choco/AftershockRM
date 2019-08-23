@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 import com.google.gson.Gson;
 
+import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.manager.ReplayManager;
 import wtf.choco.aftershock.replay.ReplayModifiable;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
