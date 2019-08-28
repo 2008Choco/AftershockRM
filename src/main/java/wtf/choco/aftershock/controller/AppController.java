@@ -12,9 +12,11 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -37,10 +39,12 @@ public final class AppController {
     @FXML private SplitPane splitPane;
 
     @FXML private Label labelListed, labelLoaded, labelSelected;
+    @FXML private ProgressBar loadProgress;
 
     @FXML private ResourceBundle resources;
 
     private double lastKnownDividerPosition = 0.75;
+    private int expectedReplays = 1, loadedReplays = 0;
 
     @FXML
     public void initialize() {
@@ -66,6 +70,8 @@ public final class AppController {
             this.splitPane.setDividerPosition(0, lastKnownDividerPosition);
             this.requestLabelUpdate();
         });
+
+        this.splitPane.setCursor(Cursor.WAIT);
     }
 
     @FXML
@@ -95,6 +101,20 @@ public final class AppController {
     public void openInfoPanel(ReplayEntry replay) {
         this.closeInfoPanel();
         this.splitPane.getItems().add(InfoPanelController.createInfoPanelFor(replay, resources));
+    }
+
+    public void setExpectedReplays(int expectedReplays) {
+        this.expectedReplays = expectedReplays;
+    }
+
+    public void increaseLoadedReplay(int amount) {
+        this.loadedReplays += amount;
+        this.loadProgress.setProgress(Math.min(((double) loadedReplays) / ((double) expectedReplays), 1.0));
+
+        if (loadProgress.getProgress() >= 1.0) {
+            this.loadProgress.setVisible(false);
+            this.splitPane.setCursor(Cursor.DEFAULT);
+        }
     }
 
     public void requestLabelUpdate() {

@@ -96,9 +96,17 @@ public final class App extends Application {
         if (replayDirectory.exists() && replayDirectory.isDirectory()) {
             this.logger.info("Running startup replay caching processes...");
             long now = System.currentTimeMillis();
+            this.replayManager.addChangeListener(l -> {
+                if (l.next()) {
+                    this.controller.increaseLoadedReplay(l.getAddedSize());
+                }
+            });
 
             this.executor.execute(() -> {
-                for (File replayFile : replayDirectory.listFiles((f, name) -> name.endsWith(".replay"))) {
+                File[] replayFiles = replayDirectory.listFiles((f, name) -> name.endsWith(".replay"));
+                this.controller.setExpectedReplays(replayFiles.length);
+
+                for (File replayFile : replayFiles) {
                     String replayFileName = replayFile.getName();
 
                     // Backup the replay file for later

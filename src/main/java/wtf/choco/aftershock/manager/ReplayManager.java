@@ -4,6 +4,7 @@ import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.structure.ReplayEntry;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TableView;
 
@@ -13,6 +14,10 @@ public class ReplayManager {
 
     public void attachTable(TableView<ReplayEntry> table) {
         table.setItems(replayEntries);
+    }
+
+    public void addChangeListener(ListChangeListener<ReplayEntry> listener) {
+        this.replayEntries.addListener(listener);
     }
 
     public void addReplay(ReplayEntry replay) {
