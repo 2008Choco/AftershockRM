@@ -158,7 +158,7 @@ public final class App extends Application {
             return settingsStage;
         }
 
-        Parent root = FXUtils.loadFXMLRoot("/layout/SettingsPanel");
+        Parent root = FXUtils.loadFXMLRoot("/layout/SettingsPanel", resources);
         if (root == null) {
             return null;
         }

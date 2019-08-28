@@ -23,7 +23,7 @@
     <Menu text="%ui.menu.replays" />
     <Menu text="%ui.menu.options">
       <items>
-        <MenuItem text="Application Settings" onAction="#openSettings" />
+        <MenuItem text="%ui.menu.app_settings" onAction="#openSettings" />
       </items>
     </Menu>
     <Menu text="%ui.menu.help" />

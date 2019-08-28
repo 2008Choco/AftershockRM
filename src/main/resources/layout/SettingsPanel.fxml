@@ -38,9 +38,9 @@
       <RowConstraints minHeight="10.0" />
     </rowConstraints>
 
-    <Label text="Replay Folder:" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.vgrow="NEVER" />
-    <Label text="Rattletrap Path:" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="NEVER" />
-    <Label text="Language:" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.vgrow="NEVER" />
+    <Label text="%ui.settings.replay_folder" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.vgrow="NEVER" />
+    <Label text="%ui.settings.rattletrap_path" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="NEVER" />
+    <Label text="%ui.settings.language" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.vgrow="NEVER" />
 
     <TextField fx:id="fieldReplayFolder" GridPane.columnIndex="1" GridPane.rowIndex="0" />
     <TextField fx:id="fieldRattletrapPath" GridPane.columnIndex="1" GridPane.rowIndex="1" />
@@ -79,7 +79,7 @@
       <Insets top="10.0" />
     </VBox.margin>
 
-    <Button prefWidth="75.0" text="Cancel" onAction="#close" />
-    <Button defaultButton="true" prefWidth="75.0" text="Apply" onAction="#applyAndClose" />
+    <Button prefWidth="75.0" text="%ui.settings.cancel" onAction="#close" />
+    <Button defaultButton="true" prefWidth="75.0" text="%ui.settings.apply" onAction="#applyAndClose" />
   </HBox>
 </VBox>
