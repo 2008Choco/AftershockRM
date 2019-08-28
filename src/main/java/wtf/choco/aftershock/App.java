@@ -22,6 +22,7 @@ import wtf.choco.aftershock.util.FXUtils;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -68,6 +69,13 @@ public final class App extends Application {
         var root = FXUtils.<Parent, AppController>loadFXML("/layout/Root", resources = ResourceBundle.getBundle("/lang/"));
         this.scene = new Scene(root.getKey());
         this.controller = root.getValue();
+
+        // TODO: Configurable key binds
+        this.scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ESCAPE) {
+                this.controller.closeInfoPanel();
+            }
+        });
 
         // Stage setup
         stage.setTitle("Aftershock Replay Manager");

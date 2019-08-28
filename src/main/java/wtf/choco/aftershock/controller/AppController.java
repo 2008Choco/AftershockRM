@@ -40,6 +40,8 @@ public final class AppController {
 
     @FXML private ResourceBundle resources;
 
+    private double lastKnownDividerPosition = 0.75;
+
     @FXML
     public void initialize() {
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
@@ -60,14 +62,8 @@ public final class AppController {
                 return;
             }
 
-            ReplayEntry replay = r.getAddedSubList().get(0);
-
-            ObservableList<Node> items = splitPane.getItems();
-            if (items.size() > 1) {
-                items.remove(1, items.size());
-            }
-
-            items.add(InfoPanelController.createInfoPanelFor(replay, resources));
+            this.openInfoPanel(r.getAddedSubList().get(0));
+            this.splitPane.setDividerPosition(0, lastKnownDividerPosition);
             this.requestLabelUpdate();
         });
     }
@@ -86,6 +82,19 @@ public final class AppController {
 
     public TableView<ReplayEntry> getReplayTable() {
         return replayTable;
+    }
+
+    public void closeInfoPanel() {
+        ObservableList<Node> items = splitPane.getItems();
+        if (items.size() > 1) {
+            this.lastKnownDividerPosition = splitPane.getDividerPositions()[0];
+            items.remove(1, items.size());
+        }
+    }
+
+    public void openInfoPanel(ReplayEntry replay) {
+        this.closeInfoPanel();
+        this.splitPane.getItems().add(InfoPanelController.createInfoPanelFor(replay, resources));
     }
 
     public void requestLabelUpdate() {
