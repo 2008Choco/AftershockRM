@@ -6,6 +6,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -20,7 +21,11 @@
 <VBox prefHeight="720.0" prefWidth="1280.0" stylesheets="/app.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.AppController">
   <MenuBar>
     <Menu text="%ui.menu.replays" />
-    <Menu text="%ui.menu.options" />
+    <Menu text="%ui.menu.options">
+      <items>
+        <MenuItem text="Application Settings" onAction="#openSettings" />
+      </items>
+    </Menu>
     <Menu text="%ui.menu.help" />
   </MenuBar>
 

@@ -20,7 +20,9 @@ import wtf.choco.aftershock.util.ColouredLogFormatter;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public final class App extends Application {
@@ -34,12 +36,14 @@ public final class App extends Application {
     private AppController controller;
     private ResourceBundle resources;
 
+    private Stage settingsStage = null;
+
     private final ReplayManager replayManager = new ReplayManager();
+    private final File installDirectory = new File(System.getProperty("user.home"), "AppData/Roaming/AftershockRM/"); // Temporarily hard-coded
 
     // TODO: Editable through the application itself
     private final ApplicationSettings settings = new ApplicationSettings(
         "D:/hawke/Documents/My Games/Rocket League/TAGame/Demos/", // Replay directory
-        "C:/Users/hawke/AppData/Roaming/AftershockRM/", // Install directory
         "C:/Users/hawke/AppData/Roaming/AftershockRM/Rattletrap/rattletrap.exe", // Rattletrap directory
         "en_US" // Language
     );
@@ -73,9 +77,8 @@ public final class App extends Application {
         this.replayManager.attachTable(controller.getReplayTable());
 
         // Replay setup
+        this.installDirectory.mkdirs();
         File replayDirectory = new File(settings.getReplayLocation());
-        File installDirectory = new File(settings.getInstallDirectory());
-        installDirectory.mkdirs();
 
         File replayCacheDirectory = new File(installDirectory, "Cache");
         replayCacheDirectory.mkdir();
@@ -148,6 +151,50 @@ public final class App extends Application {
 
     public ResourceBundle getResources() {
         return resources;
+    }
+
+    public Stage openSettingsStage() {
+        if (settingsStage != null) {
+            return settingsStage;
+        }
+
+        Parent root = null;
+
+        try {
+            root = FXMLLoader.load(App.class.getResource("/SettingsPanel.fxml"));
+        } catch (IOException e) {
+            this.logger.warning("Failed to load settings pane");
+            e.printStackTrace();
+        }
+
+        if (root == null) {
+            return null;
+        }
+
+        Scene scene = new Scene(root);
+        Stage stage = new Stage();
+        stage.setTitle("Aftershock Replay Manager - Application Settings");
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setResizable(false);
+
+        stage.setScene(scene);
+        stage.show();
+
+        this.settingsStage = stage;
+        return stage;
+    }
+
+    public void closeSettingsStage() {
+        this.settingsStage.close();
+        this.settingsStage = null;
+    }
+
+    public ApplicationSettings getSettings() {
+        return settings;
+    }
+
+    public File getInstallDirectory() {
+        return installDirectory;
     }
 
     public static App getInstance() {

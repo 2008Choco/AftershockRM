@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+
+<?import javafx.collections.FXCollections?>
+<?import javafx.collections.ObservableList?>
+
+<?import javafx.geometry.Insets?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefWidth="480.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.SettingsPanelController">
+  <padding>
+    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+  </padding>
+
+  <GridPane vgap="10.0">
+    <columnConstraints>
+      <ColumnConstraints minWidth="100.0" />
+      <ColumnConstraints hgrow="ALWAYS" />
+      <ColumnConstraints hgrow="SOMETIMES" />
+    </columnConstraints>
+    <rowConstraints>
+      <RowConstraints minHeight="10.0" />
+      <RowConstraints minHeight="10.0" />
+      <RowConstraints minHeight="10.0" />
+    </rowConstraints>
+
+    <Label text="Replay Folder:" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.vgrow="NEVER" />
+    <Label text="Rattletrap Path:" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="NEVER" />
+    <Label text="Language:" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.vgrow="NEVER" />
+
+    <TextField fx:id="fieldReplayFolder" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+    <TextField fx:id="fieldRattletrapPath" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+ 
+    <Button maxHeight="1E10" maxWidth="1E10" GridPane.columnIndex="2" GridPane.rowIndex="0" onAction="#selectReplayFolder">
+      <graphic>
+        <ImageView>
+          <image>
+            <Image url="@icons/folder.png" />
+          </image>
+        </ImageView>
+      </graphic>
+    </Button>
+    <Button maxHeight="1E10" maxWidth="1E10" GridPane.columnIndex="2" GridPane.rowIndex="1" onAction="#selectRattletrapFile">
+      <graphic>
+        <ImageView>
+          <image>
+            <Image url="@icons/file.png" />
+          </image>
+        </ImageView>
+      </graphic>
+    </Button>
+
+    <!-- Temporarily hard-coded values. Will be dynamic in due time -->
+    <ComboBox fx:id="languageSelector" prefWidth="75.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+      <items>
+        <FXCollections fx:factory="observableArrayList">
+          <String fx:value="en_US" />
+        </FXCollections>
+      </items>
+    </ComboBox>
+  </GridPane>
+
+  <HBox alignment="CENTER_RIGHT" spacing="10">
+    <VBox.margin>
+      <Insets top="10.0" />
+    </VBox.margin>
+
+    <Button prefWidth="75.0" text="Cancel" onAction="#close" />
+    <Button defaultButton="true" prefWidth="75.0" text="Apply" onAction="#applyAndClose" />
+  </HBox>
+</VBox>

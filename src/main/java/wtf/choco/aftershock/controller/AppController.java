@@ -78,6 +78,12 @@ public final class AppController {
         App.getInstance().getHostServices().showDocument(hyperlink.getTooltip().getText());
     }
 
+    @FXML
+    @SuppressWarnings("unused")
+    public void openSettings(ActionEvent event) {
+        App.getInstance().openSettingsStage();
+    }
+
     public TableView<ReplayEntry> getReplayTable() {
         return replayTable;
     }
