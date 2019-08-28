@@ -80,7 +80,7 @@ public final class InfoPanelController {
     }
 
     public static Parent createInfoPanelFor(Replay replay, ResourceBundle resources) {
-        var root = FXUtils.<Parent, InfoPanelController>loadFXML("/InfoPanel", resources);
+        var root = FXUtils.<Parent, InfoPanelController>loadFXML("/layout/InfoPanel", resources);
 
         if (root.getKey() == null) {
             return null;

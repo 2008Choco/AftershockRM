@@ -65,7 +65,7 @@ public final class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         this.stage = stage;
-        var root = FXUtils.<Parent, AppController>loadFXML("/Root", resources = ResourceBundle.getBundle("/lang/"));
+        var root = FXUtils.<Parent, AppController>loadFXML("/layout/Root", resources = ResourceBundle.getBundle("/lang/"));
         this.scene = new Scene(root.getKey());
         this.controller = root.getValue();
 
@@ -158,7 +158,7 @@ public final class App extends Application {
             return settingsStage;
         }
 
-        Parent root = FXUtils.loadFXMLRoot("/SettingsPanel");
+        Parent root = FXUtils.loadFXMLRoot("/layout/SettingsPanel");
         if (root == null) {
             return null;
         }
