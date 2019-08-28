@@ -1,18 +1,16 @@
 package wtf.choco.aftershock.controller;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.replay.PlayerData;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.structure.ReplayEntry;
+import wtf.choco.aftershock.util.FXUtils;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -82,17 +80,14 @@ public final class InfoPanelController {
     }
 
     public static Parent createInfoPanelFor(Replay replay, ResourceBundle resources) {
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("/InfoPanel.fxml"), resources);
+        var root = FXUtils.<Parent, InfoPanelController>loadFXML("/InfoPanel", resources);
 
-        try {
-            Parent root = loader.load();
-            loader.<InfoPanelController>getController().loadReplay(replay);
-            return root;
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (root.getKey() == null) {
+            return null;
         }
 
-        return null;
+        root.getValue().loadReplay(replay);
+        return root.getKey();
     }
 
     public static Parent createInfoPanelFor(ReplayEntry replay, ResourceBundle resources) {

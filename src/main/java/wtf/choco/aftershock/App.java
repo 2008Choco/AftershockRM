@@ -17,9 +17,9 @@ import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.manager.ReplayManager;
 import wtf.choco.aftershock.replay.ReplayModifiable;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
+import wtf.choco.aftershock.util.FXUtils;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -65,9 +65,9 @@ public final class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         this.stage = stage;
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/Root.fxml"), resources = ResourceBundle.getBundle("/lang/"));
-        this.scene = new Scene(fxmlLoader.load());
-        this.controller = fxmlLoader.getController();
+        var root = FXUtils.<Parent, AppController>loadFXML("/Root", resources = ResourceBundle.getBundle("/lang/"));
+        this.scene = new Scene(root.getKey());
+        this.controller = root.getValue();
 
         // Stage setup
         stage.setTitle("Aftershock Replay Manager");
@@ -158,15 +158,7 @@ public final class App extends Application {
             return settingsStage;
         }
 
-        Parent root = null;
-
-        try {
-            root = FXMLLoader.load(App.class.getResource("/SettingsPanel.fxml"));
-        } catch (IOException e) {
-            this.logger.warning("Failed to load settings pane");
-            e.printStackTrace();
-        }
-
+        Parent root = FXUtils.loadFXMLRoot("/SettingsPanel");
         if (root == null) {
             return null;
         }
