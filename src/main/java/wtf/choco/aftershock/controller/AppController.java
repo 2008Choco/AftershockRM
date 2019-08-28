@@ -43,7 +43,7 @@ public final class AppController {
 
     @FXML private ResourceBundle resources;
 
-    private double lastKnownDividerPosition = 0.75;
+    private double lastKnownDividerPosition = 0.70;
     private int expectedReplays = 1, loadedReplays = 0;
 
     @FXML
