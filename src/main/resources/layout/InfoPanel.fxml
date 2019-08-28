@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -9,7 +10,7 @@
 <VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.InfoPanelController">
   <Label text="%ui.replay.header.title" />
 
-  <GridPane >
+  <GridPane>
     <columnConstraints>
       <ColumnConstraints />
       <ColumnConstraints />
@@ -27,7 +28,11 @@
     <Label fx:id="replayId" text="replay_placeholder_id.replay" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" />
   </GridPane>
 
-  <Label fx:id="blueHeader" text="%ui.replay.stats.team.blue" />
+  <Label fx:id="blueHeader" text="%ui.replay.stats.team.blue">
+      <VBox.margin>
+         <Insets top="20.0" />
+      </VBox.margin>
+  </Label>
 
   <GridPane fx:id="blueGrid">
     <columnConstraints>
@@ -75,7 +80,11 @@
     <Label fx:id="bluePlayerThreeShots" text="N/A" GridPane.columnIndex="5" GridPane.rowIndex="3" />
   </GridPane>
 
-  <Label fx:id="orangeHeader" text="%ui.replay.stats.team.orange" />
+  <Label fx:id="orangeHeader" text="%ui.replay.stats.team.orange">
+      <VBox.margin>
+         <Insets top="20.0" />
+      </VBox.margin>
+  </Label>
 
   <GridPane fx:id="orangeGrid">
     <columnConstraints>
@@ -122,4 +131,7 @@
     <Label fx:id="orangePlayerThreeSaves" text="N/A" GridPane.columnIndex="4" GridPane.rowIndex="3" />
     <Label fx:id="orangePlayerThreeShots" text="N/A" GridPane.columnIndex="5" GridPane.rowIndex="3" />
   </GridPane>
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
 </VBox>
