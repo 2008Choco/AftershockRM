@@ -69,7 +69,7 @@
         <graphic>
           <ImageView>
             <image>
-              <Image url="@icons/paypal-logo.png" />
+              <Image url="@../icons/paypal-logo.png" />
             </image>
           </ImageView>
         </graphic>
@@ -83,7 +83,7 @@
         <graphic>
           <ImageView>
             <image>
-              <Image url="@icons/github-logo.png" />
+              <Image url="@../icons/github-logo.png" />
             </image>
           </ImageView>
         </graphic>

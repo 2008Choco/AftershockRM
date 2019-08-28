@@ -49,7 +49,7 @@
       <graphic>
         <ImageView>
           <image>
-            <Image url="@icons/folder.png" />
+            <Image url="@../icons/folder.png" />
           </image>
         </ImageView>
       </graphic>
@@ -58,7 +58,7 @@
       <graphic>
         <ImageView>
           <image>
-            <Image url="@icons/file.png" />
+            <Image url="@../icons/file.png" />
           </image>
         </ImageView>
       </graphic>
