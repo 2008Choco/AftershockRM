@@ -96,6 +96,8 @@ public final class App extends Application {
         if (replayDirectory.exists() && replayDirectory.isDirectory()) {
             this.logger.info("Running startup replay caching processes...");
             long now = System.currentTimeMillis();
+
+            this.controller.requestLabelUpdate();
             this.replayManager.addChangeListener(l -> {
                 if (l.next()) {
                     this.controller.increaseLoadedReplay(l.getAddedSize());

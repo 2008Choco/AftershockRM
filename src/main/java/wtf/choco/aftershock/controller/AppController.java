@@ -118,11 +118,17 @@ public final class AppController {
     }
 
     public void requestLabelUpdate() {
-        Platform.runLater(() -> {
+        if (Platform.isFxApplicationThread()) {
             this.labelListed.setText(String.format(resources.getString("ui.footer.listed"), replayTable.getItems().size()));
             this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), replayTable.getItems().stream().filter(ReplayEntry::isLoaded).count()));
             this.labelSelected.setText(String.format(resources.getString("ui.footer.selected"), replayTable.getSelectionModel().getSelectedCells().size()));
-        });
+        } else {
+            Platform.runLater(() -> {
+                this.labelListed.setText(String.format(resources.getString("ui.footer.listed"), replayTable.getItems().size()));
+                this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), replayTable.getItems().stream().filter(ReplayEntry::isLoaded).count()));
+                this.labelSelected.setText(String.format(resources.getString("ui.footer.selected"), replayTable.getSelectionModel().getSelectedCells().size()));
+            });
+        }
     }
 
 }
