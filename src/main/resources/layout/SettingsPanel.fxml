@@ -79,7 +79,7 @@
       <Insets top="10.0" />
     </VBox.margin>
 
-    <Button prefWidth="75.0" text="%ui.settings.cancel" onAction="#close" />
-    <Button defaultButton="true" prefWidth="75.0" text="%ui.settings.apply" onAction="#applyAndClose" />
+    <Button minWidth="75.0" text="%ui.settings.cancel" onAction="#close" />
+    <Button defaultButton="true" minWidth="75.0" text="%ui.settings.apply" onAction="#applyAndClose" />
   </HBox>
 </VBox>
