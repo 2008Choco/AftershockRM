@@ -114,7 +114,7 @@ public final class App extends Application {
                     // Backup the replay file for later
                     File cacheDestination = new File(replayCacheDirectory, replayFileName);
                     if (!cacheDestination.exists()) {
-                        this.logger.info("Copying replay with ID: " + replayFileName);
+                        this.logger.info("(" + formatID(replayFileName) + ") - Caching replay file");
                         try {
                             Files.copy(replayFile.toPath(), cacheDestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
                         } catch (IOException e) {
@@ -125,23 +125,20 @@ public final class App extends Application {
                     File headerDestination = new File(replayHeadersDirectory, replayFileName.substring(0, replayFileName.lastIndexOf('.')) + ".json");
                     ReplayModifiable replay = new ReplayModifiable(cacheDestination, headerDestination);
 
-                    if (headerDestination.exists()) {
-                        replay.loadDataFromFile(GSON);
-                        this.replayManager.addReplay(replay);
-                        continue;
-                    }
+                    if (!headerDestination.exists()) {
+                        this.logger.info("(" + formatID(replayFileName) + ") - Creating header file");
 
-                    this.logger.info("Creating header file for replay with ID: " + replayFileName);
+                        try {
+                            Runtime.getRuntime().exec(settings.getRattletrapPath() + " --f --i \"" + replayFile.getAbsolutePath() + "\" --o \"" + headerDestination.getAbsolutePath() + "\"").waitFor();
+                        } catch (InterruptedException | IOException e) {
+                            e.printStackTrace();
+                        }
 
-                    try {
-                        Runtime.getRuntime().exec(settings.getRattletrapPath() + " --f --i \"" + replayFile.getAbsolutePath() + "\" --o \"" + headerDestination.getAbsolutePath() + "\"").waitFor();
-                        replay.loadDataFromFile(GSON);
-                        this.replayManager.addReplay(replay);
                         this.logger.info("Done!");
-                    } catch (IOException | InterruptedException e) {
-                        this.logger.severe("Failed exceptionally:");
-                        e.printStackTrace();
                     }
+
+                    replay.loadDataFromFile(GSON);
+                    this.replayManager.addReplay(replay);
                 }
 
                 long time = System.currentTimeMillis() - now;
@@ -205,6 +202,15 @@ public final class App extends Application {
 
     public File getInstallDirectory() {
         return installDirectory;
+    }
+
+    private String formatID(String id) {
+        int idLength = id.length();
+        StringBuilder formatted = new StringBuilder(idLength);
+        formatted.append(id.substring(0, 4));
+        formatted.append("...");
+        formatted.append(id.substring(idLength - ".replay".length() - 4));
+        return formatted.toString();
     }
 
     public static App getInstance() {

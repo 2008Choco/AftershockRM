@@ -3,12 +3,12 @@ package wtf.choco.aftershock;
 public class ApplicationSettings {
 
     private String replayLocation, rattletrapPath;
-    private String localeCode;
+    private String locale;
 
     public ApplicationSettings(String replayLocation, String rattletrapPath, String localeCode) {
         this.replayLocation = replayLocation;
         this.rattletrapPath = rattletrapPath;
-        this.localeCode = localeCode;
+        this.locale = localeCode;
     }
 
     public void setReplayLocation(String replayLocation) {
@@ -27,12 +27,12 @@ public class ApplicationSettings {
         return rattletrapPath;
     }
 
-    public void setLocaleCode(String localeCode) {
-        this.localeCode = localeCode;
+    public void setLocale(String localeCode) {
+        this.locale = localeCode;
     }
 
-    public String getLocaleCode() {
-        return localeCode;
+    public String getLocale() {
+        return locale;
     }
 
 }

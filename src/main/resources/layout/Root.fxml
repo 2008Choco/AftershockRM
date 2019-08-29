@@ -19,7 +19,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefHeight="720.0" prefWidth="1280.0" stylesheets="/app.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.AppController">
+<VBox prefHeight="720.0" prefWidth="1280.0" stylesheets="/app.css" xmlns="http://javafx.com/javafx/12.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.AppController">
   <MenuBar>
     <Menu text="%ui.menu.replays" />
     <Menu text="%ui.menu.options">

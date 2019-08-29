@@ -21,7 +21,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefWidth="480.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.SettingsPanelController">
+<VBox prefWidth="480.0" xmlns="http://javafx.com/javafx/12.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.SettingsPanelController">
   <padding>
     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
   </padding>

@@ -29,7 +29,7 @@ public final class SettingsPanelController {
 
         this.fieldReplayFolder.setText(settings.getReplayLocation());
         this.fieldRattletrapPath.setText(settings.getRattletrapPath());
-        this.languageSelector.setValue(settings.getLocaleCode());
+        this.languageSelector.setValue(settings.getLocale());
     }
 
     @FXML
@@ -75,13 +75,13 @@ public final class SettingsPanelController {
 
         this.setIfValid(fieldReplayFolder.getText(), settings::setReplayLocation);
         this.setIfValid(fieldRattletrapPath.getText(), settings::setRattletrapPath);
-        this.setIfValid(languageSelector.getValue(), settings::setLocaleCode);
+        this.setIfValid(languageSelector.getValue(), settings::setLocale);
 
         Logger logger = App.getInstance().getLogger();
         logger.info("Settings updated to: ");
         logger.info("Replay Directory: " + settings.getReplayLocation());
         logger.info("Rattletrap Path: " + settings.getRattletrapPath());
-        logger.info("Language: " + settings.getLocaleCode());
+        logger.info("Language: " + settings.getLocale());
 
         this.close(event);
     }
