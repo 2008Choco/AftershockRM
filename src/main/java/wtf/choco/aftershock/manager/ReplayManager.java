@@ -1,5 +1,8 @@
 package wtf.choco.aftershock.manager;
 
+import java.util.Collections;
+import java.util.List;
+
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.structure.ReplayEntry;
 
@@ -42,6 +45,10 @@ public class ReplayManager {
 
     public int getReplayCount() {
         return replayEntries.size();
+    }
+
+    public List<ReplayEntry> getReplays() {
+        return Collections.unmodifiableList(replayEntries);
     }
 
 }
