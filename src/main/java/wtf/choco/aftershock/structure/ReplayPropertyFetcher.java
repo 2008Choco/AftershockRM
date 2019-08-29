@@ -2,7 +2,7 @@ package wtf.choco.aftershock.structure;
 
 import java.util.function.Function;
 
-import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.util.Callback;
@@ -18,7 +18,7 @@ public class ReplayPropertyFetcher<R> implements Callback<CellDataFeatures<Repla
     @Override
     public ObservableValue<R> call(CellDataFeatures<ReplayEntry, R> param) {
         R result = valueRetriever.apply(param.getValue());
-        return (result != null) ? new ReadOnlyObjectWrapper<>(result) : null;
+        return (result != null) ? new SimpleObjectProperty<>(result) : null;
     }
 
 }
