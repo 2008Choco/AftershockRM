@@ -21,6 +21,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 public final class AppController {
 
@@ -49,7 +50,7 @@ public final class AppController {
     @FXML
     public void initialize() {
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
-        this.columnLoaded.setCellValueFactory(new ReplayPropertyFetcher<>(ReplayEntry::isLoaded));
+        this.columnLoaded.setCellValueFactory(new PropertyValueFactory<>("loaded"));
         this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getName()));
         this.columnLastModified.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getDate().toString().replace('T', ' ')));
         this.columnMode.setCellValueFactory(new ReplayPropertyFetcher<>(r -> {

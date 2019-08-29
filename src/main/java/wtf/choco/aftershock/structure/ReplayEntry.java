@@ -4,11 +4,14 @@ import java.util.Optional;
 
 import wtf.choco.aftershock.replay.Replay;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
 public class ReplayEntry {
 
     private final Replay replay;
 
-    private boolean loaded = true;
+    private BooleanProperty loaded = new SimpleBooleanProperty(true);
     private String comments;
 
     public ReplayEntry(Replay replay, String comments) {
@@ -25,10 +28,14 @@ public class ReplayEntry {
     }
 
     public void setLoaded(boolean loaded) {
-        this.loaded = loaded;
+        this.loaded.set(loaded);
     }
 
     public boolean isLoaded() {
+        return loaded.get();
+    }
+
+    public BooleanProperty loadedProperty() {
         return loaded;
     }
 

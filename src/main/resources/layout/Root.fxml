@@ -33,7 +33,7 @@
   <SplitPane fx:id="splitPane" VBox.vgrow="ALWAYS">
     <TableView fx:id="replayTable" editable="true" focusTraversable="false" style="-fx-focus-color: transparent;">
       <columns>
-        <TableColumn fx:id="columnLoaded" sortable="false" text="%ui.table.column.loaded" />
+        <TableColumn fx:id="columnLoaded" editable="true" sortable="false" text="%ui.table.column.loaded" />
         <TableColumn fx:id="columnReplayName" prefWidth="250" text="%ui.table.column.replay_name" />
         <TableColumn fx:id="columnLastModified" prefWidth="175" text="%ui.table.column.last_modified" />
         <TableColumn fx:id="columnMode" sortable="false" text="%ui.table.column.mode" />
