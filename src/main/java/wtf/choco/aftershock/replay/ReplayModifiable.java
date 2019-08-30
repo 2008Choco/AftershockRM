@@ -56,29 +56,9 @@ public final class ReplayModifiable implements Replay {
         return headerFile;
     }
 
-    ReplayModifiable teamSize(int teamSize) {
-        this.teamSize = teamSize;
-
-        if (playerData == Collections.EMPTY_LIST) {
-            this.playerData = new ArrayList<>(teamSize * 2);
-        }
-
-        return this;
-    }
-
     @Override
     public int getTeamSize() {
         return teamSize;
-    }
-
-    ReplayModifiable blueScore(int score) {
-        this.blueScore = score;
-        return this;
-    }
-
-    ReplayModifiable orangeScore(int score) {
-        this.orangeScore = score;
-        return this;
     }
 
     @Override
@@ -86,13 +66,12 @@ public final class ReplayModifiable implements Replay {
         return (team == Team.BLUE) ? blueScore : orangeScore;
     }
 
-    ReplayModifiable addPlayer(PlayerData player) {
+    private void addPlayer(PlayerData player) {
         if (playerData == Collections.EMPTY_LIST) {
             this.playerData = new ArrayList<>((teamSize == 0 ? 6 : (teamSize * 2)));
         }
 
         this.playerData.add(player);
-        return this;
     }
 
     @Override
@@ -100,13 +79,12 @@ public final class ReplayModifiable implements Replay {
         return Collections.unmodifiableList(playerData);
     }
 
-    ReplayModifiable addGoal(GoalData goal) {
+    private void addGoal(GoalData goal) {
         if (goalData == Collections.EMPTY_LIST) {
             this.goalData = new ArrayList<>();
         }
 
         this.goalData.add(goal);
-        return this;
     }
 
     @Override
@@ -114,19 +92,9 @@ public final class ReplayModifiable implements Replay {
         return Collections.unmodifiableList(goalData);
     }
 
-    ReplayModifiable name(String name) {
-        this.name = name;
-        return this;
-    }
-
     @Override
     public String getName() {
         return name;
-    }
-
-    ReplayModifiable id(String id) {
-        this.id = id;
-        return this;
     }
 
     @Override
@@ -134,19 +102,9 @@ public final class ReplayModifiable implements Replay {
         return id;
     }
 
-    ReplayModifiable mapName(String name) {
-        this.mapName = name;
-        return this;
-    }
-
     @Override
     public String getMapName() {
         return mapName;
-    }
-
-    ReplayModifiable playerName(String name) {
-        this.playerName = name;
-        return this;
     }
 
     @Override
@@ -154,19 +112,9 @@ public final class ReplayModifiable implements Replay {
         return playerName;
     }
 
-    ReplayModifiable date(LocalDateTime date) {
-        this.date = date;
-        return this;
-    }
-
     @Override
     public LocalDateTime getDate() {
         return date;
-    }
-
-    ReplayModifiable length(int length) {
-        this.length = length;
-        return this;
     }
 
     @Override
@@ -174,19 +122,9 @@ public final class ReplayModifiable implements Replay {
         return length;
     }
 
-    ReplayModifiable fps(int fps) {
-        this.fps = fps;
-        return this;
-    }
-
     @Override
     public int getFPS() {
         return fps;
-    }
-
-    ReplayModifiable version(int version) {
-        this.replayVersion = version;
-        return this;
     }
 
     @Override
@@ -219,23 +157,27 @@ public final class ReplayModifiable implements Replay {
         JsonObject header = root.getAsJsonObject("header").getAsJsonObject("body").getAsJsonObject("properties").getAsJsonObject("value");
 
         // Basic primitive data
-        this.teamSize(get(header, "TeamSize", "int", JsonElement::getAsInt));
-        this.blueScore(get(header, "Team0Score", "int", JsonElement::getAsInt, 0));
-        this.orangeScore(get(header, "Team1Score", "int", JsonElement::getAsInt, 0));
-        this.version(get(header, "ReplayVersion", "int", JsonElement::getAsInt));
+        this.teamSize = get(header, "TeamSize", "int", JsonElement::getAsInt);
+        if (playerData == Collections.EMPTY_LIST) {
+            this.playerData = new ArrayList<>(teamSize * 2);
+        }
+
+        this.blueScore = get(header, "Team0Score", "int", JsonElement::getAsInt, 0);
+        this.orangeScore = get(header, "Team1Score", "int", JsonElement::getAsInt, 0);
+        this.replayVersion = get(header, "ReplayVersion", "int", JsonElement::getAsInt);
 
         String mapId = get(header, "MapName", "name", JsonElement::getAsString);
-        this.mapName(mapId != null ? App.getInstance().getResources().getString("map.name." + mapId.toLowerCase()) : "%unknown_map%");
-        this.name(get(header, "ReplayName", "str", JsonElement::getAsString, "[" + getMapName() + " - " + teamSize + "v" + teamSize + "]"));
-        this.id(get(header, "Id", "str", JsonElement::getAsString));
-        this.playerName(get(header, "PlayerName", "str", JsonElement::getAsString));
-        this.fps(get(header, "RecordFPS", "float", JsonElement::getAsInt, 30));
-        this.length(get(header, "NumFrames", "int", JsonElement::getAsInt, -this.fps) / this.fps); // (defaults to -1)
+        this.mapName = (mapId != null ? App.getInstance().getResources().getString("map.name." + mapId.toLowerCase()) : "%unknown_map%");
+        this.name = get(header, "ReplayName", "str", JsonElement::getAsString, "[" + getMapName() + " - " + teamSize + "v" + teamSize + "]");
+        this.id = get(header, "Id", "str", JsonElement::getAsString);
+        this.playerName = get(header, "PlayerName", "str", JsonElement::getAsString);
+        this.fps = get(header, "RecordFPS", "float", JsonElement::getAsInt, 30);
+        this.length = get(header, "NumFrames", "int", JsonElement::getAsInt, -fps) / fps; // (defaults to -1)
 
         // More complex data
         String dateString = get(header, "Date", "str", JsonElement::getAsString, "1970-00-00 00-00-00");
         LocalDateTime date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("uuuu-MM-dd HH-mm-ss"));
-        this.date((date != null) ? date : LocalDateTime.MIN);
+        this.date = ((date != null) ? date : LocalDateTime.MIN);
 
         /* Players */
         Map<String, PlayerData> nameToPlayerData = new HashMap<>();
@@ -248,14 +190,14 @@ public final class ReplayModifiable implements Replay {
             JsonObject playerRoot = playerElement.getAsJsonObject().getAsJsonObject("value");
             PlayerDataModifiable playerData = new PlayerDataModifiable(this);
 
-            playerData.name(get(playerRoot, "Name", "str", JsonElement::getAsString));
-            playerData.team(Team.fromInternalId(get(playerRoot, "Team", "int", JsonElement::getAsInt)));
+            playerData.name = get(playerRoot, "Name", "str", JsonElement::getAsString);
+            playerData.team = Team.fromInternalId(get(playerRoot, "Team", "int", JsonElement::getAsInt));
             // TODO: Parse platform
-            playerData.score(get(playerRoot, "Score", "int", JsonElement::getAsInt, 0));
-            playerData.goals(get(playerRoot, "Goals", "int", JsonElement::getAsInt, 0));
-            playerData.assists(get(playerRoot, "Assists", "int", JsonElement::getAsInt, 0));
-            playerData.saves(get(playerRoot, "Saves", "int", JsonElement::getAsInt, 0));
-            playerData.shots(get(playerRoot, "Shots", "int", JsonElement::getAsInt, 0));
+            playerData.score = get(playerRoot, "Score", "int", JsonElement::getAsInt, 0);
+            playerData.goals = get(playerRoot, "Goals", "int", JsonElement::getAsInt, 0);
+            playerData.assists = get(playerRoot, "Assists", "int", JsonElement::getAsInt, 0);
+            playerData.saves = get(playerRoot, "Saves", "int", JsonElement::getAsInt, 0);
+            playerData.shots = get(playerRoot, "Shots", "int", JsonElement::getAsInt, 0);
 
             nameToPlayerData.put(playerData.getName(), playerData);
             this.addPlayer(playerData);
@@ -271,9 +213,9 @@ public final class ReplayModifiable implements Replay {
             JsonObject goalRoot = goalElement.getAsJsonObject().getAsJsonObject("value");
             GoalDataModifiable goalData = new GoalDataModifiable(this);
 
-            goalData.secondsIn(get(goalRoot, "frame", "int", JsonElement::getAsInt) / fps);
-            goalData.team(Team.fromInternalId(get(goalRoot, "PlayerTeam", "int", JsonElement::getAsInt)));
-            goalData.player(nameToPlayerData.get(get(goalRoot, "PlayerName", "str", JsonElement::getAsString)));
+            goalData.secondsIn = get(goalRoot, "frame", "int", JsonElement::getAsInt) / fps;
+            goalData.team = Team.fromInternalId(get(goalRoot, "PlayerTeam", "int", JsonElement::getAsInt));
+            goalData.player = nameToPlayerData.get(get(goalRoot, "PlayerName", "str", JsonElement::getAsString));
 
             this.addGoal(goalData);
         }

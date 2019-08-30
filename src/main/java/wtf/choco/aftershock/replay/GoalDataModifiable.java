@@ -4,9 +4,9 @@ import java.util.Objects;
 
 public final class GoalDataModifiable implements GoalData {
 
-    private int secondsIn;
-    private PlayerData player;
-    private Team team;
+    int secondsIn;
+    PlayerData player;
+    Team team;
 
     private final Replay replay;
 
@@ -14,29 +14,14 @@ public final class GoalDataModifiable implements GoalData {
         this.replay = replay;
     }
 
-    GoalDataModifiable secondsIn(int seconds) {
-        this.secondsIn = seconds;
-        return this;
-    }
-
     @Override
     public int getSecondsIn() {
         return secondsIn;
     }
 
-    GoalDataModifiable player(PlayerData player) {
-        this.player = player;
-        return this;
-    }
-
     @Override
     public PlayerData getPlayer() {
         return player;
-    }
-
-    GoalDataModifiable team(Team team) {
-        this.team = team;
-        return this;
     }
 
     @Override
