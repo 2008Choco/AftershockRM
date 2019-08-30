@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import com.google.gson.Gson;
 
 import wtf.choco.aftershock.controller.AppController;
+import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.ReplayManager;
 import wtf.choco.aftershock.replay.ReplayModifiable;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
@@ -23,7 +24,6 @@ import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -37,6 +37,7 @@ public final class App extends Application {
     private Scene scene;
     private AppController controller;
     private ResourceBundle resources;
+    private KeybindRegistry keybindRegistry;
 
     private Stage settingsStage = null;
 
@@ -72,11 +73,8 @@ public final class App extends Application {
         this.controller = root.getValue();
 
         // TODO: Configurable key binds
-        this.scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            if (e.getCode() == KeyCode.ESCAPE) {
-                this.controller.closeInfoPanel();
-            }
-        });
+        this.keybindRegistry = new KeybindRegistry(this);
+        this.keybindRegistry.registerKeybind(KeyCode.ESCAPE).executes(controller::closeInfoPanel);
 
         // Stage setup
         stage.setTitle("Aftershock Replay Manager");
