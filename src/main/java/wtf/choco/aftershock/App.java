@@ -23,6 +23,7 @@ import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -71,7 +72,7 @@ public final class App extends Application {
         this.controller = root.getValue();
 
         // TODO: Configurable key binds
-        this.scene.setOnKeyPressed(e -> {
+        this.scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.ESCAPE) {
                 this.controller.closeInfoPanel();
             }
