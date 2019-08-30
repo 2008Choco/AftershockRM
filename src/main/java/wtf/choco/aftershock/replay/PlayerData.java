@@ -18,4 +18,6 @@ public interface PlayerData {
 
     public int getShots();
 
+    public Replay getReplay();
+
 }

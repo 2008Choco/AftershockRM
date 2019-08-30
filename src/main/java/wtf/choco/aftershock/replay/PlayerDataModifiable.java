@@ -9,6 +9,12 @@ public final class PlayerDataModifiable implements PlayerData {
     private Team team;
     private int score, goals, assists, saves, shots;
 
+    private final Replay replay;
+
+    PlayerDataModifiable(Replay replay) {
+        this.replay = replay;
+    }
+
     PlayerDataModifiable name(String name) {
         this.name = name;
         return this;
@@ -87,6 +93,11 @@ public final class PlayerDataModifiable implements PlayerData {
     @Override
     public int getShots() {
         return shots;
+    }
+
+    @Override
+    public Replay getReplay() {
+        return replay;
     }
 
     @Override

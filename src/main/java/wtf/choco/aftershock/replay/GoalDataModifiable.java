@@ -8,6 +8,12 @@ public final class GoalDataModifiable implements GoalData {
     private PlayerData player;
     private Team team;
 
+    private final Replay replay;
+
+    GoalDataModifiable(Replay replay) {
+        this.replay = replay;
+    }
+
     GoalDataModifiable secondsIn(int seconds) {
         this.secondsIn = seconds;
         return this;
@@ -36,6 +42,11 @@ public final class GoalDataModifiable implements GoalData {
     @Override
     public Team getTeam() {
         return team;
+    }
+
+    @Override
+    public Replay getReplay() {
+        return replay;
     }
 
     @Override

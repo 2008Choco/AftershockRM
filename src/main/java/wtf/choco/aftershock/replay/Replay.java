@@ -28,6 +28,10 @@ public interface Replay {
 
     public LocalDateTime getDate();
 
+    public int getFPS();
+
+    public int getLength();
+
     public int getVersion();
 
 }

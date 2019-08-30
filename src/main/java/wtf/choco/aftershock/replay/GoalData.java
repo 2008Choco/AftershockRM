@@ -8,4 +8,6 @@ public interface GoalData {
 
     public Team getTeam();
 
+    public Replay getReplay();
+
 }

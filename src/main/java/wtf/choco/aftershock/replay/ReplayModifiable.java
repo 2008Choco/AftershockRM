@@ -31,6 +31,7 @@ public final class ReplayModifiable implements Replay {
     private String name, id, mapName, playerName;
     private LocalDateTime date;
     private int replayVersion;
+    private int length, fps;
 
     public ReplayModifiable(Gson gson, File demoFile, File headerFile) {
         this.demoFile = demoFile;
@@ -163,6 +164,26 @@ public final class ReplayModifiable implements Replay {
         return date;
     }
 
+    ReplayModifiable length(int length) {
+        this.length = length;
+        return this;
+    }
+
+    @Override
+    public int getLength() {
+        return length;
+    }
+
+    ReplayModifiable fps(int fps) {
+        this.fps = fps;
+        return this;
+    }
+
+    @Override
+    public int getFPS() {
+        return fps;
+    }
+
     ReplayModifiable version(int version) {
         this.replayVersion = version;
         return this;
@@ -208,6 +229,8 @@ public final class ReplayModifiable implements Replay {
         this.name(get(header, "ReplayName", "str", JsonElement::getAsString, "[" + getMapName() + " - " + teamSize + "v" + teamSize + "]"));
         this.id(get(header, "Id", "str", JsonElement::getAsString));
         this.playerName(get(header, "PlayerName", "str", JsonElement::getAsString));
+        this.fps(get(header, "RecordFPS", "float", JsonElement::getAsInt, 30));
+        this.length(get(header, "NumFrames", "int", JsonElement::getAsInt, -this.fps) / this.fps); // (defaults to -1)
 
         // More complex data
         String dateString = get(header, "Date", "str", JsonElement::getAsString, "1970-00-00 00-00-00");
@@ -223,7 +246,7 @@ public final class ReplayModifiable implements Replay {
             }
 
             JsonObject playerRoot = playerElement.getAsJsonObject().getAsJsonObject("value");
-            PlayerDataModifiable playerData = new PlayerDataModifiable();
+            PlayerDataModifiable playerData = new PlayerDataModifiable(this);
 
             playerData.name(get(playerRoot, "Name", "str", JsonElement::getAsString));
             playerData.team(Team.fromInternalId(get(playerRoot, "Team", "int", JsonElement::getAsInt)));
@@ -246,9 +269,9 @@ public final class ReplayModifiable implements Replay {
             }
 
             JsonObject goalRoot = goalElement.getAsJsonObject().getAsJsonObject("value");
-            GoalDataModifiable goalData = new GoalDataModifiable();
+            GoalDataModifiable goalData = new GoalDataModifiable(this);
 
-            goalData.secondsIn(get(goalRoot, "frame", "int", JsonElement::getAsInt)); // TODO: Convert to seconds, not frames
+            goalData.secondsIn(get(goalRoot, "frame", "int", JsonElement::getAsInt) / fps);
             goalData.team(Team.fromInternalId(get(goalRoot, "PlayerTeam", "int", JsonElement::getAsInt)));
             goalData.player(nameToPlayerData.get(get(goalRoot, "PlayerName", "str", JsonElement::getAsString)));
 
