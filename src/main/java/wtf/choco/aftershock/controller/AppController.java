@@ -17,9 +17,11 @@ import javafx.scene.Node;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 
@@ -59,8 +61,10 @@ public final class AppController {
         this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getPlayerName()));
         this.columnComments.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getComments().orElse("None")));
 
-        this.replayTable.getSelectionModel().getSelectedItems().addListener((ListChangeListener<ReplayEntry>) r -> {
-            if (!r.next() || r.getAddedSize() != 1) {
+        TableViewSelectionModel<ReplayEntry> selectionModel = replayTable.getSelectionModel();
+        selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
+        selectionModel.getSelectedItems().addListener((ListChangeListener<ReplayEntry>) r -> {
+            if (!r.next() || r.getAddedSize() < 1) {
                 return;
             }
 
