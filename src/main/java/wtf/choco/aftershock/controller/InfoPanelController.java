@@ -1,9 +1,12 @@
 package wtf.choco.aftershock.controller;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import wtf.choco.aftershock.replay.GoalData;
 import wtf.choco.aftershock.replay.PlayerData;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
@@ -16,6 +19,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 
 public final class InfoPanelController {
+
+    private static final NumberFormat TIME_FORMATTER = new DecimalFormat("00");
 
     @FXML private GridPane blueGrid, orangeGrid;
 
@@ -30,6 +35,8 @@ public final class InfoPanelController {
     @FXML private Label orangePlayerOne, orangePlayerOneScore, orangePlayerOneGoals, orangePlayerOneAssists, orangePlayerOneSaves, orangePlayerOneShots;
     @FXML private Label orangePlayerTwo, orangePlayerTwoScore, orangePlayerTwoGoals, orangePlayerTwoAssists, orangePlayerTwoSaves, orangePlayerTwoShots;
     @FXML private Label orangePlayerThree, orangePlayerThreeScore, orangePlayerThreeGoals, orangePlayerThreeAssists, orangePlayerThreeSaves, orangePlayerThreeShots;
+
+    @FXML private GridPane goalGrid;
 
     @FXML private ResourceBundle resources;
 
@@ -62,6 +69,16 @@ public final class InfoPanelController {
         this.setPlayer(orangePlayers, 0, orangePlayerOne, orangePlayerOneScore, orangePlayerOneGoals, orangePlayerOneAssists, orangePlayerOneSaves, orangePlayerOneShots);
         this.setPlayer(orangePlayers, 1, orangePlayerTwo, orangePlayerTwoScore, orangePlayerTwoGoals, orangePlayerTwoAssists, orangePlayerTwoSaves, orangePlayerTwoShots);
         this.setPlayer(orangePlayers, 2, orangePlayerThree, orangePlayerThreeScore, orangePlayerThreeGoals, orangePlayerThreeAssists, orangePlayerThreeSaves, orangePlayerThreeShots);
+
+        int index = 1;
+        for (GoalData goal : replay.getGoals()) {
+            int time = goal.getSecondsIn();
+            Label timeLabel = new Label((time / 60) + ":" + TIME_FORMATTER.format((time % 60)));
+            Label playerLabel = new Label(goal.getPlayer() != null ? goal.getPlayer().getName() : "%unknown_player%");
+
+            this.goalGrid.add(timeLabel, 0, index);
+            this.goalGrid.add(playerLabel, 1, index++);
+        }
     }
 
     private void setPlayer(List<PlayerData> players, int playerIndex, Label name, Label score, Label goals, Label assists, Label saves, Label shots) {
