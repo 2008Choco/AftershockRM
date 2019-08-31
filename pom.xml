@@ -7,6 +7,7 @@
   
   <properties>
     <javafx.version>12.0.2</javafx.version>
+    <mainClass>wtf.choco.aftershock.App</mainClass>
   </properties>
 
   <build>
@@ -20,11 +21,30 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <minimizeJar>true</minimizeJar>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>${mainClass}</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.3</version>
         <configuration>
-          <mainClass>wtf.choco.aftershock.App</mainClass>
+          <mainClass>${mainClass}</mainClass>
         </configuration>
       </plugin>
     </plugins>
@@ -36,11 +56,13 @@
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
       <version>${javafx.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-fxml</artifactId>
       <version>${javafx.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Dependencies / Utilities -->
@@ -48,6 +70,7 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.8.5</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 </project>

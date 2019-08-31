@@ -29,6 +29,8 @@ import javafx.stage.Stage;
 
 public final class App extends Application {
 
+    private static boolean isDevelopment = false;
+
     // https://www.flaticon.com
     private static final Gson GSON = new Gson();
     private static App instance;
@@ -42,7 +44,7 @@ public final class App extends Application {
     private Stage settingsStage = null;
 
     private final ReplayManager replayManager = new ReplayManager();
-    private final File installDirectory = new File(System.getProperty("user.home"), "AppData/Roaming/AftershockRM/"); // Temporarily hard-coded
+    private File installDirectory;
 
     // TODO: Editable through the application itself
     private final ApplicationSettings settings = new ApplicationSettings(
@@ -63,12 +65,19 @@ public final class App extends Application {
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(ColouredLogFormatter.get());
         this.logger.addHandler(handler);
+
+        if (isDevelopment) {
+            this.installDirectory = new File(System.getProperty("user.home"), "AppData/Roaming/AftershockRM/");
+            this.logger.warning("Running app in development mode. Installation directory will be at " + installDirectory.getPath());
+        } else {
+            this.installDirectory = new File(".");
+        }
     }
 
     @Override
     public void start(Stage stage) throws IOException {
         this.stage = stage;
-        var root = FXUtils.<Parent, AppController>loadFXML("/layout/Root", resources = ResourceBundle.getBundle("/lang/"));
+        var root = FXUtils.<Parent, AppController>loadFXML("/layout/Root", resources = ResourceBundle.getBundle("lang."));
         this.scene = new Scene(root.getKey());
         this.controller = root.getValue();
 
@@ -217,6 +226,12 @@ public final class App extends Application {
     }
 
     public static void main(String[] args) {
+        for (String arg : args) {
+            if (arg.equals("--dev")) {
+                isDevelopment = true;
+            }
+        }
+
         launch(args);
     }
 
