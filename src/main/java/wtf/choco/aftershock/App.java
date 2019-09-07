@@ -39,19 +39,13 @@ public final class App extends Application {
     private Scene scene;
     private AppController controller;
     private ResourceBundle resources;
-    private KeybindRegistry keybindRegistry;
-
     private Stage settingsStage = null;
+
+    private KeybindRegistry keybindRegistry;
+    private ApplicationSettings settings;
 
     private final ReplayManager replayManager = new ReplayManager();
     private File installDirectory;
-
-    // TODO: Editable through the application itself
-    private final ApplicationSettings settings = new ApplicationSettings(
-        "D:/hawke/Documents/My Games/Rocket League/TAGame/Demos/", // Replay directory
-        "C:/Users/hawke/AppData/Roaming/AftershockRM/Rattletrap/rattletrap.exe", // Rattletrap directory
-        "en_US" // Language
-    );
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Logger logger = Logger.getLogger("AftershockRM");
@@ -72,6 +66,8 @@ public final class App extends Application {
         } else {
             this.installDirectory = new File(".");
         }
+
+        this.settings = new ApplicationSettings(this);
     }
 
     @Override
@@ -94,7 +90,7 @@ public final class App extends Application {
 
         // Replay setup
         this.installDirectory.mkdirs();
-        File replayDirectory = new File(settings.getReplayLocation());
+        File replayDirectory = new File(settings.get(ApplicationSettings.REPLAY_DIRECTORY));
 
         File replayCacheDirectory = new File(installDirectory, "Cache");
         replayCacheDirectory.mkdir();
@@ -137,7 +133,7 @@ public final class App extends Application {
                         this.logger.info("(" + formatID(replayFileName) + ") - Creating header file");
 
                         try {
-                            Runtime.getRuntime().exec(settings.getRattletrapPath() + " --f --i \"" + replayFile.getAbsolutePath() + "\" --o \"" + headerDestination.getAbsolutePath() + "\"").waitFor();
+                            Runtime.getRuntime().exec(settings.get(ApplicationSettings.RATTLETRAP_PATH) + " --f --i \"" + replayFile.getAbsolutePath() + "\" --o \"" + headerDestination.getAbsolutePath() + "\"").waitFor();
                         } catch (InterruptedException | IOException e) {
                             e.printStackTrace();
                         }
@@ -154,7 +150,7 @@ public final class App extends Application {
                 this.controller.requestLabelUpdate();
             });
         } else {
-            this.logger.warning("Could not find replay directory at path " + settings.getReplayLocation());
+            this.logger.warning("Could not find replay directory at path " + settings.get(ApplicationSettings.REPLAY_DIRECTORY));
         }
     }
 
@@ -162,6 +158,7 @@ public final class App extends Application {
     public void stop() throws Exception {
         this.executor.shutdown();
         this.replayManager.clearReplays();
+        this.settings.writeToFile();
     }
 
     public Logger getLogger() {
@@ -174,6 +171,10 @@ public final class App extends Application {
 
     public ResourceBundle getResources() {
         return resources;
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 
     public Stage openSettingsStage() {

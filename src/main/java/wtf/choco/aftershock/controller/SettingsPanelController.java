@@ -3,11 +3,11 @@ package wtf.choco.aftershock.controller;
 import java.io.File;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
-import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.ApplicationSettings.Setting;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -27,9 +27,9 @@ public final class SettingsPanelController {
     public void initialize() {
         ApplicationSettings settings = App.getInstance().getSettings();
 
-        this.fieldReplayFolder.setText(settings.getReplayLocation());
-        this.fieldRattletrapPath.setText(settings.getRattletrapPath());
-        this.languageSelector.setValue(settings.getLocale());
+        this.fieldReplayFolder.setText(settings.get(ApplicationSettings.REPLAY_DIRECTORY));
+        this.fieldRattletrapPath.setText(settings.get(ApplicationSettings.RATTLETRAP_PATH));
+        this.languageSelector.setValue(settings.get(ApplicationSettings.LOCALE));
     }
 
     @FXML
@@ -73,25 +73,27 @@ public final class SettingsPanelController {
     public void applyAndClose(ActionEvent event) {
         ApplicationSettings settings = App.getInstance().getSettings();
 
-        this.setIfValid(fieldReplayFolder.getText(), settings::setReplayLocation);
-        this.setIfValid(fieldRattletrapPath.getText(), settings::setRattletrapPath);
-        this.setIfValid(languageSelector.getValue(), settings::setLocale);
+        this.setIfValid(settings, ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
+        this.setIfValid(settings, ApplicationSettings.RATTLETRAP_PATH, fieldRattletrapPath.getText());
+        this.setIfValid(settings, ApplicationSettings.LOCALE, languageSelector.getValue());
+
+        App.getInstance().getExecutor().execute(settings::writeToFile);
 
         Logger logger = App.getInstance().getLogger();
         logger.info("Settings updated to: ");
-        logger.info("Replay Directory: " + settings.getReplayLocation());
-        logger.info("Rattletrap Path: " + settings.getRattletrapPath());
-        logger.info("Language: " + settings.getLocale());
+        logger.info("Replay Directory: " + settings.get(ApplicationSettings.REPLAY_DIRECTORY));
+        logger.info("Rattletrap Path: " + settings.get(ApplicationSettings.RATTLETRAP_PATH));
+        logger.info("Language: " + settings.get(ApplicationSettings.LOCALE));
 
         this.close(event);
     }
 
-    private void setIfValid(String value, Consumer<String> applyFunction) {
+    private void setIfValid(ApplicationSettings settings, Setting key, String value) {
         if (value == null || (value = value.trim()).isEmpty()) {
             return;
         }
 
-        applyFunction.accept(value);
+        settings.set(key, value);
     }
 
     // Doesn't work on Linux... for some reason... always true

@@ -1,38 +1,94 @@
 package wtf.choco.aftershock;
 
-public class ApplicationSettings {
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
 
-    private String replayLocation, rattletrapPath;
-    private String locale;
+public final class ApplicationSettings {
 
-    public ApplicationSettings(String replayLocation, String rattletrapPath, String localeCode) {
-        this.replayLocation = replayLocation;
-        this.rattletrapPath = rattletrapPath;
-        this.locale = localeCode;
+    private static final List<Setting> SETTINGS = new ArrayList<>();
+    private static final Charset CHARSET = Charset.forName("UTF-8");
+
+    // TODO: System independent defaults
+    public static final Setting REPLAY_DIRECTORY = Setting.of("replay_directory", "D:/hawke/Documents/My Games/Rocket League/TAGame/Demos/");
+    public static final Setting RATTLETRAP_PATH = Setting.of("rattletrap_path", App.getInstance().getInstallDirectory().getAbsolutePath() + "/Rattletrap/rattletrap.exe");
+    public static final Setting LOCALE = Setting.of("locale_code", Locale.getDefault().getDisplayName());
+
+
+    private final Path localFilePath;
+    private final Properties properties;
+
+    protected ApplicationSettings(App app) {
+        this.properties = new Properties();
+        SETTINGS.forEach(s -> properties.put(s.key, s.defaultValue));
+
+        this.localFilePath = app.getInstallDirectory().toPath().resolve("app.properties");
+
+        try {
+            Files.createFile(localFilePath);
+            this.writeToFile();
+        } catch (FileAlreadyExistsException e) {
+            app.getLogger().info("Found app.properties file. Loading...");
+            this.readFromFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void setReplayLocation(String replayLocation) {
-        this.replayLocation = replayLocation;
+    public String get(Setting setting) {
+        return properties.computeIfAbsent(setting.key, k -> setting.defaultValue).toString();
     }
 
-    public String getReplayLocation() {
-        return replayLocation;
+    public void set(Setting setting, String value) {
+        this.properties.setProperty(setting.key, value);
     }
 
-    public void setRattletrapPath(String rattletrapPath) {
-        this.rattletrapPath = rattletrapPath;
+    public void readFromFile() {
+        try {
+            this.properties.load(Files.newBufferedReader(localFilePath, CHARSET));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public String getRattletrapPath() {
-        return rattletrapPath;
+    public void writeToFile() {
+        try {
+            this.properties.store(Files.newBufferedWriter(localFilePath, CHARSET, StandardOpenOption.CREATE, StandardOpenOption.WRITE), null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void setLocale(String localeCode) {
-        this.locale = localeCode;
-    }
 
-    public String getLocale() {
-        return locale;
+    public static final class Setting {
+
+        private final String key, defaultValue;
+
+        private Setting(String key, String defaultValue) {
+            this.key = key;
+            this.defaultValue = defaultValue;
+            SETTINGS.add(this);
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getDefaultValue() {
+            return defaultValue;
+        }
+
+        private static Setting of(String key, String defaultValue) {
+            return new Setting(key, defaultValue);
+        }
+
     }
 
 }
