@@ -3,9 +3,9 @@ module wtf.choco.aftershock {
     requires javafx.fxml;
 
     requires transitive javafx.graphics;
-    requires transitive gson;
     requires transitive java.sql;
     requires transitive java.logging;
+    requires transitive com.google.gson;
 
     opens wtf.choco.aftershock to javafx.fxml;
     opens wtf.choco.aftershock.controller to javafx.fxml;

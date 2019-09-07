@@ -6,6 +6,7 @@
   <version>1.0.0</version>
   
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javafx.version>12.0.2</javafx.version>
     <mainClass>wtf.choco.aftershock.App</mainClass>
   </properties>
@@ -20,9 +21,11 @@
           <release>11</release>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
+        <version>3.2.1</version>
         <executions>
           <execution>
             <goals>
@@ -39,11 +42,19 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.3</version>
         <configuration>
+          <stripDebug>true</stripDebug>
+          <compress>2</compress>
+          <noHeaderFiles>true</noHeaderFiles>
+          <noManPages>true</noManPages>
+          <launcher>run</launcher>
+          <jlinkImageName>${project.artifactId}</jlinkImageName>
+          <jlinkZipName>${project.artifactId}</jlinkZipName>
           <mainClass>${mainClass}</mainClass>
         </configuration>
       </plugin>
@@ -56,20 +67,18 @@
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
       <version>${javafx.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-fxml</artifactId>
       <version>${javafx.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <!-- Dependencies / Utilities -->
-    <dependency>
+    <dependency> <!-- LOCAL DEPENDENCY UNTIL GSON FINALLY MAKES A GOD DAMN RELEASE -->
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.8.5</version>
+      <version>2.8.6-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
