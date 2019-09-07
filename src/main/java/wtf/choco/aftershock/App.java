@@ -15,7 +15,7 @@ import com.google.gson.Gson;
 
 import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
-import wtf.choco.aftershock.manager.ReplayManager;
+import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.ReplayModifiable;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
@@ -42,7 +42,7 @@ public final class App extends Application {
     private KeybindRegistry keybindRegistry;
     private ApplicationSettings settings;
 
-    private final ReplayManager replayManager = new ReplayManager();
+    private final BinRegistry binRegistry = new BinRegistry();
     private File installDirectory;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -84,7 +84,7 @@ public final class App extends Application {
         stage.setScene(scene);
         stage.show();
 
-        this.replayManager.attachTable(controller.getReplayTable());
+        this.controller.displayBin(BinRegistry.GLOBAL_BIN);
 
         // Replay setup
         this.installDirectory.mkdirs();
@@ -100,11 +100,6 @@ public final class App extends Application {
             long now = System.currentTimeMillis();
 
             this.controller.requestLabelUpdate();
-            this.replayManager.addChangeListener(l -> {
-                if (l.next()) {
-                    this.controller.increaseLoadedReplay(l.getAddedSize());
-                }
-            });
 
             this.executor.execute(() -> {
                 File[] replayFiles = replayDirectory.listFiles((f, name) -> name.endsWith(".replay"));
@@ -140,11 +135,11 @@ public final class App extends Application {
                     }
 
                     replay.loadDataFromFile(GSON);
-                    this.replayManager.addReplay(replay);
+                    BinRegistry.GLOBAL_BIN.addReplay(replay);
                 }
 
                 long time = System.currentTimeMillis() - now;
-                this.logger.info("Loaded " + replayManager.getReplayCount() + " replays in " + time + " milliseconds!");
+                this.logger.info("Loaded " + BinRegistry.GLOBAL_BIN.size() + " replays in " + time + " milliseconds!");
                 this.controller.requestLabelUpdate();
             });
         } else {
@@ -155,7 +150,7 @@ public final class App extends Application {
     @Override
     public void stop() throws Exception {
         this.executor.shutdown();
-        this.replayManager.clearReplays();
+        this.binRegistry.clearBins(false);
         this.settings.writeToFile();
     }
 

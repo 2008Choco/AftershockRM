@@ -1,36 +1,49 @@
 package wtf.choco.aftershock.structure;
 
+import java.util.AbstractList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
+import java.util.UUID;
 
-public class ReplayBin implements Iterable<ReplayEntry> {
+import wtf.choco.aftershock.replay.Replay;
 
-    private final int id;
-    private final Set<ReplayEntry> replays;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+public class ReplayBin extends AbstractList<ReplayEntry> {
+
+    private final UUID uuid;
+    private final ObservableList<ReplayEntry> replays;
+    private final Map<String, ReplayEntry> byId;
 
     private String name;
 
-    public ReplayBin(int id, String name, Collection<ReplayEntry> replays) {
-        this.id = id;
+    public ReplayBin(UUID uuid, String name, Collection<ReplayEntry> replays) {
+        this.uuid = uuid;
         this.name = name;
-        this.replays = new HashSet<>(replays);
+        this.replays = FXCollections.observableArrayList(replays);
+        this.byId = new HashMap<>(replays.size());
+
+        for (ReplayEntry replay : replays) {
+            this.byId.put(replay.getReplay().getId(), replay);
+        }
     }
 
-    public ReplayBin(int id, String name, int size) {
-        this.id = id;
+    public ReplayBin(UUID uuid, String name, int size) {
+        this.uuid = uuid;
         this.name = name;
-        this.replays = new HashSet<>(size);
+        this.replays = FXCollections.observableArrayList();
+        this.byId = new HashMap<>(size);
     }
 
-    public ReplayBin(int id, String name) {
-        this(id, name, 0);
+    public ReplayBin(UUID uuid, String name) {
+        this(uuid, name, 0);
     }
 
-    public int getId() {
-        return id;
+    public UUID getUUID() {
+        return uuid;
     }
 
     public String getName() {
@@ -39,14 +52,44 @@ public class ReplayBin implements Iterable<ReplayEntry> {
 
     public void addReplay(ReplayEntry replay) {
         this.replays.add(replay);
+        this.byId.put(replay.getReplay().getId(), replay);
+    }
+
+    public void addReplay(Replay replay) {
+        this.addReplay(new ReplayEntry(replay));
     }
 
     public void removeReplay(ReplayEntry replay) {
-        this.replays.remove(replay);
+        this.removeReplay(replay.getReplay());
     }
 
-    public Collection<ReplayEntry> getReplays() {
-        return Collections.unmodifiableCollection(replays);
+    public void removeReplay(Replay replay) {
+        this.replays.removeIf(r -> r.getReplay() == replay);
+        this.byId.remove(replay.getId());
+    }
+
+    public ReplayEntry getReplayById(String id) {
+        return byId.get(id);
+    }
+
+    public ObservableList<ReplayEntry> getObservableList() {
+        return replays;
+    }
+
+    @Override
+    public ReplayEntry get(int index) {
+        return replays.get(index);
+    }
+
+    @Override
+    public void clear() {
+        this.replays.clear();
+        this.byId.clear();
+    }
+
+    @Override
+    public int size() {
+        return replays.size();
     }
 
     @Override

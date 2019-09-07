@@ -3,11 +3,14 @@ package wtf.choco.aftershock.controller;
 import java.util.ResourceBundle;
 
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.Team;
+import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -45,6 +48,8 @@ public final class AppController {
     @FXML private ProgressBar loadProgress;
 
     @FXML private ResourceBundle resources;
+
+    private ReplayBin displayedBin = null;
 
     private double lastKnownDividerPosition = 0.70;
     private int expectedReplays = 1, loadedReplays = 0;
@@ -92,6 +97,25 @@ public final class AppController {
         return replayTable;
     }
 
+    public void displayBin(ReplayBin bin) {
+        this.displayedBin = bin;
+
+        if (bin != null) {
+            this.replayTable.setItems(bin.getObservableList());
+            this.replayTable.getItems().addListener((ListChangeListener<ReplayEntry>) l -> {
+                if (l.next()) {
+                    this.increaseLoadedReplay(l.getAddedSize());
+                }
+            });
+        } else {
+            this.replayTable.setItems(FXCollections.observableArrayList());
+        }
+    }
+
+    public ReplayBin getDisplayedBin() {
+        return displayedBin;
+    }
+
     public void closeInfoPanel() {
         ObservableList<Node> items = splitPane.getItems();
         if (items.size() > 1) {
@@ -122,12 +146,12 @@ public final class AppController {
     public void requestLabelUpdate() {
         if (Platform.isFxApplicationThread()) {
             this.labelListed.setText(String.format(resources.getString("ui.footer.listed"), replayTable.getItems().size()));
-            this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), replayTable.getItems().stream().filter(ReplayEntry::isLoaded).count()));
+            this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), BinRegistry.GLOBAL_BIN.stream().filter(ReplayEntry::isLoaded).count()));
             this.labelSelected.setText(String.format(resources.getString("ui.footer.selected"), replayTable.getSelectionModel().getSelectedCells().size()));
         } else {
             Platform.runLater(() -> {
                 this.labelListed.setText(String.format(resources.getString("ui.footer.listed"), replayTable.getItems().size()));
-                this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), replayTable.getItems().stream().filter(ReplayEntry::isLoaded).count()));
+                this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), BinRegistry.GLOBAL_BIN.stream().filter(ReplayEntry::isLoaded).count()));
                 this.labelSelected.setText(String.format(resources.getString("ui.footer.selected"), replayTable.getSelectionModel().getSelectedCells().size()));
             });
         }
