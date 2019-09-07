@@ -29,8 +29,6 @@ import javafx.stage.Stage;
 
 public final class App extends Application {
 
-    private static boolean isDevelopment = false;
-
     // https://www.flaticon.com
     private static final Gson GSON = new Gson();
     private static App instance;
@@ -60,7 +58,7 @@ public final class App extends Application {
         handler.setFormatter(ColouredLogFormatter.get());
         this.logger.addHandler(handler);
 
-        if (isDevelopment) {
+        if (getParameters().getRaw().contains("--dev")) {
             this.installDirectory = new File(System.getProperty("user.home"), "AppData/Roaming/AftershockRM/");
             this.logger.warning("Running app in development mode. Installation directory will be at " + installDirectory.getPath());
         } else {
@@ -227,12 +225,6 @@ public final class App extends Application {
     }
 
     public static void main(String[] args) {
-        for (String arg : args) {
-            if (arg.equals("--dev")) {
-                isDevelopment = true;
-            }
-        }
-
         launch(args);
     }
 
