@@ -38,8 +38,11 @@ public final class SettingsPanelController {
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle("Select Replay Directory");
 
-        File initialDirectory = (isValidPath(fieldReplayFolder.getText())) ? new File(fieldReplayFolder.getText()) : App.getInstance().getInstallDirectory();
-        chooser.setInitialDirectory(initialDirectory);
+        String replayFolderPath = fieldReplayFolder.getText();
+        if (!replayFolderPath.isBlank()) {
+            File initialDirectory = (isValidPath(replayFolderPath)) ? new File(replayFolderPath) : App.getInstance().getInstallDirectory();
+            chooser.setInitialDirectory(initialDirectory);
+        }
 
         File directory = chooser.showDialog(new Stage());
         if (directory != null) {
@@ -54,8 +57,11 @@ public final class SettingsPanelController {
         chooser.setTitle("Select Rattletrap Executable");
         chooser.setSelectedExtensionFilter(new ExtensionFilter("Executable File", "*.exe"));
 
-        File initialDirectory = (isValidPath(fieldRattletrapPath.getText())) ? new File(fieldRattletrapPath.getText()).getParentFile() : App.getInstance().getInstallDirectory();
-        chooser.setInitialDirectory(initialDirectory);
+        String rattletrapPath = fieldRattletrapPath.getText();
+        if (!rattletrapPath.isBlank()) {
+            File initialDirectory = (isValidPath(rattletrapPath)) ? new File(rattletrapPath).getParentFile() : App.getInstance().getInstallDirectory();
+            chooser.setInitialDirectory(initialDirectory);
+        }
 
         File file = chooser.showOpenDialog(new Stage());
         if (file != null) {
@@ -73,11 +79,15 @@ public final class SettingsPanelController {
     public void applyAndClose(ActionEvent event) {
         ApplicationSettings settings = App.getInstance().getSettings();
 
-        this.setIfValid(settings, ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
+        boolean replayDirectoryChanged = setIfValid(settings, ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
         this.setIfValid(settings, ApplicationSettings.RATTLETRAP_PATH, fieldRattletrapPath.getText());
         this.setIfValid(settings, ApplicationSettings.LOCALE, languageSelector.getValue());
 
-        App.getInstance().getExecutor().execute(settings::writeToFile);
+        App app = App.getInstance();
+        app.getExecutor().execute(settings::writeToFile);
+        if (replayDirectoryChanged) {
+            app.reloadReplayFiles();
+        }
 
         Logger logger = App.getInstance().getLogger();
         logger.info("Settings updated to: ");
@@ -88,12 +98,14 @@ public final class SettingsPanelController {
         this.close(event);
     }
 
-    private void setIfValid(ApplicationSettings settings, Setting key, String value) {
+    private boolean setIfValid(ApplicationSettings settings, Setting key, String value) {
         if (value == null || (value = value.trim()).isEmpty()) {
-            return;
+            return false;
         }
 
+        String before = settings.get(key);
         settings.set(key, value);
+        return !before.equals(value);
     }
 
     // Doesn't work on Linux... for some reason... always true

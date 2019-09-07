@@ -16,10 +16,9 @@ public final class ApplicationSettings {
     private static final List<Setting> SETTINGS = new ArrayList<>();
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
-    // TODO: System independent defaults
-    public static final Setting REPLAY_DIRECTORY = Setting.of("replay_directory", "D:/hawke/Documents/My Games/Rocket League/TAGame/Demos/");
-    public static final Setting RATTLETRAP_PATH = Setting.of("rattletrap_path", App.getInstance().getInstallDirectory().getAbsolutePath() + "/Rattletrap/rattletrap.exe");
-    public static final Setting LOCALE = Setting.of("locale_code", Locale.getDefault().getDisplayName());
+    public static final Setting REPLAY_DIRECTORY = Setting.of("replay_directory", "");
+    public static final Setting RATTLETRAP_PATH = Setting.of("rattletrap_path", App.getInstance().getInstallDirectory().getAbsolutePath() + "\\Rattletrap\\rattletrap.exe");
+    public static final Setting LOCALE = Setting.of("locale_code", Locale.getDefault().toString());
 
 
     private final Path localFilePath;

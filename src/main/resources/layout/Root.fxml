@@ -62,7 +62,7 @@
         <Insets left="10.0" right="10.0" />
       </padding>
 
-      <ProgressBar fx:id="loadProgress" focusTraversable="false" prefWidth="200.0" progress="0.0" />
+      <ProgressBar fx:id="loadProgress" visible="false" focusTraversable="false" prefWidth="200.0" progress="0.0" />
 
       <Hyperlink contentDisplay="RIGHT" text="%ui.footer.support">
         <tooltip>

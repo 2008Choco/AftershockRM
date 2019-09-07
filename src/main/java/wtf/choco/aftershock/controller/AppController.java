@@ -77,8 +77,6 @@ public final class AppController {
             this.splitPane.setDividerPosition(0, lastKnownDividerPosition);
             this.requestLabelUpdate();
         });
-
-        this.splitPane.setCursor(Cursor.WAIT);
     }
 
     @FXML
@@ -129,8 +127,10 @@ public final class AppController {
         this.splitPane.getItems().add(InfoPanelController.createInfoPanelFor(replay, resources));
     }
 
-    public void setExpectedReplays(int expectedReplays) {
+    public void prepareLoading(int expectedReplays) {
         this.expectedReplays = expectedReplays;
+        this.splitPane.setCursor(Cursor.WAIT);
+        this.loadProgress.setVisible(true);
     }
 
     public void increaseLoadedReplay(int amount) {
@@ -138,8 +138,8 @@ public final class AppController {
         this.loadProgress.setProgress(Math.min(((double) loadedReplays) / ((double) expectedReplays), 1.0));
 
         if (loadProgress.getProgress() >= 1.0) {
-            this.loadProgress.setVisible(false);
             this.splitPane.setCursor(Cursor.DEFAULT);
+            this.loadProgress.setVisible(false);
         }
     }
 
