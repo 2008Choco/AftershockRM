@@ -42,11 +42,7 @@ public class ReplayEntry {
             }
         });
 
-        this.comments.addListener((ListChangeListener<String>) c -> {
-            if (c.next()) {
-                this.writeToHeader(true);
-            }
-        });
+        this.comments.addListener((ListChangeListener<String>) c -> writeToHeader(true));
     }
 
     public Replay getReplay() {
