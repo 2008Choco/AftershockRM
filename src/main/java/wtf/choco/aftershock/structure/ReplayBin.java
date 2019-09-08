@@ -1,6 +1,5 @@
 package wtf.choco.aftershock.structure;
 
-import java.util.AbstractList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -12,11 +11,11 @@ import wtf.choco.aftershock.replay.Replay;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class ReplayBin extends AbstractList<ReplayEntry> {
+public class ReplayBin implements Iterable<Replay> {
 
     private final UUID uuid;
     private final ObservableList<ReplayEntry> replays;
-    private final Map<String, ReplayEntry> byId;
+    private final Map<String, Replay> byId;
 
     private String name;
 
@@ -27,7 +26,7 @@ public class ReplayBin extends AbstractList<ReplayEntry> {
         this.byId = new HashMap<>(replays.size());
 
         for (ReplayEntry replay : replays) {
-            this.byId.put(replay.getReplay().getId(), replay);
+            this.byId.put(replay.getReplay().getId(), replay.getReplay());
         }
     }
 
@@ -50,17 +49,9 @@ public class ReplayBin extends AbstractList<ReplayEntry> {
         return name;
     }
 
-    public void addReplay(ReplayEntry replay) {
-        this.replays.add(replay);
-        this.byId.put(replay.getReplay().getId(), replay);
-    }
-
     public void addReplay(Replay replay) {
-        this.addReplay(new ReplayEntry(replay));
-    }
-
-    public void removeReplay(ReplayEntry replay) {
-        this.removeReplay(replay.getReplay());
+        this.replays.add(replay.getEntryData());
+        this.byId.put(replay.getId(), replay);
     }
 
     public void removeReplay(Replay replay) {
@@ -68,7 +59,7 @@ public class ReplayBin extends AbstractList<ReplayEntry> {
         this.byId.remove(replay.getId());
     }
 
-    public ReplayEntry getReplayById(String id) {
+    public Replay getReplayById(String id) {
         return byId.get(id);
     }
 
@@ -76,25 +67,18 @@ public class ReplayBin extends AbstractList<ReplayEntry> {
         return replays;
     }
 
-    @Override
-    public ReplayEntry get(int index) {
-        return replays.get(index);
-    }
-
-    @Override
     public void clear() {
         this.replays.clear();
         this.byId.clear();
     }
 
-    @Override
     public int size() {
         return replays.size();
     }
 
     @Override
-    public Iterator<ReplayEntry> iterator() {
-        return replays.iterator();
+    public Iterator<Replay> iterator() {
+        return byId.values().iterator();
     }
 
 }

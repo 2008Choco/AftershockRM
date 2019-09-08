@@ -12,6 +12,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Logger;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
@@ -30,7 +31,7 @@ import javafx.stage.Stage;
 public final class App extends Application {
 
     // https://www.flaticon.com
-    private static final Gson GSON = new Gson();
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static App instance;
 
     private Stage stage;
@@ -178,7 +179,7 @@ public final class App extends Application {
                         // Backup the replay file for later
                         File cacheDestination = new File(replayCacheDirectory, replayFileName);
                         if (!cacheDestination.exists()) {
-                            this.logger.info("(" + formatID(replayFileName) + ") - Caching replay file");
+                            this.logger.info("(" + truncateID(replayFileName) + ") - Caching replay file");
                             try {
                                 Files.copy(replayFile.toPath(), cacheDestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
                             } catch (IOException e) {
@@ -190,7 +191,7 @@ public final class App extends Application {
                         ReplayModifiable replay = new ReplayModifiable(cacheDestination, headerDestination);
 
                         if (!headerDestination.exists()) {
-                            this.logger.info("(" + formatID(replayFileName) + ") - Creating header file");
+                            this.logger.info("(" + truncateID(replayFileName) + ") - Creating header file");
 
                             try {
                                 Runtime.getRuntime().exec(settings.get(ApplicationSettings.RATTLETRAP_PATH) + " --f --i \"" + replayFile.getAbsolutePath() + "\" --o \"" + headerDestination.getAbsolutePath() + "\"").waitFor();
@@ -201,7 +202,7 @@ public final class App extends Application {
                             this.logger.info("Done!");
                         }
 
-                        replay.loadDataFromFile(GSON);
+                        replay.loadDataFromFile();
                         BinRegistry.GLOBAL_BIN.addReplay(replay);
                     }
 
@@ -215,7 +216,7 @@ public final class App extends Application {
         }
     }
 
-    private String formatID(String id) {
+    public static String truncateID(String id) {
         int idLength = id.length();
         StringBuilder formatted = new StringBuilder(idLength);
         formatted.append(id.substring(0, 4));

@@ -4,6 +4,8 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import wtf.choco.aftershock.structure.ReplayEntry;
+
 public interface Replay {
 
     public File getDemoFile();
@@ -33,5 +35,7 @@ public interface Replay {
     public int getLength();
 
     public int getVersion();
+
+    public ReplayEntry getEntryData();
 
 }

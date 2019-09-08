@@ -1,13 +1,16 @@
 package wtf.choco.aftershock.controller;
 
+import java.util.List;
 import java.util.ResourceBundle;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
+import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
+import wtf.choco.aftershock.structure.StringListTableCell;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -39,7 +42,7 @@ public final class AppController {
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreBlue;
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreOrange;
     @FXML private TableColumn<ReplayEntry, String> columnOwner;
-    @FXML private TableColumn<ReplayEntry, String> columnComments;
+    @FXML private TableColumn<ReplayEntry, List<String>> columnComments;
     @FXML private TableColumn<ReplayEntry, String> columnTags; // TODO
 
     @FXML private SplitPane splitPane;
@@ -64,7 +67,8 @@ public final class AppController {
         this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.BLUE)));
         this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.ORANGE)));
         this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getPlayerName()));
-        this.columnComments.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getComments().orElse("None")));
+        this.columnComments.setCellFactory(StringListTableCell.getFactoryCallback());
+        this.columnComments.setCellValueFactory(new PropertyValueFactory<>("comments"));
 
         TableViewSelectionModel<ReplayEntry> selectionModel = replayTable.getSelectionModel();
         selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
@@ -146,15 +150,26 @@ public final class AppController {
     public void requestLabelUpdate() {
         if (Platform.isFxApplicationThread()) {
             this.labelListed.setText(String.format(resources.getString("ui.footer.listed"), replayTable.getItems().size()));
-            this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), BinRegistry.GLOBAL_BIN.stream().filter(ReplayEntry::isLoaded).count()));
+            this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), getLoadedCount(BinRegistry.GLOBAL_BIN)));
             this.labelSelected.setText(String.format(resources.getString("ui.footer.selected"), replayTable.getSelectionModel().getSelectedCells().size()));
         } else {
             Platform.runLater(() -> {
                 this.labelListed.setText(String.format(resources.getString("ui.footer.listed"), replayTable.getItems().size()));
-                this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), BinRegistry.GLOBAL_BIN.stream().filter(ReplayEntry::isLoaded).count()));
+                this.labelLoaded.setText(String.format(resources.getString("ui.footer.loaded"), getLoadedCount(BinRegistry.GLOBAL_BIN)));
                 this.labelSelected.setText(String.format(resources.getString("ui.footer.selected"), replayTable.getSelectionModel().getSelectedCells().size()));
             });
         }
+    }
+
+    private int getLoadedCount(ReplayBin bin) {
+        int count = 0;
+        for (Replay replay : bin) {
+            if (replay.getEntryData().isLoaded()) {
+                count++;
+            }
+        }
+
+        return count;
     }
 
 }
