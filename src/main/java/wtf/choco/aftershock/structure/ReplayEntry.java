@@ -39,7 +39,6 @@ public class ReplayEntry {
         this.loaded.addListener((ChangeListener<Boolean>) (l, oldValue, newValue) -> {
             if (oldValue != newValue) {
                 this.writeToHeader(true);
-                App.getInstance().getLogger().info("Updated loaded value to " + newValue);
             }
         });
 
