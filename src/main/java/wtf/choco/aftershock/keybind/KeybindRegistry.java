@@ -19,7 +19,7 @@ public final class KeybindRegistry {
         this.app = app;
         this.app.getStage().addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             for (KeybindAction keybind : keyActions) {
-                if (keybind.combination.match(e) && keybind.action != null) {
+                if (keybind.matchesEvent(e) && keybind.action != null) {
                     keybind.action.accept(app);
                 }
             }
@@ -45,9 +45,11 @@ public final class KeybindRegistry {
 
         private KeybindExecutor action;
         private final KeyCombination combination;
+        private final List<KeyCombination> altCombinations;
 
         public KeybindAction(KeyCombination combination) {
             this.combination = combination;
+            this.altCombinations = new ArrayList<>(0);
         }
 
         public void executes(KeybindExecutor function) {
@@ -56,6 +58,25 @@ public final class KeybindRegistry {
 
         public void executes(SimpleKeybindExecutor function) {
             this.action = function;
+        }
+
+        public KeybindAction or(KeyCode character, KeyCombination.Modifier... modifiers) {
+            this.altCombinations.add(new KeyCodeCombination(character, modifiers));
+            return this;
+        }
+
+        private boolean matchesEvent(KeyEvent event) {
+            if (combination.match(event)) {
+                return true;
+            }
+
+            for (KeyCombination combination : altCombinations) {
+                if (combination.match(event)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
     }

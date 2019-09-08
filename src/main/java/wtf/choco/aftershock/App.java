@@ -25,6 +25,7 @@ import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -78,7 +79,19 @@ public final class App extends Application {
 
         // TODO: Configurable key binds
         this.keybindRegistry = new KeybindRegistry(this);
-        this.keybindRegistry.registerKeybind(KeyCode.ESCAPE).executes(controller::closeInfoPanel);
+        this.keybindRegistry.registerKeybind(KeyCode.ESCAPE).executes(() -> {
+            this.controller.closeInfoPanel();
+            this.controller.getReplayTable().getSelectionModel().clearSelection();
+        });
+        this.keybindRegistry.registerKeybind(KeyCode.A, KeyCombination.CONTROL_DOWN).executes(() -> controller.getReplayTable().getSelectionModel().selectAll());
+        this.keybindRegistry.registerKeybind(KeyCode.SPACE).or(KeyCode.ENTER).executes(() -> {
+            var selectionModel = this.controller.getReplayTable().getSelectionModel();
+            if (selectionModel.isEmpty()) {
+                return;
+            }
+
+            selectionModel.getSelectedItems().forEach(e -> e.setLoaded(!e.isLoaded()));
+        });
 
         // Stage setup
         stage.setTitle("Aftershock Replay Manager");
