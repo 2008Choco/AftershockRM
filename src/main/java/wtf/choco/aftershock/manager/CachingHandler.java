@@ -113,6 +113,8 @@ public class CachingHandler {
                 } else {
                     replayFile.delete();
                 }
+
+                this.app.getController().updateLoadedLabel();
             });
 
             this.app.getController().increaseLoadedReplay(1);

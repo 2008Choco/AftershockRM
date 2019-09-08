@@ -105,7 +105,6 @@ public final class App extends Application {
 
         // Replay setup
         this.installDirectory.mkdirs();
-        this.controller.requestLabelUpdate();
         this.reloadReplays();
     }
 
@@ -180,7 +179,7 @@ public final class App extends Application {
         CompletableFuture.runAsync(() -> {
             this.cacheHandler.cacheReplays();
             this.cacheHandler.loadReplaysFromCache();
-        }, executor).thenAccept(ignore -> controller.requestLabelUpdate());
+        }, executor);
     }
 
     public static String truncateID(String id) {
