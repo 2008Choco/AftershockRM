@@ -28,7 +28,7 @@ import wtf.choco.aftershock.util.TriConsumer;
 
 public final class ReplayModifiable implements Replay {
 
-    private final File demoFile, headerFile;
+    private final File demoFile, cachedFile, headerFile;
 
     private int teamSize;
     private int blueScore, orangeScore;
@@ -43,8 +43,9 @@ public final class ReplayModifiable implements Replay {
 
     private boolean modifiedHeader = false;
 
-    public ReplayModifiable(Gson gson, File demoFile, File headerFile) {
+    public ReplayModifiable(Gson gson, File demoFile, File cachedFile, File headerFile) {
         this.demoFile = demoFile;
+        this.cachedFile = cachedFile;
         this.headerFile = headerFile;
 
         if (gson != null) {
@@ -52,13 +53,18 @@ public final class ReplayModifiable implements Replay {
         }
     }
 
-    public ReplayModifiable(File demoFile, File headerFile) {
-        this(null, demoFile, headerFile);
+    public ReplayModifiable(File demoFile, File cachedFile, File headerFile) {
+        this(null, demoFile, cachedFile, headerFile);
     }
 
     @Override
     public File getDemoFile() {
         return demoFile;
+    }
+
+    @Override
+    public File getCachedFile() {
+        return cachedFile;
     }
 
     @Override

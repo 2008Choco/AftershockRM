@@ -10,6 +10,8 @@ public interface Replay {
 
     public File getDemoFile();
 
+    public File getCachedFile();
+
     public File getHeaderJsonFile();
 
     public int getTeamSize();

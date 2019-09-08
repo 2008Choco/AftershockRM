@@ -2,10 +2,9 @@ package wtf.choco.aftershock;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.ConsoleHandler;
@@ -17,7 +16,7 @@ import com.google.gson.GsonBuilder;
 import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.replay.ReplayModifiable;
+import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
 
@@ -43,6 +42,7 @@ public final class App extends Application {
 
     private KeybindRegistry keybindRegistry;
     private ApplicationSettings settings;
+    private CachingHandler cacheHandler;
 
     private final BinRegistry binRegistry = new BinRegistry();
     private File installDirectory;
@@ -67,7 +67,10 @@ public final class App extends Application {
             this.installDirectory = new File(".");
         }
 
+        // POST INSTALL DIRECTORY STARTUP
+
         this.settings = new ApplicationSettings(this);
+        this.cacheHandler = new CachingHandler(this);
     }
 
     @Override
@@ -102,7 +105,8 @@ public final class App extends Application {
 
         // Replay setup
         this.installDirectory.mkdirs();
-        this.reloadReplayFiles();
+        this.controller.requestLabelUpdate();
+        this.reloadReplays();
     }
 
     @Override
@@ -120,12 +124,20 @@ public final class App extends Application {
         return stage;
     }
 
+    public AppController getController() {
+        return controller;
+    }
+
     public ResourceBundle getResources() {
         return resources;
     }
 
     public ExecutorService getExecutor() {
         return executor;
+    }
+
+    public BinRegistry getBinRegistry() {
+        return binRegistry;
     }
 
     public Stage openSettingsStage() {
@@ -164,69 +176,11 @@ public final class App extends Application {
         return installDirectory;
     }
 
-    public void reloadReplayFiles() {
-        this.binRegistry.clearBins(true);
-        BinRegistry.GLOBAL_BIN.clear();
-        this.controller.requestLabelUpdate();
-
-        File replayCacheDirectory = new File(installDirectory, "Cache");
-        File replayHeadersDirectory = new File(installDirectory, "Headers");
-        replayCacheDirectory.mkdir();
-        replayHeadersDirectory.mkdir();
-
-        String replayDirectoryPath = settings.get(ApplicationSettings.REPLAY_DIRECTORY);
-        if (replayDirectoryPath != null && !replayDirectoryPath.isBlank()) {
-            File replayDirectory = new File(replayDirectoryPath);
-
-            if (replayDirectory.exists() && replayDirectory.isDirectory()) {
-                this.logger.info("Running startup replay caching processes...");
-                long now = System.currentTimeMillis();
-
-                this.executor.execute(() -> {
-                    File[] replayFiles = replayDirectory.listFiles((f, name) -> name.endsWith(".replay"));
-                    this.controller.prepareLoading(replayFiles.length);
-
-                    for (File replayFile : replayFiles) {
-                        String replayFileName = replayFile.getName();
-
-                        // Backup the replay file for later
-                        File cacheDestination = new File(replayCacheDirectory, replayFileName);
-                        if (!cacheDestination.exists()) {
-                            this.logger.info("(" + truncateID(replayFileName) + ") - Caching replay file");
-                            try {
-                                Files.copy(replayFile.toPath(), cacheDestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        File headerDestination = new File(replayHeadersDirectory, replayFileName.substring(0, replayFileName.lastIndexOf('.')) + ".json");
-                        ReplayModifiable replay = new ReplayModifiable(cacheDestination, headerDestination);
-
-                        if (!headerDestination.exists()) {
-                            this.logger.info("(" + truncateID(replayFileName) + ") - Creating header file");
-
-                            try {
-                                Runtime.getRuntime().exec(settings.get(ApplicationSettings.RATTLETRAP_PATH) + " --f --i \"" + replayFile.getAbsolutePath() + "\" --o \"" + headerDestination.getAbsolutePath() + "\"").waitFor();
-                            } catch (InterruptedException | IOException e) {
-                                e.printStackTrace();
-                            }
-
-                            this.logger.info("Done!");
-                        }
-
-                        replay.loadDataFromFile();
-                        BinRegistry.GLOBAL_BIN.addReplay(replay);
-                    }
-
-                    long time = System.currentTimeMillis() - now;
-                    this.logger.info("Loaded " + BinRegistry.GLOBAL_BIN.size() + " replays in " + time + " milliseconds!");
-                    this.controller.requestLabelUpdate();
-                });
-            } else {
-                this.logger.warning("Could not find replay directory at path " + settings.get(ApplicationSettings.REPLAY_DIRECTORY));
-            }
-        }
+    public void reloadReplays() {
+        CompletableFuture.runAsync(() -> {
+            this.cacheHandler.cacheReplays();
+            this.cacheHandler.loadReplaysFromCache();
+        }, executor).thenAccept(ignore -> controller.requestLabelUpdate());
     }
 
     public static String truncateID(String id) {
