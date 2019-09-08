@@ -11,6 +11,8 @@ import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.replay.ReplayModifiable;
 
+import javafx.beans.value.ChangeListener;
+
 public class CachingHandler {
 
     private static final FilenameFilter REPLAY_FILE_FILTER = (f, name) -> name.endsWith(".replay");
@@ -100,6 +102,18 @@ public class CachingHandler {
 
             ReplayModifiable replay = new ReplayModifiable(replayFile, cachedReplayFile, headerFile);
             replay.loadDataFromFile();
+
+            replay.getEntryData().loadedProperty().addListener((ChangeListener<Boolean>) (change, oldValue, newValue) -> {
+                if (newValue) {
+                    try {
+                        Files.copy(cachedReplayFile.toPath(), replayFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    replayFile.delete();
+                }
+            });
 
             this.app.getController().increaseLoadedReplay(1);
             BinRegistry.GLOBAL_BIN.addReplay(replay);
