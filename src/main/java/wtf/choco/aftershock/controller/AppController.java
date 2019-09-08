@@ -10,6 +10,7 @@ import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
 import wtf.choco.aftershock.structure.StringListTableCell;
+import wtf.choco.aftershock.structure.Tag;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -42,7 +43,7 @@ public final class AppController {
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreOrange;
     @FXML private TableColumn<ReplayEntry, String> columnOwner;
     @FXML private TableColumn<ReplayEntry, List<String>> columnComments;
-    @FXML private TableColumn<ReplayEntry, String> columnTags; // TODO
+    @FXML private TableColumn<ReplayEntry, List<Tag>> columnTags;
 
     @FXML private SplitPane splitPane;
 
@@ -68,8 +69,10 @@ public final class AppController {
         this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.BLUE)));
         this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.ORANGE)));
         this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getPlayerName()));
-        this.columnComments.setCellFactory(StringListTableCell.getFactoryCallback());
+        this.columnComments.setCellFactory(StringListTableCell.getFactoryCallback("None"));
         this.columnComments.setCellValueFactory(new PropertyValueFactory<>("comments"));
+        this.columnTags.setCellFactory(StringListTableCell.getFactoryCallback());
+        this.columnTags.setCellValueFactory(new PropertyValueFactory<>("tags"));
 
         TableViewSelectionModel<ReplayEntry> selectionModel = replayTable.getSelectionModel();
         selectionModel.setSelectionMode(SelectionMode.MULTIPLE);

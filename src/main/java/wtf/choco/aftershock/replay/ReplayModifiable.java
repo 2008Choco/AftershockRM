@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -22,7 +23,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.structure.ReplayEntry;
+import wtf.choco.aftershock.structure.Tag;
 import wtf.choco.aftershock.util.JsonUtil;
 import wtf.choco.aftershock.util.TriConsumer;
 
@@ -164,6 +167,8 @@ public final class ReplayModifiable implements Replay {
     }
 
     public void loadDataFromFile() {
+        App app = App.getInstance();
+
         JsonObject root = null;
         try (FileReader reader = new FileReader(headerFile)) {
             root = App.GSON.fromJson(reader, JsonObject.class);
@@ -187,7 +192,19 @@ public final class ReplayModifiable implements Replay {
 
         JsonArray tags = getOrCreate(aftershockRoot, "tags", JsonElement::getAsJsonArray, JsonObject::add, (Supplier<JsonArray>) JsonArray::new);
         if (tags.size() > 0) {
-            // TODO
+            TagRegistry tagRegistry = app.getTagRegistry();
+
+            for (JsonElement tagIdElement : tags) {
+                UUID tagUUID = UUID.fromString(tagIdElement.getAsString());
+                Tag tag = tagRegistry.getTag(tagUUID);
+                if (tag == null) {
+                    app.getLogger().warning("Attempted to load tag with unknown UUID " + (tagUUID) + ". Ignoring...");
+                    this.modifiedHeader = true; // Mark as dirty to remove missing tag
+                    continue;
+                }
+
+                this.entryData.addTag(tag);
+            }
         }
 
         JsonObject header = root.getAsJsonObject("header").getAsJsonObject("body").getAsJsonObject("properties").getAsJsonObject("value");
@@ -203,7 +220,7 @@ public final class ReplayModifiable implements Replay {
         this.replayVersion = JsonUtil.get(header, "ReplayVersion", "int", JsonElement::getAsInt);
 
         String mapId = JsonUtil.get(header, "MapName", "name", JsonElement::getAsString);
-        this.mapName = (mapId != null ? App.getInstance().getResources().getString("map.name." + mapId.toLowerCase()) : "%unknown_map%");
+        this.mapName = (mapId != null ? app.getResources().getString("map.name." + mapId.toLowerCase()) : "%unknown_map%");
         this.name = JsonUtil.get(header, "ReplayName", "str", JsonElement::getAsString, "[" + getMapName() + " - " + teamSize + "v" + teamSize + "]");
         this.id = JsonUtil.get(header, "Id", "str", JsonElement::getAsString);
         this.playerName = JsonUtil.get(header, "PlayerName", "str", JsonElement::getAsString);
@@ -257,7 +274,7 @@ public final class ReplayModifiable implements Replay {
         }
 
         if (modifiedHeader) {
-            App.getInstance().getLogger().info("(" + App.truncateID(id) + ") " + "- Writing aftershock data to header");
+            app.getLogger().info("(" + App.truncateID(id) + ") " + "- Writing aftershock data to header");
             try (JsonWriter writer = App.GSON.newJsonWriter(new FileWriter(headerFile))) {
                 App.GSON.toJson(root, writer);
             } catch (IOException e) {

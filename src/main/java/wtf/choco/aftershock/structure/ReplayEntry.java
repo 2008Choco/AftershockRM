@@ -32,6 +32,7 @@ public class ReplayEntry {
 
     private BooleanProperty loaded = new SimpleBooleanProperty(true);
     private ListProperty<String> comments = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private ListProperty<Tag> tags = new SimpleListProperty<>(FXCollections.observableArrayList());
 
     public ReplayEntry(Replay replay) {
         this.replay = replay;
@@ -43,6 +44,7 @@ public class ReplayEntry {
         });
 
         this.comments.addListener((ListChangeListener<String>) c -> writeToHeader(true));
+        this.tags.addListener((ListChangeListener<Tag>) c -> writeToHeader(true));
     }
 
     public Replay getReplay() {
@@ -94,6 +96,26 @@ public class ReplayEntry {
         return comments;
     }
 
+    public void addTag(Tag tag) {
+        this.tags.add(tag);
+    }
+
+    public void removeTag(Tag tag) {
+        this.tags.remove(tag);
+    }
+
+    public void clearTags() {
+        this.tags.clear();
+    }
+
+    public List<Tag> getTags() {
+        return Collections.unmodifiableList(tags.get());
+    }
+
+    public ListProperty<Tag> tagsProperty() {
+        return tags;
+    }
+
     public void writeToHeader(boolean async) {
         if (async) {
             App.getInstance().getExecutor().execute(this::writeToHeader);
@@ -123,7 +145,8 @@ public class ReplayEntry {
         this.comments.forEach(commentsArray::add);
         aftershockRoot.add("comments", commentsArray);
 
-        JsonArray tagsArray = new JsonArray(); // TODO
+        JsonArray tagsArray = new JsonArray();
+        this.tags.forEach(t -> tagsArray.add(t.getUUID().toString()));
         aftershockRoot.add("tags", tagsArray);
 
         try (JsonWriter writer = App.GSON.newJsonWriter(new FileWriter(headerFile))) {

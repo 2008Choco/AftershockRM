@@ -6,23 +6,31 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.util.Callback;
 
-public class StringListTableCell extends TableCell<ReplayEntry, List<String>> {
+public class StringListTableCell<T> extends TableCell<ReplayEntry, List<T>> {
 
-    private StringListTableCell() { }
+    private final String emptyDisplayValue;
+
+    private StringListTableCell(String emptyDisplayValue) {
+        this.emptyDisplayValue = emptyDisplayValue;
+    }
 
     @Override
-    protected void updateItem(List<String> item, boolean empty) {
+    protected void updateItem(List<T> item, boolean empty) {
         if (item == getItem()) {
             return;
         }
 
         super.updateItem(item, empty);
         this.setGraphic(null); // TODO: Better format than List#toString() --v
-        this.setText((item != null && !empty && !item.isEmpty()) ? item.toString() : "None");
+        this.setText((item != null && !empty && !item.isEmpty()) ? item.toString() : emptyDisplayValue);
     }
 
-    public static Callback<TableColumn<ReplayEntry, List<String>>, TableCell<ReplayEntry, List<String>>> getFactoryCallback() {
-        return ignore -> new StringListTableCell();
+    public static <T> Callback<TableColumn<ReplayEntry, List<T>>, TableCell<ReplayEntry, List<T>>> getFactoryCallback(String emptyDisplayValue) {
+        return ignore -> new StringListTableCell<>(emptyDisplayValue);
+    }
+
+    public static <T> Callback<TableColumn<ReplayEntry, List<T>>, TableCell<ReplayEntry, List<T>>> getFactoryCallback() {
+        return getFactoryCallback(null);
     }
 
 }

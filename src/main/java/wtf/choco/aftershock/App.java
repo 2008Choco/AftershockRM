@@ -17,6 +17,7 @@ import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
+import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
 
@@ -45,6 +46,7 @@ public final class App extends Application {
     private CachingHandler cacheHandler;
 
     private final BinRegistry binRegistry = new BinRegistry();
+    private final TagRegistry tagRegistry = new TagRegistry();
     private File installDirectory;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -112,6 +114,7 @@ public final class App extends Application {
     public void stop() throws Exception {
         this.executor.shutdown();
         this.binRegistry.clearBins(false);
+        this.tagRegistry.clearTags();
         this.settings.writeToFile();
     }
 
@@ -137,6 +140,10 @@ public final class App extends Application {
 
     public BinRegistry getBinRegistry() {
         return binRegistry;
+    }
+
+    public TagRegistry getTagRegistry() {
+        return tagRegistry;
     }
 
     public Stage openSettingsStage() {
