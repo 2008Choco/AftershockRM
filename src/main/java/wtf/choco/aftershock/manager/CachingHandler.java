@@ -26,6 +26,9 @@ public class CachingHandler {
         this.app = app;
         this.cacheDirectory = new File(app.getInstallDirectory(), "Cache");
         this.headersDirectory = new File(app.getInstallDirectory(), "Headers");
+
+        this.cacheDirectory.mkdirs();
+        this.headersDirectory.mkdirs();
     }
 
     public void cacheReplays() {
