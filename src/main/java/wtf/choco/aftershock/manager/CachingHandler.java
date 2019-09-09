@@ -5,11 +5,13 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.replay.ReplayModifiable;
+import wtf.choco.aftershock.structure.ReplayBin;
 
 import javafx.beans.value.ChangeListener;
 
@@ -96,6 +98,7 @@ public class CachingHandler {
         File[] replayFiles = cacheDirectory.listFiles(REPLAY_FILE_FILTER);
         this.app.getController().prepareLoading(replayFiles.length);
 
+        ReplayBin testBin = app.getBinRegistry().getBin("Testing Bin");
         for (File cachedReplayFile : cacheDirectory.listFiles(REPLAY_FILE_FILTER)) {
             File replayFile = new File(replayDirectory, cachedReplayFile.getName());
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.RATTLETRAP_PATH), cachedReplayFile);
@@ -119,6 +122,10 @@ public class CachingHandler {
 
             this.app.getController().increaseLoadedReplay(1);
             BinRegistry.GLOBAL_BIN.addReplay(replay);
+
+            if (ThreadLocalRandom.current().nextBoolean() && testBin.size() < 10) {
+                testBin.addReplay(replay);
+            }
         }
 
         long now = System.currentTimeMillis() - start;

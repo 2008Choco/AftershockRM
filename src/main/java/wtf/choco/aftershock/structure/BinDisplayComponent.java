@@ -22,8 +22,7 @@ public class BinDisplayComponent extends VBox {
 
     {
         this.setAlignment(Pos.TOP_CENTER);
-        this.setMaxHeight(55.0);
-        this.setPrefWidth(70.0);
+        this.setMaxSize(75.0, 75.0);
         this.setSpacing(5.0);
         this.setPadding(new Insets(5.0, 5.0, 5.0, 5.0));
 

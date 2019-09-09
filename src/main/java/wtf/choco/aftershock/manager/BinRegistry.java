@@ -20,7 +20,7 @@ public class BinRegistry  {
     }
 
     public ReplayBin createBin(String name) {
-        if (name == null || (name = name.toLowerCase()).equals("global")) {
+        if (name == null || name.toLowerCase().equals("global")) {
             throw new IllegalStateException("'Global' is a reserved bin identifier");
         }
 
