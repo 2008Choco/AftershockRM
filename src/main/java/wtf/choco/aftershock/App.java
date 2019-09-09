@@ -40,6 +40,8 @@ public final class App extends Application {
     private ResourceBundle resources;
     private Stage settingsStage = null;
 
+    private Parent binEditorPane;
+
     private KeybindRegistry keybindRegistry;
     private ApplicationSettings settings;
     private CachingHandler cacheHandler;
@@ -76,10 +78,13 @@ public final class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        // Stage loading
         this.stage = stage;
         var root = FXUtils.<Parent, AppController>loadFXML("/layout/Root", resources = ResourceBundle.getBundle("lang."));
         this.scene = new Scene(root.getKey());
         this.controller = root.getValue();
+
+        this.binEditorPane = FXUtils.loadFXMLRoot("/layout/BinEditor", resources);
 
         // TODO: Configurable key binds
         this.keybindRegistry = new KeybindRegistry(this);
@@ -131,6 +136,10 @@ public final class App extends Application {
 
     public ResourceBundle getResources() {
         return resources;
+    }
+
+    public Parent getBinEditorPane() {
+        return binEditorPane;
     }
 
     public ExecutorService getExecutor() {

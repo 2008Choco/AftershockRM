@@ -18,3 +18,8 @@
 #infoHeader {
     -fx-font-weight: bold;
 }
+
+*:focused {
+    -fx-faint-focus-color: transparent;
+    -fx-focus-color: transparent;
+}

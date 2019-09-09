@@ -20,6 +20,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -54,7 +55,7 @@ public final class AppController {
 
     private ReplayBin displayedBin = null;
 
-    private double lastKnownDividerPosition = 0.70;
+    private double lastDividerPositionInfo = 0.70, lastDividerPositionBinEditor = 0.075;
     private int expectedReplays = 1, loadedReplays = 0;
 
     private ListChangeListener<ReplayEntry> binChangeListener;
@@ -87,7 +88,7 @@ public final class AppController {
 
             if (c.getAddedSize() > 0) {
                 this.openInfoPanel(c.getAddedSubList().get(0));
-                this.splitPane.setDividerPosition(0, lastKnownDividerPosition);
+                this.splitPane.setDividerPosition(splitPane.getDividers().size() - 1, lastDividerPositionInfo);
             }
         });
 
@@ -123,9 +124,22 @@ public final class AppController {
     }
 
     @FXML
-    @SuppressWarnings("unused")
-    public void openSettings(ActionEvent event) {
+    public void openSettings(@SuppressWarnings("unused") ActionEvent event) {
         App.getInstance().openSettingsStage();
+    }
+
+    @FXML
+    public void toggleBinList(@SuppressWarnings("unused") ActionEvent event) {
+        Parent binEditor = App.getInstance().getBinEditorPane();
+        ObservableList<Node> splitPaneItems = splitPane.getItems();
+        if (splitPaneItems.get(0) == binEditor) {
+            this.lastDividerPositionBinEditor = splitPane.getDividerPositions()[0];
+            splitPaneItems.remove(0);
+            return;
+        }
+
+        splitPaneItems.add(0, binEditor);
+        this.splitPane.setDividerPosition(0, lastDividerPositionBinEditor);
     }
 
     public TableView<ReplayEntry> getReplayTable() {
@@ -154,9 +168,9 @@ public final class AppController {
 
     public void closeInfoPanel() {
         ObservableList<Node> items = splitPane.getItems();
-        if (items.size() > 1) {
-            this.lastKnownDividerPosition = splitPane.getDividerPositions()[0];
-            items.remove(1, items.size());
+        if (items.get(items.size() - 1) != replayTable) {
+            this.lastDividerPositionInfo = splitPane.getDividerPositions()[splitPane.getDividers().size() - 1];
+            items.remove(items.size() - 1);
         }
     }
 

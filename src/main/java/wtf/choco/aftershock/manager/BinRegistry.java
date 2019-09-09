@@ -2,18 +2,18 @@ package wtf.choco.aftershock.manager;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import wtf.choco.aftershock.structure.ReplayBin;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
 
 public class BinRegistry  {
 
     public static final ReplayBin GLOBAL_BIN = new ReplayBin(UUID.randomUUID(), "global");
 
-
-    private final Map<String, ReplayBin> bins = new HashMap<>();
+    private final ObservableMap<String, ReplayBin> bins = FXCollections.observableHashMap();
 
     public BinRegistry() {
         this.addBin(GLOBAL_BIN);
@@ -24,38 +24,49 @@ public class BinRegistry  {
             throw new IllegalStateException("'global' is a reserved bin identified");
         }
 
-        ReplayBin bin = new ReplayBin(UUID.randomUUID(), name);
+        ReplayBin bin = new ReplayBin(UUID.randomUUID(), name = name.toLowerCase());
         this.bins.put(name, bin);
         return bin;
     }
 
     public void addBin(ReplayBin bin) {
-        this.bins.put(bin.getName(), bin);
+        this.bins.put(bin.getName().toLowerCase(), bin);
     }
 
     public ReplayBin getBin(String name) {
-        return bins.get(name);
+        return bins.get(name.toLowerCase());
     }
 
     public void deleteBin(String name) {
-        this.bins.remove(name);
+        this.bins.remove(name.toLowerCase());
     }
 
     public void deleteBin(ReplayBin bin) {
-        this.deleteBin(bin.getName());
+        this.deleteBin(bin.getName().toLowerCase());
     }
 
-    public void clearBins(boolean keepGlobal) {
+    public void clearBins(boolean clearGlobal) {
         this.bins.values().forEach(ReplayBin::clear);
+        if (clearGlobal) {
+            GLOBAL_BIN.clear();
+        }
+    }
+
+    public void deleteBins(boolean deleteGlobal) {
+        this.clearBins(deleteGlobal);
         this.bins.clear();
 
-        if (keepGlobal) {
+        if (!deleteGlobal) {
             this.addBin(GLOBAL_BIN);
         }
     }
 
     public Collection<ReplayBin> getBins() {
         return Collections.unmodifiableCollection(bins.values());
+    }
+
+    public ObservableMap<String, ReplayBin> getObservableBins() {
+        return bins;
     }
 
 }

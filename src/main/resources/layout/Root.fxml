@@ -18,6 +18,7 @@
 
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Button?>
 
 <VBox prefHeight="720.0" prefWidth="1280.0" stylesheets="/app.css" xmlns="http://javafx.com/javafx/12.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.AppController">
   <MenuBar>
@@ -48,6 +49,16 @@
 
   <HBox prefHeight="25.0">
     <HBox alignment="CENTER_LEFT" spacing="15.0">
+      <Button focusTraversable="false" onAction="#toggleBinList">
+        <graphic>
+          <ImageView>
+            <image>
+              <Image url="@../icons/folder.png"/>
+            </image>
+          </ImageView>
+        </graphic>
+      </Button>
+
       <Label fx:id="labelListed" text="%ui.footer.listed" />
       <Label fx:id="labelLoaded" text="%ui.footer.loaded" />
       <Label fx:id="labelSelected" text="%ui.footer.selected" />
