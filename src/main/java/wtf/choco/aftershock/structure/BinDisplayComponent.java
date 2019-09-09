@@ -22,7 +22,7 @@ public class BinDisplayComponent extends VBox {
 
     {
         this.setAlignment(Pos.TOP_CENTER);
-        this.setMaxSize(75.0, 75.0);
+        this.setMaxSize(75.0, 65.0);
         this.setSpacing(5.0);
         this.setPadding(new Insets(5.0, 5.0, 5.0, 5.0));
 
@@ -37,13 +37,13 @@ public class BinDisplayComponent extends VBox {
         this.label.setTextAlignment(TextAlignment.CENTER);
         this.label.setWrapText(true);
 
+        this.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> setCursor(Cursor.HAND));
+        this.addEventFilter(MouseEvent.MOUSE_EXITED, e -> setCursor(Cursor.DEFAULT));
         this.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             if (e.getButton() == MouseButton.PRIMARY) {
                 app.getController().displayBin(bin);
             }
         });
-        this.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> setCursor(Cursor.HAND));
-        this.addEventFilter(MouseEvent.MOUSE_EXITED, e -> setCursor(Cursor.DEFAULT));
 
         this.getChildren().addAll(this.graphic, label);
     }

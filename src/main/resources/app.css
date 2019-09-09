@@ -1,5 +1,6 @@
-.hyperlink {
-    -fx-border-color: transparent;
+*, *:focused {
+    -fx-faint-focus-color: transparent;
+    -fx-focus-color: transparent;
 }
 
 .hyperlink:visited {
@@ -15,13 +16,16 @@
     -fx-background-color: transparent;
 }
 
-#infoHeader {
-    -fx-font-weight: bold;
+.scroll-pane {
+    -fx-background-color: transparent;
 }
 
-*:focused {
-    -fx-faint-focus-color: transparent;
-    -fx-focus-color: transparent;
+.button {
+    -fx-background-radius: 0px;
+}
+
+#infoHeader {
+    -fx-font-weight: bold;
 }
 
 .bin-display-selected {
