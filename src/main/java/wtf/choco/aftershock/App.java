@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.ConsoleHandler;
@@ -146,6 +145,14 @@ public final class App extends Application {
         return tagRegistry;
     }
 
+    public ApplicationSettings getSettings() {
+        return settings;
+    }
+
+    public File getInstallDirectory() {
+        return installDirectory;
+    }
+
     public Stage openSettingsStage() {
         if (settingsStage != null) {
             return settingsStage;
@@ -174,19 +181,11 @@ public final class App extends Application {
         this.settingsStage = null;
     }
 
-    public ApplicationSettings getSettings() {
-        return settings;
-    }
-
-    public File getInstallDirectory() {
-        return installDirectory;
-    }
-
     public void reloadReplays() {
-        CompletableFuture.runAsync(() -> {
+        this.executor.execute(() -> {
             this.cacheHandler.cacheReplays();
             this.cacheHandler.loadReplaysFromCache();
-        }, executor);
+        });
     }
 
     public static String truncateID(String id) {
@@ -195,6 +194,7 @@ public final class App extends Application {
         formatted.append(id.substring(0, 4));
         formatted.append("...");
         formatted.append(id.substring(idLength - ".replay".length() - 4));
+        formatted.trimToSize();
         return formatted.toString();
     }
 
