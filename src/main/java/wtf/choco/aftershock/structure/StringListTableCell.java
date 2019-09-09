@@ -21,8 +21,15 @@ public class StringListTableCell<T> extends TableCell<ReplayEntry, List<T>> {
         }
 
         super.updateItem(item, empty);
+
+        if (empty) {
+            this.setGraphic(null);
+            this.setText(null);
+            return;
+        }
+
         this.setGraphic(null); // TODO: Better format than List#toString() --v
-        this.setText((item != null && !empty && !item.isEmpty()) ? item.toString() : emptyDisplayValue);
+        this.setText((item != null && !item.isEmpty()) ? item.toString() : emptyDisplayValue);
     }
 
     public static <T> Callback<TableColumn<ReplayEntry, List<T>>, TableCell<ReplayEntry, List<T>>> getFactoryCallback(String emptyDisplayValue) {
