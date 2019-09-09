@@ -11,7 +11,7 @@ import javafx.collections.ObservableMap;
 
 public class BinRegistry  {
 
-    public static final ReplayBin GLOBAL_BIN = new ReplayBin(UUID.randomUUID(), "global");
+    public static final ReplayBin GLOBAL_BIN = new ReplayBin(UUID.randomUUID(), "Global");
 
     private final ObservableMap<String, ReplayBin> bins = FXCollections.observableHashMap();
 
@@ -21,11 +21,11 @@ public class BinRegistry  {
 
     public ReplayBin createBin(String name) {
         if (name == null || (name = name.toLowerCase()).equals("global")) {
-            throw new IllegalStateException("'global' is a reserved bin identified");
+            throw new IllegalStateException("'Global' is a reserved bin identifier");
         }
 
-        ReplayBin bin = new ReplayBin(UUID.randomUUID(), name = name.toLowerCase());
-        this.bins.put(name, bin);
+        ReplayBin bin = new ReplayBin(UUID.randomUUID(), name);
+        this.bins.put(name.toLowerCase(), bin);
         return bin;
     }
 
