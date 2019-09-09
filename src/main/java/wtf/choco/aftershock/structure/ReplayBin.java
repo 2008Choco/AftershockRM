@@ -1,8 +1,10 @@
 package wtf.choco.aftershock.structure;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -61,6 +63,10 @@ public class ReplayBin implements Iterable<Replay> {
 
     public Replay getReplayById(String id) {
         return byId.get(id);
+    }
+
+    public List<ReplayEntry> getReplays() {
+        return Collections.unmodifiableList(replays);
     }
 
     public ObservableList<ReplayEntry> getObservableList() {

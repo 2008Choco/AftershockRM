@@ -160,6 +160,8 @@ public final class AppController {
         // Ensure there is only ever one instance of the listener by removing it first
         entries.removeListener(binChangeListener);
         entries.addListener(binChangeListener);
+
+        this.setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size());
     }
 
     public ReplayBin getDisplayedBin() {
@@ -197,7 +199,7 @@ public final class AppController {
 
     public void updateLoadedLabel() {
         int loaded = 0;
-        for (ReplayEntry replay : replayTable.getItems()) {
+        for (ReplayEntry replay : BinRegistry.GLOBAL_BIN.getReplays()) {
             if (replay.isLoaded()) {
                 loaded++;
             }
