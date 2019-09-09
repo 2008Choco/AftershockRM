@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import wtf.choco.aftershock.controller.AppController;
+import wtf.choco.aftershock.controller.BinEditorController;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
@@ -41,6 +42,7 @@ public final class App extends Application {
     private Stage settingsStage = null;
 
     private Parent binEditorPane;
+    private BinEditorController binEditorController;
 
     private KeybindRegistry keybindRegistry;
     private ApplicationSettings settings;
@@ -84,7 +86,9 @@ public final class App extends Application {
         this.scene = new Scene(root.getKey());
         this.controller = root.getValue();
 
-        this.binEditorPane = FXUtils.loadFXMLRoot("/layout/BinEditor", resources);
+        var binEditorRoot = FXUtils.<Parent, BinEditorController>loadFXML("/layout/BinEditor", resources);
+        this.binEditorPane = binEditorRoot.getKey();
+        this.binEditorController = binEditorRoot.getValue();
 
         // TODO: Configurable key binds
         this.keybindRegistry = new KeybindRegistry(this);
@@ -112,6 +116,8 @@ public final class App extends Application {
         // Replay setup
         this.installDirectory.mkdirs();
         this.reloadReplays();
+
+        this.binRegistry.createBin("Testing Bin");
     }
 
     @Override
@@ -140,6 +146,10 @@ public final class App extends Application {
 
     public Parent getBinEditorPane() {
         return binEditorPane;
+    }
+
+    public BinEditorController getBinEditorController() {
+        return binEditorController;
     }
 
     public ExecutorService getExecutor() {

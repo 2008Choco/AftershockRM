@@ -23,3 +23,7 @@
     -fx-faint-focus-color: transparent;
     -fx-focus-color: transparent;
 }
+
+.bin-display-selected {
+    -fx-background-color: rgb(230, 230, 230);
+}

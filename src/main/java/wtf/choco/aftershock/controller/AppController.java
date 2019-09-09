@@ -6,6 +6,7 @@ import java.util.ResourceBundle;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.Team;
+import wtf.choco.aftershock.structure.BinDisplayComponent;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
@@ -147,6 +148,12 @@ public final class AppController {
     }
 
     public void displayBin(ReplayBin bin) {
+        BinEditorController binEditorController = App.getInstance().getBinEditorController();
+        if (displayedBin != null) {
+            BinDisplayComponent binDisplay = binEditorController.getDisplayComponent(displayedBin);
+            binDisplay.getStyleClass().remove("bin-display-selected");
+        }
+
         this.displayedBin = bin;
 
         if (bin == null) {
@@ -162,6 +169,7 @@ public final class AppController {
         entries.addListener(binChangeListener);
 
         this.setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size());
+        binEditorController.getDisplayComponent(displayedBin).getStyleClass().add("bin-display-selected");
     }
 
     public ReplayBin getDisplayedBin() {

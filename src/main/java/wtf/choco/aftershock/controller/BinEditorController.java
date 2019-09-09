@@ -37,4 +37,19 @@ public class BinEditorController {
         });
     }
 
+    public BinDisplayComponent getDisplayComponent(ReplayBin bin) {
+        for (Node node : viewPane.getChildren()) {
+            if (!(node instanceof BinDisplayComponent)) {
+                continue;
+            }
+
+            BinDisplayComponent binDisplay = (BinDisplayComponent) node;
+            if (binDisplay.getBin() == bin) {
+                return binDisplay;
+            }
+        }
+
+        return null;
+    }
+
 }

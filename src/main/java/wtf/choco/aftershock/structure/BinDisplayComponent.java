@@ -2,6 +2,7 @@ package wtf.choco.aftershock.structure;
 
 import wtf.choco.aftershock.App;
 
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
@@ -24,6 +25,9 @@ public class BinDisplayComponent extends VBox {
         this.setMaxHeight(55.0);
         this.setPrefWidth(70.0);
         this.setSpacing(5.0);
+        this.setPadding(new Insets(5.0, 5.0, 5.0, 5.0));
+
+        this.getStyleClass().add("bin-display");
     }
 
     public BinDisplayComponent(App app, ReplayBin bin, Image graphic) {
