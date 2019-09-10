@@ -1,5 +1,6 @@
 package wtf.choco.aftershock.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -15,10 +16,7 @@ import wtf.choco.aftershock.structure.Tag;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableSet;
-import javafx.collections.SetChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
@@ -62,7 +60,7 @@ public final class AppController {
     @FXML private VBox binList;
 
     private ReplayBin displayedBin = null;
-    private ObservableSet<ReplayBin> selectedBins = FXCollections.observableSet();
+    private ObservableList<ReplayBin> selectedBins = FXCollections.observableArrayList();
 
     private double lastDividerPositionInfo = 0.70;
     private int expectedReplays = 1, loadedReplays = 0;
@@ -127,19 +125,27 @@ public final class AppController {
         ObservableList<Node> viewChildren = binList.getChildren();
         binRegistry.getBins().forEach(b -> viewChildren.add(b.getDisplay()));
 
-        binRegistry.getObservableBins().addListener((MapChangeListener<String, ReplayBin>) change -> {
-            if (change.wasAdded()) {
-                viewChildren.add(change.getValueAdded().getDisplay());
+        binRegistry.getBins().addListener((ListChangeListener<ReplayBin>) c -> {
+            if (!c.next()) {
+                return;
+            }
+
+            if (c.wasAdded()) {
+                c.getAddedSubList().forEach(b -> viewChildren.add(b.getDisplay()));
             } else {
-                viewChildren.remove(change.getValueRemoved().getDisplay());
+                c.getRemoved().forEach(b -> viewChildren.remove(b.getDisplay()));
             }
         });
 
-        this.selectedBins.addListener((SetChangeListener<ReplayBin>) c -> {
+        this.selectedBins.addListener((ListChangeListener<ReplayBin>) c -> {
+            if (!c.next()) {
+                return;
+            }
+
             if (c.wasAdded()) {
-                c.getElementAdded().getDisplay().getStyleClass().add("bin-display-selected");
+                c.getAddedSubList().forEach(b -> b.getDisplay().getStyleClass().add("bin-display-selected"));
             } else if (c.wasRemoved()) {
-                c.getElementRemoved().getDisplay().getStyleClass().remove("bin-display-selected");
+                c.getRemoved().forEach(b -> b.getDisplay().getStyleClass().remove("bin-display-selected"));
             }
         });
 
@@ -167,6 +173,45 @@ public final class AppController {
             primaryDisplayChildren.add(0, binEditor);
         } else {
             primaryDisplayChildren.remove(binEditor);
+        }
+    }
+
+    @FXML
+    public void createBin(@SuppressWarnings("unused") ActionEvent event) {
+        int duplicateCount = 0;
+        String name = "New Bin";
+
+        BinRegistry binRegistry = App.getInstance().getBinRegistry();
+        ReplayBin bin = null;
+        while ((bin = binRegistry.createBin(name + (duplicateCount++ >= 1 ? " (" + duplicateCount + ")" : ""))) == null);
+
+        this.clearSelectedBins();
+        this.displayBin(bin);
+        bin.getDisplay().openNameEditor();
+    }
+
+    @FXML
+    public void deleteBin(@SuppressWarnings("unused") ActionEvent event) {
+        BinRegistry binRegistry = App.getInstance().getBinRegistry();
+
+        List<ReplayBin> deleted = new ArrayList<>(selectedBins.size());
+        this.selectedBins.forEach(b -> {
+            if (b == BinRegistry.GLOBAL_BIN) { // Don't delete the global bin
+                return;
+            }
+
+            if (displayedBin == b) {
+                this.displayBin(null);
+            }
+
+            binRegistry.deleteBin(b);
+            deleted.add(b);
+        });
+
+        deleted.forEach(this::deselectBin);
+
+        if (displayedBin == null) {
+            this.displayBin(selectedBins.size() > 0 ? selectedBins.get(0) : BinRegistry.GLOBAL_BIN);
         }
     }
 

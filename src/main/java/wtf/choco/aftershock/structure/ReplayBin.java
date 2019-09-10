@@ -58,6 +58,11 @@ public class ReplayBin implements Iterable<Replay> {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+        this.display.updateName();
+    }
+
     public BinDisplayComponent getDisplay() {
         return display;
     }

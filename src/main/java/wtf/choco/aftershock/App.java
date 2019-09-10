@@ -18,6 +18,7 @@ import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.manager.TagRegistry;
+import wtf.choco.aftershock.structure.BinDisplayComponent;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
 
@@ -27,6 +28,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.PickResult;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -103,6 +107,18 @@ public final class App extends Application {
             }
 
             selectionModel.getSelectedItems().forEach(e -> e.setLoaded(!e.isLoaded()));
+        });
+
+        // Listen for clicks outside of bin name editor, cancel editing
+        this.scene.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+            PickResult result = e.getPickResult();
+
+            this.binRegistry.getBins().forEach(b -> {
+                BinDisplayComponent binDisplay = b.getDisplay();
+                if (binDisplay.isBeingEdited() && !(result.getIntersectedNode() instanceof Text)) {
+                    binDisplay.closeNameEditor(true);
+                }
+            });
         });
 
         // Stage setup

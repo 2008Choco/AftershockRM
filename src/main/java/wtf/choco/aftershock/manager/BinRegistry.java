@@ -1,8 +1,6 @@
 package wtf.choco.aftershock.manager;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,13 +15,13 @@ import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.JsonUtil;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
+import javafx.collections.ObservableList;
 
 public class BinRegistry  {
 
     public static final ReplayBin GLOBAL_BIN = new ReplayBin(UUID.randomUUID(), "Global");
 
-    private final ObservableMap<String, ReplayBin> bins = FXCollections.observableHashMap();
+    private final ObservableList<ReplayBin> bins = FXCollections.observableArrayList();
 
     public BinRegistry() {
         this.addBin(GLOBAL_BIN);
@@ -34,21 +32,33 @@ public class BinRegistry  {
             throw new IllegalStateException("'Global' is a reserved bin identifier");
         }
 
+        for (ReplayBin bin : bins) {
+            if (bin.getName().equalsIgnoreCase(name)) {
+                return null;
+            }
+        }
+
         ReplayBin bin = new ReplayBin(UUID.randomUUID(), name);
-        this.bins.put(name.toLowerCase(), bin);
+        this.addBin(bin);
         return bin;
     }
 
     public void addBin(ReplayBin bin) {
-        this.bins.put(bin.getName().toLowerCase(), bin);
+        this.bins.add(bin);
     }
 
     public ReplayBin getBin(String name) {
-        return bins.get(name.toLowerCase());
+        for (ReplayBin bin : bins) {
+            if (bin.getName().equalsIgnoreCase(name)) {
+                return bin;
+            }
+        }
+
+        return null;
     }
 
     public void deleteBin(String name) {
-        this.bins.remove(name.toLowerCase());
+        this.bins.removeIf(b -> b.getName().equalsIgnoreCase(name));
     }
 
     public void deleteBin(ReplayBin bin) {
@@ -56,7 +66,7 @@ public class BinRegistry  {
     }
 
     public void clearBins(boolean clearGlobal) {
-        for (ReplayBin bin : bins.values()) {
+        for (ReplayBin bin : bins) {
             if (!clearGlobal && bin == GLOBAL_BIN) {
                 continue;
             }
@@ -74,11 +84,7 @@ public class BinRegistry  {
         }
     }
 
-    public Collection<ReplayBin> getBins() {
-        return Collections.unmodifiableCollection(bins.values());
-    }
-
-    public ObservableMap<String, ReplayBin> getObservableBins() {
+    public ObservableList<ReplayBin> getBins() {
         return bins;
     }
 
@@ -121,7 +127,7 @@ public class BinRegistry  {
     public void saveBinsToFile(File file) {
         JsonArray root = new JsonArray();
 
-        for (ReplayBin bin : bins.values()) {
+        for (ReplayBin bin : bins) {
             if (bin == GLOBAL_BIN) { // Don't write global bin to file
                 continue;
             }

@@ -40,7 +40,7 @@
       </ScrollPane>
 
       <HBox alignment="CENTER_LEFT" prefHeight="25.0" style="-fx-background-color: rgb(230,230,230);">
-        <Button focusTraversable="false" maxWidth="50.0" HBox.hgrow="ALWAYS">
+        <Button focusTraversable="false" maxWidth="50.0" HBox.hgrow="ALWAYS" onAction="#createBin">
           <graphic>
             <ImageView>
               <image>
@@ -49,7 +49,7 @@
             </ImageView>
           </graphic>
         </Button>
-        <Button focusTraversable="false" maxWidth="50.0" HBox.hgrow="ALWAYS">
+        <Button focusTraversable="false" maxWidth="50.0" HBox.hgrow="ALWAYS" onAction="#deleteBin">
           <graphic>
             <ImageView>
               <image>
