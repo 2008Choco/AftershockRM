@@ -1,6 +1,7 @@
 package wtf.choco.aftershock.structure;
 
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.controller.AppController;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,7 +30,7 @@ public class BinDisplayComponent extends VBox {
         this.getStyleClass().add("bin-display");
     }
 
-    public BinDisplayComponent(App app, ReplayBin bin, Image graphic) {
+    public BinDisplayComponent(ReplayBin bin, Image graphic) {
         this.bin = bin;
         this.graphic = new ImageView(graphic);
         this.label = new Label(bin.getName());
@@ -40,8 +41,24 @@ public class BinDisplayComponent extends VBox {
         this.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> setCursor(Cursor.HAND));
         this.addEventFilter(MouseEvent.MOUSE_EXITED, e -> setCursor(Cursor.DEFAULT));
         this.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
-            if (e.getButton() == MouseButton.PRIMARY) {
-                app.getController().displayBin(bin);
+            if (e.getButton() != MouseButton.PRIMARY) {
+                return;
+            }
+
+            AppController controller = App.getInstance().getController();
+
+            if (e.isControlDown()) {
+                if (!controller.isSelectedBin(bin)) {
+                    controller.selectBin(bin);
+                    if (controller.getDisplayedBin() == null) {
+                        controller.displayBin(bin);
+                    }
+                } else {
+                    controller.deselectBin(bin);
+                }
+            } else {
+                controller.clearSelectedBins();
+                controller.displayBin(controller.getDisplayedBin() == bin ? null : bin);
             }
         });
 

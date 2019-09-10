@@ -8,16 +8,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.replay.Replay;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.image.Image;
 
 public class ReplayBin implements Iterable<Replay> {
+
+    private static final Image BIN_GRAPHIC = new Image(App.class.getResourceAsStream("/icons/folder.png"));
 
     private final UUID uuid;
     private final ObservableList<ReplayEntry> replays;
     private final Map<String, Replay> byId;
+    private final BinDisplayComponent display;
 
     private String name;
 
@@ -26,6 +31,7 @@ public class ReplayBin implements Iterable<Replay> {
         this.name = name;
         this.replays = FXCollections.observableArrayList(replays);
         this.byId = new HashMap<>(replays.size());
+        this.display = new BinDisplayComponent(this, BIN_GRAPHIC);
 
         for (ReplayEntry replay : replays) {
             this.byId.put(replay.getReplay().getId(), replay.getReplay());
@@ -37,6 +43,7 @@ public class ReplayBin implements Iterable<Replay> {
         this.name = name;
         this.replays = FXCollections.observableArrayList();
         this.byId = new HashMap<>(size);
+        this.display = new BinDisplayComponent(this, BIN_GRAPHIC);
     }
 
     public ReplayBin(UUID uuid, String name) {
@@ -49,6 +56,10 @@ public class ReplayBin implements Iterable<Replay> {
 
     public String getName() {
         return name;
+    }
+
+    public BinDisplayComponent getDisplay() {
+        return display;
     }
 
     public void addReplay(Replay replay) {

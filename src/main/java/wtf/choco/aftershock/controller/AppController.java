@@ -6,7 +6,6 @@ import java.util.ResourceBundle;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.Team;
-import wtf.choco.aftershock.structure.BinDisplayComponent;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
@@ -18,6 +17,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
@@ -32,7 +33,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -62,13 +62,12 @@ public final class AppController {
     @FXML private VBox binList;
 
     private ReplayBin displayedBin = null;
+    private ObservableSet<ReplayBin> selectedBins = FXCollections.observableSet();
 
     private double lastDividerPositionInfo = 0.70;
     private int expectedReplays = 1, loadedReplays = 0;
 
     private ListChangeListener<ReplayEntry> binChangeListener;
-
-    private final Image binGraphic = new Image(App.class.getResourceAsStream("/icons/folder.png"));
 
     @FXML
     public void initialize() {
@@ -126,15 +125,25 @@ public final class AppController {
         BinRegistry binRegistry = app.getBinRegistry();
 
         ObservableList<Node> viewChildren = binList.getChildren();
-        for (ReplayBin bin : binRegistry.getBins()) {
-            viewChildren.add(new BinDisplayComponent(app, bin, binGraphic));
-        }
+        binRegistry.getBins().forEach(b -> viewChildren.add(b.getDisplay()));
 
         binRegistry.getObservableBins().addListener((MapChangeListener<String, ReplayBin>) change -> {
             if (change.wasAdded()) {
-                viewChildren.add(new BinDisplayComponent(app, change.getValueAdded(), binGraphic));
+                viewChildren.add(change.getValueAdded().getDisplay());
             } else {
-                viewChildren.removeIf(n -> (n instanceof BinDisplayComponent) && ((BinDisplayComponent) n).getBin() == change.getValueRemoved());
+                viewChildren.remove(change.getValueRemoved().getDisplay());
+            }
+        });
+
+        this.selectedBins.addListener((SetChangeListener<ReplayBin>) c -> {
+            if (c.wasAdded()) {
+                c.getElementAdded().getDisplay().getStyleClass().add("bin-display-selected");
+            } else if (c.wasRemoved()) {
+                c.getElementRemoved().getDisplay().getStyleClass().remove("bin-display-selected");
+            }
+
+            if (c.getSet().isEmpty()) {
+                this.displayBin(null);
             }
         });
 
@@ -170,11 +179,6 @@ public final class AppController {
     }
 
     public void displayBin(ReplayBin bin) {
-        if (displayedBin != null) {
-            BinDisplayComponent binDisplay = getDisplayComponent(displayedBin);
-            binDisplay.getStyleClass().remove("bin-display-selected");
-        }
-
         this.displayedBin = bin;
 
         if (bin == null) {
@@ -184,13 +188,29 @@ public final class AppController {
 
         ObservableList<ReplayEntry> entries = bin.getObservableList();
         this.replayTable.setItems(entries);
+        this.selectBin(displayedBin);
 
         // Ensure there is only ever one instance of the listener by removing it first
         entries.removeListener(binChangeListener);
         entries.addListener(binChangeListener);
 
         this.setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size());
-        this.getDisplayComponent(displayedBin).getStyleClass().add("bin-display-selected");
+    }
+
+    public void selectBin(ReplayBin bin) {
+        this.selectedBins.add(bin);
+    }
+
+    public void deselectBin(ReplayBin bin) {
+        this.selectedBins.remove(bin);
+    }
+
+    public boolean isSelectedBin(ReplayBin bin) {
+        return selectedBins.contains(bin);
+    }
+
+    public void clearSelectedBins() {
+        this.selectedBins.clear();
     }
 
     public ReplayBin getDisplayedBin() {
@@ -244,21 +264,6 @@ public final class AppController {
         }
 
         label.setText(String.format(resources.getString(resourceKey), amount));
-    }
-
-    private BinDisplayComponent getDisplayComponent(ReplayBin bin) {
-        for (Node node : binList.getChildren()) {
-            if (!(node instanceof BinDisplayComponent)) {
-                continue;
-            }
-
-            BinDisplayComponent binDisplay = (BinDisplayComponent) node;
-            if (binDisplay.getBin() == bin) {
-                return binDisplay;
-            }
-        }
-
-        return null;
     }
 
 }
