@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.ConsoleHandler;
@@ -21,6 +22,7 @@ import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -46,7 +48,9 @@ public final class App extends Application {
 
     private final BinRegistry binRegistry = new BinRegistry();
     private final TagRegistry tagRegistry = new TagRegistry();
+
     private File installDirectory;
+    private File binsFile;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Logger logger = Logger.getLogger("AftershockRM");
@@ -69,6 +73,9 @@ public final class App extends Application {
         }
 
         // POST INSTALL DIRECTORY STARTUP
+
+        this.binsFile = new File(installDirectory, "bins.json");
+        this.binsFile.createNewFile();
 
         this.settings = new ApplicationSettings(this);
         this.cacheHandler = new CachingHandler(this);
@@ -107,18 +114,14 @@ public final class App extends Application {
 
         // Replay setup
         this.installDirectory.mkdirs();
-
-        this.binRegistry.createBin("Testing Bin");
-        this.binRegistry.createBin("Testing Bin Long Name");
-        this.binRegistry.createBin("Testing Bin Too Long Name");
-
-        this.reloadReplays();
+        this.reloadReplays().thenRun(() -> Platform.runLater(() -> binRegistry.loadBinsFromFile(binsFile, false)));
     }
 
     @Override
     public void stop() throws Exception {
         this.executor.shutdown();
-        this.binRegistry.clearBins(false);
+        this.binRegistry.saveBinsToFile(binsFile);
+        this.binRegistry.deleteBins(true);
         this.tagRegistry.clearTags();
         this.settings.writeToFile();
     }
@@ -187,11 +190,11 @@ public final class App extends Application {
         this.settingsStage = null;
     }
 
-    public void reloadReplays() {
-        this.executor.execute(() -> {
+    public CompletableFuture<Void> reloadReplays() {
+        return CompletableFuture.runAsync(() -> {
             this.cacheHandler.cacheReplays();
             this.cacheHandler.loadReplaysFromCache();
-        });
+        }, executor);
     }
 
     public static String truncateID(String id) {
