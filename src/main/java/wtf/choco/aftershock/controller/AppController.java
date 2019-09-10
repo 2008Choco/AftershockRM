@@ -16,6 +16,7 @@ import wtf.choco.aftershock.structure.bin.BinEditor;
 import wtf.choco.aftershock.structure.bin.BinSelectionModel;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -83,6 +84,13 @@ public final class AppController {
         selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
 
         // Label update listeners
+        ListChangeListener<ReplayEntry> changeListener = (c) -> setLabel(labelListed, "ui.footer.listed", c.getList().size());
+        this.replayTable.getItems().addListener(changeListener);
+        this.replayTable.itemsProperty().addListener((ChangeListener<ObservableList<ReplayEntry>>) (c, oldValue, newValue) -> {
+            this.setLabel(labelListed, "ui.footer.listed", newValue.size());
+            newValue.addListener(changeListener);
+        });
+
         selectionModel.getSelectedItems().addListener((ListChangeListener<ReplayEntry>) c -> {
             this.setLabel(labelSelected, "ui.footer.selected", selectionModel.getSelectedItems().size());
 
