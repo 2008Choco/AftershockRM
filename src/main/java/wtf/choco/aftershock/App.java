@@ -18,7 +18,7 @@ import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.manager.TagRegistry;
-import wtf.choco.aftershock.structure.BinDisplayComponent;
+import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
 

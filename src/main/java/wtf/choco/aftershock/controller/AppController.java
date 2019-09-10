@@ -7,13 +7,13 @@ import java.util.ResourceBundle;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.Team;
-import wtf.choco.aftershock.structure.BinEditor;
-import wtf.choco.aftershock.structure.BinSelectionModel;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
 import wtf.choco.aftershock.structure.StringListTableCell;
 import wtf.choco.aftershock.structure.Tag;
+import wtf.choco.aftershock.structure.bin.BinEditor;
+import wtf.choco.aftershock.structure.bin.BinSelectionModel;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;

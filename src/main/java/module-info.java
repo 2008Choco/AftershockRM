@@ -15,5 +15,6 @@ module wtf.choco.aftershock {
     exports wtf.choco.aftershock.manager;
     exports wtf.choco.aftershock.replay;
     exports wtf.choco.aftershock.structure;
+    exports wtf.choco.aftershock.structure.bin;
     exports wtf.choco.aftershock.util;
 }

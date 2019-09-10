@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.replay.Replay;
+import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
