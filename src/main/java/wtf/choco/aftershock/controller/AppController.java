@@ -209,6 +209,10 @@ public final class AppController {
         return selectedBins.contains(bin);
     }
 
+    public int getSelectedCount() {
+        return selectedBins.size();
+    }
+
     public void clearSelectedBins() {
         this.selectedBins.clear();
     }

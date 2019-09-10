@@ -57,8 +57,9 @@ public class BinDisplayComponent extends VBox {
                     controller.deselectBin(bin);
                 }
             } else {
+                boolean wasSelected = controller.isSelectedBin(bin) && controller.getSelectedCount() > 1;
                 controller.clearSelectedBins();
-                controller.displayBin(controller.getDisplayedBin() == bin ? null : bin);
+                controller.displayBin(wasSelected || controller.getDisplayedBin() != bin ? bin : null);
             }
         });
 
