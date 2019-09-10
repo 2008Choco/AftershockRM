@@ -141,10 +141,6 @@ public final class AppController {
             } else if (c.wasRemoved()) {
                 c.getElementRemoved().getDisplay().getStyleClass().remove("bin-display-selected");
             }
-
-            if (c.getSet().isEmpty()) {
-                this.displayBin(null);
-            }
         });
 
         // Zero the labels on init (no placeholder %s should be visible)
@@ -197,6 +193,10 @@ public final class AppController {
         this.setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size());
     }
 
+    public ReplayBin getDisplayedBin() {
+        return displayedBin;
+    }
+
     public void selectBin(ReplayBin bin) {
         this.selectedBins.add(bin);
     }
@@ -211,10 +211,6 @@ public final class AppController {
 
     public void clearSelectedBins() {
         this.selectedBins.clear();
-    }
-
-    public ReplayBin getDisplayedBin() {
-        return displayedBin;
     }
 
     public void closeInfoPanel() {
