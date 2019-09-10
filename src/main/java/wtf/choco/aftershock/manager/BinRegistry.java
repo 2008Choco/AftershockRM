@@ -47,6 +47,10 @@ public class BinRegistry  {
         this.bins.add(bin);
     }
 
+    public ReplayBin getBin(int index) {
+        return bins.get(index);
+    }
+
     public ReplayBin getBin(String name) {
         for (ReplayBin bin : bins) {
             if (bin.getName().equalsIgnoreCase(name)) {
@@ -86,6 +90,10 @@ public class BinRegistry  {
 
     public ObservableList<ReplayBin> getBins() {
         return bins;
+    }
+
+    public int getBinCount() {
+        return bins.size();
     }
 
     public void loadBinsFromFile(File file, boolean deleteBins) {

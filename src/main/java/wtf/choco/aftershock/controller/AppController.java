@@ -7,6 +7,8 @@ import java.util.ResourceBundle;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.Team;
+import wtf.choco.aftershock.structure.BinEditor;
+import wtf.choco.aftershock.structure.BinSelectionModel;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
@@ -14,7 +16,6 @@ import wtf.choco.aftershock.structure.StringListTableCell;
 import wtf.choco.aftershock.structure.Tag;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -56,16 +57,12 @@ public final class AppController {
     @FXML private ResourceBundle resources;
 
     @FXML private HBox primaryDisplay;
-    @FXML private VBox binEditor;
-    @FXML private VBox binList;
+    @FXML private VBox binEditorPane, binEditorList;
 
-    private ReplayBin displayedBin = null;
-    private ObservableList<ReplayBin> selectedBins = FXCollections.observableArrayList();
+    private BinEditor binEditor;
 
     private double lastDividerPositionInfo = 0.70;
     private int expectedReplays = 1, loadedReplays = 0;
-
-    private ListChangeListener<ReplayEntry> binChangeListener;
 
     @FXML
     public void initialize() {
@@ -114,40 +111,7 @@ public final class AppController {
             this.setLabel(labelLoaded, "ui.footer.loaded", loaded);
         });
 
-        this.binChangeListener = c -> {
-            this.setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size());
-        };
-
-        // Bin control
-        App app = App.getInstance();
-        BinRegistry binRegistry = app.getBinRegistry();
-
-        ObservableList<Node> viewChildren = binList.getChildren();
-        binRegistry.getBins().forEach(b -> viewChildren.add(b.getDisplay()));
-
-        binRegistry.getBins().addListener((ListChangeListener<ReplayBin>) c -> {
-            if (!c.next()) {
-                return;
-            }
-
-            if (c.wasAdded()) {
-                c.getAddedSubList().forEach(b -> viewChildren.add(b.getDisplay()));
-            } else {
-                c.getRemoved().forEach(b -> viewChildren.remove(b.getDisplay()));
-            }
-        });
-
-        this.selectedBins.addListener((ListChangeListener<ReplayBin>) c -> {
-            if (!c.next()) {
-                return;
-            }
-
-            if (c.wasAdded()) {
-                c.getAddedSubList().forEach(b -> b.getDisplay().getStyleClass().add("bin-display-selected"));
-            } else if (c.wasRemoved()) {
-                c.getRemoved().forEach(b -> b.getDisplay().getStyleClass().remove("bin-display-selected"));
-            }
-        });
+        this.binEditor = new BinEditor(replayTable, binEditorPane, binEditorList, c -> setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size()));
 
         // Zero the labels on init (no placeholder %s should be visible)
         this.setLabel(labelListed, "ui.footer.listed", 0);
@@ -170,9 +134,9 @@ public final class AppController {
     public void toggleBinEditor(@SuppressWarnings("unused") ActionEvent event) {
         ObservableList<Node> primaryDisplayChildren = primaryDisplay.getChildren();
         if (primaryDisplayChildren.size() == 1) {
-            primaryDisplayChildren.add(0, binEditor);
+            primaryDisplayChildren.add(0, binEditor.getNode());
         } else {
-            primaryDisplayChildren.remove(binEditor);
+            primaryDisplayChildren.remove(binEditor.getNode());
         }
     }
 
@@ -185,8 +149,8 @@ public final class AppController {
         ReplayBin bin = null;
         while ((bin = binRegistry.createBin(name + (duplicateCount++ >= 1 ? " (" + duplicateCount + ")" : ""))) == null);
 
-        this.clearSelectedBins();
-        this.displayBin(bin);
+        this.binEditor.getSelectionModel().clearSelection();
+        this.binEditor.display(bin);
         bin.getDisplay().openNameEditor();
     }
 
@@ -194,24 +158,27 @@ public final class AppController {
     public void deleteBin(@SuppressWarnings("unused") ActionEvent event) {
         BinRegistry binRegistry = App.getInstance().getBinRegistry();
 
-        List<ReplayBin> deleted = new ArrayList<>(selectedBins.size());
-        this.selectedBins.forEach(b -> {
+        BinSelectionModel selection = binEditor.getSelectionModel();
+        ObservableList<ReplayBin> selected = selection.getSelectedItems();
+        List<ReplayBin> deleted = new ArrayList<>(selected.size());
+
+        selected.forEach(b -> {
             if (b == BinRegistry.GLOBAL_BIN) { // Don't delete the global bin
                 return;
             }
 
-            if (displayedBin == b) {
-                this.displayBin(null);
+            if (binEditor.getDisplayed() == b) {
+                this.binEditor.clearDisplay();
             }
 
             binRegistry.deleteBin(b);
             deleted.add(b);
         });
 
-        deleted.forEach(this::deselectBin);
+        deleted.forEach(selection::clearSelection);
 
-        if (displayedBin == null) {
-            this.displayBin(selectedBins.size() > 0 ? selectedBins.get(0) : BinRegistry.GLOBAL_BIN);
+        if (binEditor.getDisplayed() == null) {
+            this.binEditor.display(selected.size() > 0 ? selected.get(0) : BinRegistry.GLOBAL_BIN);
         }
     }
 
@@ -219,47 +186,8 @@ public final class AppController {
         return replayTable;
     }
 
-    public void displayBin(ReplayBin bin) {
-        this.displayedBin = bin;
-
-        if (bin == null) {
-            this.replayTable.setItems(FXCollections.emptyObservableList());
-            return;
-        }
-
-        ObservableList<ReplayEntry> entries = bin.getObservableList();
-        this.replayTable.setItems(entries);
-        this.selectBin(displayedBin);
-
-        // Ensure there is only ever one instance of the listener by removing it first
-        entries.removeListener(binChangeListener);
-        entries.addListener(binChangeListener);
-
-        this.setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size());
-    }
-
-    public ReplayBin getDisplayedBin() {
-        return displayedBin;
-    }
-
-    public void selectBin(ReplayBin bin) {
-        this.selectedBins.add(bin);
-    }
-
-    public void deselectBin(ReplayBin bin) {
-        this.selectedBins.remove(bin);
-    }
-
-    public boolean isSelectedBin(ReplayBin bin) {
-        return selectedBins.contains(bin);
-    }
-
-    public int getSelectedCount() {
-        return selectedBins.size();
-    }
-
-    public void clearSelectedBins() {
-        this.selectedBins.clear();
+    public BinEditor getBinEditor() {
+        return binEditor;
     }
 
     public void closeInfoPanel() {

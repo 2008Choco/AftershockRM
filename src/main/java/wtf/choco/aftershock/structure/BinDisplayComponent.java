@@ -1,7 +1,6 @@
 package wtf.choco.aftershock.structure;
 
 import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.controller.AppController;
 
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -53,31 +52,31 @@ public class BinDisplayComponent extends VBox {
                 return;
             }
 
-            AppController controller = App.getInstance().getController();
+            BinEditor binEditor = App.getInstance().getController().getBinEditor();
+            BinSelectionModel selection = binEditor.getSelectionModel();
 
             if (e.isControlDown()) {
-                if (!controller.isSelectedBin(bin)) {
-                    controller.selectBin(bin);
-                    if (controller.getDisplayedBin() == null) {
-                        controller.displayBin(bin);
+                if (!selection.isSelected(bin)) {
+                    selection.select(bin);
+                    if (binEditor.getDisplayed() == null) {
+                        binEditor.display(bin);
                     }
                 } else {
-                    controller.deselectBin(bin);
+                    selection.clearSelection(bin);
                 }
             } else {
                 if (beingEdited) {
                     return;
                 }
 
-                boolean wasSelected = controller.isSelectedBin(bin) && controller.getSelectedCount() > 1;
-                controller.clearSelectedBins();
-                controller.displayBin(wasSelected || controller.getDisplayedBin() != bin ? bin : null);
+                boolean wasSelected = selection.isSelected(bin) && selection.getSelectedItems().size() > 1;
+                selection.clearSelection();
+                binEditor.display(wasSelected || binEditor.getDisplayed() != bin ? bin : null);
             }
         });
 
         this.label.setOnMouseClicked(e -> {
-            AppController controller = App.getInstance().getController();
-            if (!controller.isSelectedBin(bin)) {
+            if (!App.getInstance().getController().getBinEditor().getSelectionModel().isSelected(bin)) {
                 return;
             }
 

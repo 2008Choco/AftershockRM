@@ -126,7 +126,7 @@ public final class App extends Application {
         stage.setScene(scene);
         stage.show();
 
-        this.controller.displayBin(BinRegistry.GLOBAL_BIN);
+        this.controller.getBinEditor().display(BinRegistry.GLOBAL_BIN);
 
         // Replay setup
         this.installDirectory.mkdirs();
