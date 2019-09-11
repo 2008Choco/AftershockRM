@@ -69,6 +69,7 @@ public final class AppController {
     @FXML private TableColumn<ReplayEntry, String> columnMode;
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreBlue;
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreOrange;
+    @FXML private TableColumn<ReplayEntry, String> columnMap;
     @FXML private TableColumn<ReplayEntry, String> columnOwner;
     @FXML private TableColumn<ReplayEntry, List<String>> columnComments;
     @FXML private TableColumn<ReplayEntry, List<Tag>> columnTags;
@@ -104,6 +105,7 @@ public final class AppController {
         this.columnMode.setCellValueFactory(new ReplayPropertyFetcher<>(r -> String.format("%dv%1$d", r.getReplay().getTeamSize())));
         this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.BLUE)));
         this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.ORANGE)));
+        this.columnMap.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getMapName()));
         this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getPlayerName()));
         this.columnComments.setCellFactory(StringListTableCell.getFactoryCallback("None"));
         this.columnComments.setCellValueFactory(new PropertyValueFactory<>("comments"));

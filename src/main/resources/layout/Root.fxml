@@ -68,6 +68,7 @@
           <TableColumn fx:id="columnMode" sortable="false" text="%ui.table.column.mode" />
           <TableColumn fx:id="columnScoreBlue" prefWidth="80" sortable="false" styleClass="columnScoreBlue" text="%ui.table.column.score_blue" />
           <TableColumn fx:id="columnScoreOrange" prefWidth="80" sortable="false" text="%ui.table.column.score_orange" />
+          <TableColumn fx:id="columnMap" prefWidth="175" text="%ui.table.column.map" />
           <TableColumn fx:id="columnOwner" prefWidth="100" sortable="false" text="%ui.table.column.owner" />
           <TableColumn fx:id="columnComments" prefWidth="340" sortable="false" text="%ui.table.column.comments" />
           <TableColumn fx:id="columnTags" sortable="false" text="%ui.table.column.tags" />
