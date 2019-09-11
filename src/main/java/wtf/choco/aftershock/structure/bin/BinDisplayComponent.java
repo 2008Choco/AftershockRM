@@ -51,10 +51,7 @@ public class BinDisplayComponent extends VBox {
 
         this.contextMenu = new ContextMenu();
         MenuItem loadAllReplays = new MenuItem("Load all replays");
-        loadAllReplays.setOnAction(e -> {
-            BinRegistry.GLOBAL_BIN.forEach(r -> r.getEntryData().setLoaded(false));
-            bin.forEach(r -> r.getEntryData().setLoaded(true));
-        });
+        loadAllReplays.setOnAction(e -> BinRegistry.GLOBAL_BIN.forEach(r -> r.getEntryData().setLoaded(bin.hasReplay(r))));
         MenuItem unloadAllReplays = new MenuItem("Unload all replays");
         unloadAllReplays.setOnAction(e -> bin.forEach(r -> r.getEntryData().setLoaded(false)));
         this.contextMenu.getItems().addAll(loadAllReplays, unloadAllReplays);
