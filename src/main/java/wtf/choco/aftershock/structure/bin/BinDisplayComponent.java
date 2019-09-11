@@ -57,7 +57,7 @@ public class BinDisplayComponent extends VBox {
         unloadAllReplays.setOnAction(e -> bin.forEach(r -> r.getEntryData().setLoaded(false)));
         this.contextMenu.getItems().addAll(loadAllReplays, unloadAllReplays);
 
-        if (!bin.getName().equalsIgnoreCase("global")) {
+        if (!bin.isGlobalBin()) {
             MenuItem clearReplays = new MenuItem("Clear bin");
             clearReplays.setOnAction(e -> bin.clear());
             this.contextMenu.getItems().addAll(new SeparatorMenuItem(), clearReplays);
@@ -100,7 +100,7 @@ public class BinDisplayComponent extends VBox {
         });
 
         this.setOnDragOver(e -> {
-            if (bin != BinRegistry.GLOBAL_BIN && e.getGestureSource() == App.getInstance().getController().getReplayTable()) {
+            if (!bin.isGlobalBin() && e.getGestureSource() == App.getInstance().getController().getReplayTable()) {
                 e.acceptTransferModes(TransferMode.MOVE);
             }
         });
@@ -193,7 +193,7 @@ public class BinDisplayComponent extends VBox {
     }
 
     private void selectedOnly(Runnable runnable) {
-        if (bin == BinRegistry.GLOBAL_BIN || !App.getInstance().getController().getBinEditor().getSelectionModel().isSelected(bin)) {
+        if (bin.isGlobalBin() || !App.getInstance().getController().getBinEditor().getSelectionModel().isSelected(bin)) {
             return;
         }
 

@@ -204,7 +204,7 @@ public final class AppController {
             sendTo.getItems().clear();
 
             for (ReplayBin bin : binRegistry.getBins()) {
-                if (bin == BinRegistry.GLOBAL_BIN || bin == binEditor.getDisplayed()) {
+                if (bin.isGlobalBin() || bin == binEditor.getDisplayed()) {
                     continue;
                 }
 
@@ -267,7 +267,7 @@ public final class AppController {
         ArrayList<ReplayBin> toDelete = new ArrayList<>(selection.getSelectedItems());
 
         toDelete.forEach(b -> {
-            if (b == BinRegistry.GLOBAL_BIN) { // Don't delete the global bin
+            if (b.isGlobalBin()) { // Don't delete the global bin
                 Toolkit.getDefaultToolkit().beep();
                 return;
             }

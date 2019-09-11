@@ -19,7 +19,7 @@ import javafx.collections.ObservableList;
 
 public class BinRegistry  {
 
-    public static final ReplayBin GLOBAL_BIN = new ReplayBin(UUID.randomUUID(), "Global");
+    public static final ReplayBin GLOBAL_BIN = new ReplayBin(UUID.randomUUID(), "Global", true);
 
     private final ObservableList<ReplayBin> bins = FXCollections.observableArrayList();
 

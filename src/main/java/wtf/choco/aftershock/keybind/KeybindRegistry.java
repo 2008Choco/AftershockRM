@@ -6,7 +6,6 @@ import java.util.List;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.controller.AppController;
-import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 
@@ -127,7 +126,7 @@ public final class KeybindRegistry {
             }
 
             ReplayBin displayed = controller.getBinEditor().getDisplayed();
-            if (displayed == BinRegistry.GLOBAL_BIN) {
+            if (displayed == null || displayed.isGlobalBin()) {
                 Toolkit.getDefaultToolkit().beep();
                 return;
             }
