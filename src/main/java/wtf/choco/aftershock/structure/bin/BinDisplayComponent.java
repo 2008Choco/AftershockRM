@@ -129,9 +129,13 @@ public class BinDisplayComponent extends VBox {
             e.setDropCompleted(success);
         });
 
-        this.label.setOnMouseClicked(e -> selectedOnly(this::openNameEditor));
         this.label.setOnMouseEntered(e -> selectedOnly(() -> label.setCursor(Cursor.TEXT)));
         this.label.setOnMouseExited(e -> selectedOnly(() -> label.setCursor(getCursor())));
+        this.label.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY) {
+                this.selectedOnly(this::openNameEditor);
+            }
+        });
 
         this.nameEditor.setOnKeyPressed(e -> {
             KeyCode key = e.getCode();
