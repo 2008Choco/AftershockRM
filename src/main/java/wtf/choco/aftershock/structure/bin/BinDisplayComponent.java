@@ -50,19 +50,32 @@ public class BinDisplayComponent extends VBox {
         this.label = new Label(bin.getName());
         this.nameEditor = new TextField();
 
+        // Context menu
         this.contextMenu = new ContextMenu();
         MenuItem loadAllReplays = new MenuItem("Load all replays");
         loadAllReplays.setOnAction(e -> BinRegistry.GLOBAL_BIN.forEach(r -> r.getEntryData().setLoaded(bin.hasReplay(r))));
         MenuItem unloadAllReplays = new MenuItem("Unload all replays");
         unloadAllReplays.setOnAction(e -> bin.forEach(r -> r.getEntryData().setLoaded(false)));
+
         this.contextMenu.getItems().addAll(loadAllReplays, unloadAllReplays);
 
+        // Menu items that should not be accessible to the global bin
         if (!bin.isGlobalBin()) {
-            MenuItem clearReplays = new MenuItem("Clear bin");
-            clearReplays.setOnAction(e -> bin.clear());
-            this.contextMenu.getItems().addAll(new SeparatorMenuItem(), clearReplays);
+            MenuItem renameBin = new MenuItem("Rename");
+            renameBin.setOnAction(e -> openNameEditor());
+            MenuItem clearBin = new MenuItem("Clear");
+            clearBin.setOnAction(e -> bin.clear());
+            MenuItem deleteBin = new MenuItem("Delete");
+            deleteBin.setOnAction(e -> {
+                this.contextMenu.hide();
+                App.getInstance().getBinRegistry().deleteBin(bin);
+                e.consume();
+            });
+
+            this.contextMenu.getItems().addAll(new SeparatorMenuItem(), renameBin, clearBin, deleteBin);
         }
 
+        // Layout and listeners
         this.label.setTextAlignment(TextAlignment.CENTER);
         this.label.setWrapText(true);
 
