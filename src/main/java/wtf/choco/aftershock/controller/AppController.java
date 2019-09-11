@@ -282,6 +282,10 @@ public final class AppController {
         return replayTable;
     }
 
+    public TextField getFilterBar() {
+        return filterBar;
+    }
+
     public BinEditor getBinEditor() {
         return binEditor;
     }

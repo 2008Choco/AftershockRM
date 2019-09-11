@@ -131,6 +131,8 @@ public final class App extends Application {
             this.controller.closeInfoPanel();
         });
 
+        this.keybindRegistry.registerKeybind(KeyCode.F, KeyCombination.CONTROL_DOWN).executes(() -> controller.getFilterBar().requestFocus());
+
         // Listen for clicks outside of bin name editor, cancel editing
         this.scene.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
             PickResult result = e.getPickResult();

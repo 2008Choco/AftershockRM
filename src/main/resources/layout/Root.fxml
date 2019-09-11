@@ -100,7 +100,7 @@
 
       <ProgressBar fx:id="loadProgress" focusTraversable="false" nodeOrientation="LEFT_TO_RIGHT" prefWidth="200.0" progress="0.0" visible="false" />
       <StackPane alignment="CENTER_RIGHT">
-        <TextField fx:id="filterBar" focusTraversable="false" promptText="Filter..." prefWidth="250" onKeyTyped="#updateFilter" />
+        <TextField fx:id="filterBar" focusTraversable="false" promptText="Filter... (Ctrl + F)" prefWidth="250" onKeyTyped="#updateFilter" />
         <ImageView opacity="0.5">
           <StackPane.margin>
             <Insets right="10.0" />

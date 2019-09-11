@@ -1,7 +1,7 @@
 module wtf.choco.aftershock {
-    requires javafx.controls;
     requires javafx.fxml;
 
+    requires transitive javafx.controls;
     requires transitive javafx.graphics;
     requires transitive java.desktop;
     requires transitive java.logging;
