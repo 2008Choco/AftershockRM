@@ -73,6 +73,10 @@ public class ReplayBin implements Iterable<Replay> {
         this.byId.put(replay.getId(), replay);
     }
 
+    public boolean hasReplay(Replay replay) {
+        return byId.containsValue(replay);
+    }
+
     public void removeReplay(Replay replay) {
         this.replays.removeIf(r -> r.getReplay() == replay);
         this.byId.remove(replay.getId());

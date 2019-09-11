@@ -3,6 +3,7 @@
 ### Eclipse ###
 .metadata
 bin/
+!src/**/bin/
 tmp/
 *.tmp
 *.bak

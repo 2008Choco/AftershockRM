@@ -1,5 +1,6 @@
 package wtf.choco.aftershock.controller;
 
+import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -33,10 +34,19 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public final class AppController {
+
+    public static final DataFormat DATA_FORMAT_REPLAY_ENTRY = new DataFormat();
+
+    private static final Image DRAG_IMAGE = new Image(App.class.getResourceAsStream("/icons/file.png"));
 
     @FXML private TableView<ReplayEntry> replayTable;
 
@@ -119,6 +129,27 @@ public final class AppController {
             this.setLabel(labelLoaded, "ui.footer.loaded", loaded);
         });
 
+        this.replayTable.setOnDragDetected(e -> {
+            var selection = replayTable.getSelectionModel();
+            if (selection.isEmpty()) {
+                return;
+            }
+
+            Dragboard dragboard = replayTable.startDragAndDrop(TransferMode.MOVE);
+            dragboard.setDragView(DRAG_IMAGE);
+
+            ClipboardContent clipboard = new ClipboardContent();
+            StringBuilder replays = new StringBuilder();
+            for (ReplayEntry replay : selection.getSelectedItems()) {
+                replays.append(replay.getReplay().getId());
+                replays.append(";");
+            }
+
+            clipboard.putString(replays.toString().substring(0, replays.length() - 1));
+            dragboard.setContent(clipboard);
+            System.out.println("Started dragging " + selection.getSelectedItems().size() + " items");
+        });
+
         this.binEditor = new BinEditor(replayTable, binEditorPane, binEditorList, c -> setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size()));
 
         // Zero the labels on init (no placeholder %s should be visible)
@@ -172,6 +203,7 @@ public final class AppController {
 
         selected.forEach(b -> {
             if (b == BinRegistry.GLOBAL_BIN) { // Don't delete the global bin
+                Toolkit.getDefaultToolkit().beep();
                 return;
             }
 

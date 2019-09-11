@@ -1,7 +1,10 @@
 package wtf.choco.aftershock;
 
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
@@ -18,6 +21,8 @@ import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.manager.TagRegistry;
+import wtf.choco.aftershock.structure.ReplayBin;
+import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
@@ -107,6 +112,23 @@ public final class App extends Application {
             }
 
             selectionModel.getSelectedItems().forEach(e -> e.setLoaded(!e.isLoaded()));
+        });
+        this.keybindRegistry.registerKeybind(KeyCode.DELETE).executes(() -> {
+            var selection = controller.getReplayTable().getSelectionModel();
+            if (selection.isEmpty()) {
+                return;
+            }
+
+            ReplayBin displayed = controller.getBinEditor().getDisplayed();
+            if (displayed == BinRegistry.GLOBAL_BIN) {
+                Toolkit.getDefaultToolkit().beep();
+                return;
+            }
+
+            List<ReplayEntry> selected = new ArrayList<>(selection.getSelectedItems());
+            selection.clearSelection();
+            selected.forEach(r -> displayed.removeReplay(r.getReplay()));
+            this.controller.closeInfoPanel();
         });
 
         // Listen for clicks outside of bin name editor, cancel editing
