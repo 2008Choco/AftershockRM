@@ -24,8 +24,11 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
@@ -71,6 +74,7 @@ public final class AppController {
     @FXML private VBox binEditorPane, binEditorList;
 
     private BinEditor binEditor;
+    private ContextMenu contextMenu;
 
     private double lastDividerPositionInfo = 0.70;
     private int expectedReplays = 1, loadedReplays = 0;
@@ -147,10 +151,43 @@ public final class AppController {
 
             clipboard.putString(replays.toString().substring(0, replays.length() - 1));
             dragboard.setContent(clipboard);
-            System.out.println("Started dragging " + selection.getSelectedItems().size() + " items");
         });
 
         this.binEditor = new BinEditor(replayTable, binEditorPane, binEditorList, c -> setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size()));
+
+        // TODO: Add functionality for "open file location"
+        this.contextMenu = new ContextMenu();
+        this.contextMenu.getItems().add(new MenuItem("Open file location..."));
+        Menu sendTo = new Menu("Send to...");
+
+        this.replayTable.setContextMenu(contextMenu);
+
+        this.replayTable.setOnContextMenuRequested(e -> {
+            if (replayTable.getSelectionModel().isEmpty()) {
+                this.contextMenu.hide();
+                e.consume();
+                return;
+            }
+
+            BinRegistry binRegistry = App.getInstance().getBinRegistry();
+
+            this.contextMenu.getItems().add(1, sendTo);
+            sendTo.getItems().clear();
+
+            for (ReplayBin bin : binRegistry.getBins()) {
+                if (bin == BinRegistry.GLOBAL_BIN || bin == binEditor.getDisplayed()) {
+                    continue;
+                }
+
+                MenuItem item = new MenuItem(bin.getName());
+                item.setOnAction(itemEvent -> replayTable.getSelectionModel().getSelectedItems().forEach(i -> bin.addReplay(i.getReplay())));
+                sendTo.getItems().add(item);
+            }
+
+            if (sendTo.getItems().isEmpty()) {
+                this.contextMenu.getItems().remove(1);
+            }
+        });
 
         // Zero the labels on init (no placeholder %s should be visible)
         this.setLabel(labelListed, "ui.footer.listed", 0);
