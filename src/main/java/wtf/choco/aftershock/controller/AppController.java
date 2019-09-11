@@ -197,8 +197,6 @@ public final class AppController {
             }
         });
 
-        this.filterBar.setOnMouseClicked(e -> filterBar.clear());
-
         // Zero the labels on init (no placeholder %s should be visible)
         this.setLabel(labelListed, "ui.footer.listed", 0);
         this.setLabel(labelLoaded, "ui.footer.loaded", 0);
