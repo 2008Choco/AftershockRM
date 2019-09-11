@@ -122,13 +122,9 @@ public class BinDisplayComponent extends VBox {
             e.setDropCompleted(success);
         });
 
-        this.label.setOnMouseClicked(e -> {
-            if (!App.getInstance().getController().getBinEditor().getSelectionModel().isSelected(bin)) {
-                return;
-            }
-
-            this.openNameEditor();
-        });
+        this.label.setOnMouseClicked(e -> selectedOnly(this::openNameEditor));
+        this.label.setOnMouseEntered(e -> selectedOnly(() -> label.setCursor(Cursor.TEXT)));
+        this.label.setOnMouseExited(e -> selectedOnly(() -> label.setCursor(getCursor())));
 
         this.nameEditor.setOnKeyPressed(e -> {
             KeyCode key = e.getCode();
@@ -162,6 +158,8 @@ public class BinDisplayComponent extends VBox {
         children.remove(label);
         children.add(nameEditor);
 
+        this.nameEditor.requestFocus();
+
         this.beingEdited = true;
         return true;
     }
@@ -185,6 +183,14 @@ public class BinDisplayComponent extends VBox {
 
     public boolean isBeingEdited() {
         return beingEdited;
+    }
+
+    private void selectedOnly(Runnable runnable) {
+        if (bin == BinRegistry.GLOBAL_BIN || !App.getInstance().getController().getBinEditor().getSelectionModel().isSelected(bin)) {
+            return;
+        }
+
+        runnable.run();
     }
 
 }
