@@ -12,8 +12,8 @@
 }
 
 .split-pane *.split-pane-divider {
-    -fx-padding: 0 1 0 1;
-    -fx-background-color: transparent;
+    -fx-padding: 1;
+    -fx-background-color: lightgray;
 }
 
 .scroll-pane {
@@ -30,4 +30,11 @@
 
 .bin-display-selected {
     -fx-background-color: rgb(230, 230, 230);
+}
+
+.filter-popup {
+    -fx-border-color: lightgray;
+    -fx-border-width: 1px;
+    -fx-border-color: lightgray;
+    -fx-background-color: whitesmoke;
 }
