@@ -5,6 +5,7 @@ import java.util.List;
 
 import wtf.choco.aftershock.App;
 
+import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -29,6 +30,17 @@ public final class KeybindRegistry {
     public KeybindAction registerKeybind(KeyCode character, KeyCombination.Modifier... modifiers) {
         KeybindAction keybind = new KeybindAction(new KeyCodeCombination(character, modifiers));
         this.keyActions.add(keybind);
+        return keybind;
+    }
+
+    public KeybindAction registerKeybind(Node parent, KeyCode character, KeyCombination.Modifier... modifiers) {
+        KeybindAction keybind = new KeybindAction(new KeyCodeCombination(character, modifiers));
+        parent.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+            if (keybind.matchesEvent(e) && keybind.action != null) {
+                keybind.action.accept(app);
+            }
+        });
+
         return keybind;
     }
 

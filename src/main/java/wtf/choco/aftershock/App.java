@@ -104,8 +104,8 @@ public final class App extends Application {
             this.controller.closeInfoPanel();
             this.controller.getReplayTable().getSelectionModel().clearSelection();
         });
-        this.keybindRegistry.registerKeybind(KeyCode.A, KeyCombination.CONTROL_DOWN).executes(() -> controller.getReplayTable().getSelectionModel().selectAll());
-        this.keybindRegistry.registerKeybind(KeyCode.SPACE).or(KeyCode.ENTER).executes(() -> {
+        this.keybindRegistry.registerKeybind(controller.getReplayTable(), KeyCode.A, KeyCombination.CONTROL_DOWN).executes(() -> controller.getReplayTable().getSelectionModel().selectAll());
+        this.keybindRegistry.registerKeybind(controller.getReplayTable(), KeyCode.SPACE).or(KeyCode.ENTER).executes(() -> {
             var selectionModel = this.controller.getReplayTable().getSelectionModel();
             if (selectionModel.isEmpty()) {
                 return;
@@ -113,7 +113,7 @@ public final class App extends Application {
 
             selectionModel.getSelectedItems().forEach(e -> e.setLoaded(!e.isLoaded()));
         });
-        this.keybindRegistry.registerKeybind(KeyCode.DELETE).executes(() -> {
+        this.keybindRegistry.registerKeybind(controller.getReplayTable(), KeyCode.DELETE).executes(() -> {
             var selection = controller.getReplayTable().getSelectionModel();
             if (selection.isEmpty()) {
                 return;
