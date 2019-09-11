@@ -13,6 +13,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -55,6 +56,12 @@ public class BinDisplayComponent extends VBox {
         MenuItem unloadAllReplays = new MenuItem("Unload all replays");
         unloadAllReplays.setOnAction(e -> bin.forEach(r -> r.getEntryData().setLoaded(false)));
         this.contextMenu.getItems().addAll(loadAllReplays, unloadAllReplays);
+
+        if (!bin.getName().equalsIgnoreCase("global")) {
+            MenuItem clearReplays = new MenuItem("Clear bin");
+            clearReplays.setOnAction(e -> bin.clear());
+            this.contextMenu.getItems().addAll(new SeparatorMenuItem(), clearReplays);
+        }
 
         this.label.setTextAlignment(TextAlignment.CENTER);
         this.label.setWrapText(true);
