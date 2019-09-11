@@ -10,7 +10,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -28,6 +30,8 @@ public class BinDisplayComponent extends VBox {
     private final ImageView graphic;
     private final Label label;
     private final TextField nameEditor;
+    private final ContextMenu contextMenu;
+
     private boolean beingEdited = false;
 
     {
@@ -45,11 +49,22 @@ public class BinDisplayComponent extends VBox {
         this.label = new Label(bin.getName());
         this.nameEditor = new TextField();
 
+        this.contextMenu = new ContextMenu();
+        MenuItem loadAllReplays = new MenuItem("Load all replays");
+        loadAllReplays.setOnAction(e -> {
+            BinRegistry.GLOBAL_BIN.forEach(r -> r.getEntryData().setLoaded(false));
+            bin.forEach(r -> r.getEntryData().setLoaded(true));
+        });
+        MenuItem unloadAllReplays = new MenuItem("Unload all replays");
+        unloadAllReplays.setOnAction(e -> bin.forEach(r -> r.getEntryData().setLoaded(false)));
+        this.contextMenu.getItems().addAll(loadAllReplays, unloadAllReplays);
+
         this.label.setTextAlignment(TextAlignment.CENTER);
         this.label.setWrapText(true);
 
         this.nameEditor.setAlignment(Pos.TOP_CENTER);
 
+        this.setOnContextMenuRequested(e -> contextMenu.show(this, e.getScreenX(), e.getScreenY()));
         this.setOnMouseEntered(e -> setCursor(Cursor.HAND));
         this.setOnMouseExited(e -> setCursor(Cursor.DEFAULT));
         this.setOnMouseClicked(e -> {
