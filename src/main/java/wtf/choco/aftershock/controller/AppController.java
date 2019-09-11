@@ -16,6 +16,7 @@ import wtf.choco.aftershock.structure.StringListTableCell;
 import wtf.choco.aftershock.structure.Tag;
 import wtf.choco.aftershock.structure.bin.BinEditor;
 import wtf.choco.aftershock.structure.bin.BinSelectionModel;
+import wtf.choco.aftershock.util.FXUtils;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -24,6 +25,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
@@ -41,13 +43,17 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Popup;
 
 public final class AppController {
 
@@ -71,6 +77,7 @@ public final class AppController {
 
     @FXML private Label labelListed, labelLoaded, labelSelected;
     @FXML private TextField filterBar;
+    @FXML private ImageView filterOptionsImage;
     @FXML private ProgressBar loadProgress;
 
     @FXML private ResourceBundle resources;
@@ -83,6 +90,8 @@ public final class AppController {
 
     private double lastDividerPositionInfo = 0.70;
     private int expectedReplays = 1, loadedReplays = 0;
+
+    private Popup popup = new Popup();
 
     private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((r, t) -> r.getReplay().getName().toLowerCase().startsWith(t.toLowerCase()));
 
@@ -103,6 +112,16 @@ public final class AppController {
 
         TableViewSelectionModel<ReplayEntry> selectionModel = replayTable.getSelectionModel();
         selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
+
+        // TODO: Do this with CSS
+        StackPane root = FXUtils.loadFXMLRoot("/layout/FilterPopup", resources);
+        this.popup.setAutoHide(true);
+        this.popup.getContent().add(root);
+        this.popup.setOnHidden(e -> filterOptionsImage.setOpacity(0.5));
+        this.popup.setWidth(root.getPrefWidth());
+        this.popup.setHeight(root.getPrefHeight());
+
+        this.filterOptionsImage.setCursor(Cursor.HAND);
 
         // Label update listeners
         ListChangeListener<ReplayEntry> changeListener = (c) -> setLabel(labelListed, "ui.footer.listed", c.getList().size());
@@ -273,6 +292,24 @@ public final class AppController {
             FilteredList<ReplayEntry> filteredItems = (FilteredList<ReplayEntry>) items;
             filteredItems.setPredicate(null); // Must set to null first to invalidate the predicate... stupid
             filteredItems.setPredicate(getTableFilter());
+        }
+    }
+
+    @FXML
+    public void toggleFilterMenu(MouseEvent event) {
+        Object clicked = event.getSource();
+        if (clicked instanceof ImageView) {
+            ImageView clickedImage = (ImageView) clicked;
+
+            if (!popup.isShowing()) {
+                clickedImage.setOpacity(1.0);
+
+                Bounds imageBounds = clickedImage.localToScreen(clickedImage.getBoundsInLocal());
+                this.popup.show(clickedImage, imageBounds.getCenterX() - (popup.getWidth() / 2), imageBounds.getCenterY() - 15 - popup.getHeight());
+            } else {
+                clickedImage.setOpacity(0.5);
+                this.popup.hide();
+            }
         }
     }
 

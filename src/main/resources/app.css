@@ -1,4 +1,4 @@
-*, *:focused {
+*:focused {
     -fx-faint-focus-color: transparent;
     -fx-focus-color: transparent;
 }
