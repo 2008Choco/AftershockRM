@@ -198,10 +198,9 @@ public final class AppController {
         BinRegistry binRegistry = App.getInstance().getBinRegistry();
 
         BinSelectionModel selection = binEditor.getSelectionModel();
-        ObservableList<ReplayBin> selected = selection.getSelectedItems();
-        List<ReplayBin> deleted = new ArrayList<>(selected.size());
+        ArrayList<ReplayBin> toDelete = new ArrayList<>(selection.getSelectedItems());
 
-        selected.forEach(b -> {
+        toDelete.forEach(b -> {
             if (b == BinRegistry.GLOBAL_BIN) { // Don't delete the global bin
                 Toolkit.getDefaultToolkit().beep();
                 return;
@@ -211,14 +210,12 @@ public final class AppController {
                 this.binEditor.clearDisplay();
             }
 
+            selection.clearSelection(b);
             binRegistry.deleteBin(b);
-            deleted.add(b);
         });
 
-        deleted.forEach(selection::clearSelection);
-
         if (binEditor.getDisplayed() == null) {
-            this.binEditor.display(selected.size() > 0 ? selected.get(0) : BinRegistry.GLOBAL_BIN);
+            this.binEditor.display(selection.isEmpty() ? BinRegistry.GLOBAL_BIN : selection.getSelectedItems().get(0));
         }
     }
 
