@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.Team;
+import wtf.choco.aftershock.structure.DynamicFilter;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
@@ -20,6 +21,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
@@ -35,12 +37,14 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -66,6 +70,7 @@ public final class AppController {
     @FXML private SplitPane splitPane;
 
     @FXML private Label labelListed, labelLoaded, labelSelected;
+    @FXML private TextField filterBar;
     @FXML private ProgressBar loadProgress;
 
     @FXML private ResourceBundle resources;
@@ -78,6 +83,8 @@ public final class AppController {
 
     private double lastDividerPositionInfo = 0.70;
     private int expectedReplays = 1, loadedReplays = 0;
+
+    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((r, t) -> r.getReplay().getName().toLowerCase().startsWith(t.toLowerCase()));
 
     @FXML
     public void initialize() {
@@ -133,6 +140,7 @@ public final class AppController {
             this.setLabel(labelLoaded, "ui.footer.loaded", loaded);
         });
 
+        this.replayTable.setOnMouseClicked(e -> replayTable.requestFocus());
         this.replayTable.setOnDragDetected(e -> {
             var selection = replayTable.getSelectionModel();
             if (selection.isEmpty()) {
@@ -153,7 +161,7 @@ public final class AppController {
             dragboard.setContent(clipboard);
         });
 
-        this.binEditor = new BinEditor(replayTable, binEditorPane, binEditorList, c -> setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size()));
+        this.binEditor = new BinEditor(this, binEditorPane, binEditorList, c -> setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size()));
 
         // TODO: Add functionality for "open file location"
         this.contextMenu = new ContextMenu();
@@ -188,6 +196,8 @@ public final class AppController {
                 this.contextMenu.getItems().remove(1);
             }
         });
+
+        this.filterBar.setOnMouseClicked(e -> filterBar.clear());
 
         // Zero the labels on init (no placeholder %s should be visible)
         this.setLabel(labelListed, "ui.footer.listed", 0);
@@ -256,12 +266,28 @@ public final class AppController {
         }
     }
 
+    @FXML
+    public void updateFilter(@SuppressWarnings("unused") KeyEvent event) {
+        this.getTableFilter().setTerm(filterBar.getText());
+
+        ObservableList<ReplayEntry> items = replayTable.getItems();
+        if (items instanceof FilteredList) {
+            FilteredList<ReplayEntry> filteredItems = (FilteredList<ReplayEntry>) items;
+            filteredItems.setPredicate(null); // Must set to null first to invalidate the predicate... stupid
+            filteredItems.setPredicate(getTableFilter());
+        }
+    }
+
     public TableView<ReplayEntry> getReplayTable() {
         return replayTable;
     }
 
     public BinEditor getBinEditor() {
         return binEditor;
+    }
+
+    public DynamicFilter<ReplayEntry> getTableFilter() {
+        return tableFilter;
     }
 
     public void closeInfoPanel() {

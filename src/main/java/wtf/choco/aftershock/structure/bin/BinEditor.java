@@ -1,6 +1,7 @@
 package wtf.choco.aftershock.structure.bin;
 
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
@@ -8,6 +9,7 @@ import wtf.choco.aftershock.structure.ReplayEntry;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.scene.Node;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
@@ -16,6 +18,7 @@ public class BinEditor {
 
     private ReplayBin displayed;
 
+    private final AppController controller;
     private final ObservableList<Node> listed;
     private final BinSelectionModel selectionModel = new BinSelectionModel();
     private final TableView<ReplayEntry> replayTable;
@@ -23,8 +26,9 @@ public class BinEditor {
 
     private final ListChangeListener<ReplayEntry> binChangeListener;
 
-    public BinEditor(TableView<ReplayEntry> replayTable, VBox node, VBox list, ListChangeListener<ReplayEntry> binChangeListener) {
-        this.replayTable = replayTable;
+    public BinEditor(AppController controller, VBox node, VBox list, ListChangeListener<ReplayEntry> binChangeListener) {
+        this.controller = controller;
+        this.replayTable = controller.getReplayTable();
         this.node = node;
         this.listed = list.getChildren();
         this.binChangeListener = binChangeListener;
@@ -70,7 +74,8 @@ public class BinEditor {
             return;
         }
 
-        ObservableList<ReplayEntry> entries = bin.getObservableList();
+        FilteredList<ReplayEntry> entries = new FilteredList<>(bin.getObservableList());
+        entries.setPredicate(controller.getTableFilter());
         this.replayTable.setItems(entries);
         this.selectionModel.select(displayed);
 
