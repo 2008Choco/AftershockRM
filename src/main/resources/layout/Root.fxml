@@ -113,7 +113,7 @@
         </ImageView>
       </StackPane>
 
-      <Hyperlink contentDisplay="RIGHT" text="%ui.footer.support">
+      <Hyperlink contentDisplay="RIGHT" onAction="#openLink" text="%ui.footer.support">
         <tooltip>
           <Tooltip text="https://paypal.me/2008Choco" />
         </tooltip>
