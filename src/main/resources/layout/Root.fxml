@@ -61,6 +61,9 @@
 
     <SplitPane fx:id="splitPane" HBox.hgrow="ALWAYS">
       <TableView fx:id="replayTable" editable="true" focusTraversable="false" style="-fx-focus-color: transparent;">
+        <placeholder>
+          <Label text="Select a bin to display" />
+        </placeholder>
         <columns>
           <TableColumn fx:id="columnLoaded" prefWidth="60" editable="true" sortable="false" text="%ui.table.column.loaded" />
           <TableColumn fx:id="columnReplayName" prefWidth="200" text="%ui.table.column.replay_name" />
