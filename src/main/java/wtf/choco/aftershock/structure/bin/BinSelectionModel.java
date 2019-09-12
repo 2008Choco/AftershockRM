@@ -58,6 +58,11 @@ public class BinSelectionModel extends MultipleSelectionModel<ReplayBin> {
         this.select(index);
     }
 
+    public void clearAndSelect(ReplayBin bin) {
+        this.clearSelection();
+        this.select(bin);
+    }
+
     @Override
     public void select(int index) {
         if (index < binRegistry.getBinCount()) {
@@ -104,6 +109,7 @@ public class BinSelectionModel extends MultipleSelectionModel<ReplayBin> {
     @Override
     public void clearSelection() {
         this.selected.clear();
+        this.selectedIndices.clear();
     }
 
     @Override

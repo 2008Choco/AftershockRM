@@ -91,12 +91,22 @@ public class BinDisplayComponent extends VBox {
         this.setOnMouseEntered(e -> setCursor(Cursor.HAND));
         this.setOnMouseExited(e -> setCursor(Cursor.DEFAULT));
         this.setOnMouseClicked(e -> {
-            if (e.getButton() != MouseButton.PRIMARY) {
+            MouseButton button = e.getButton();
+            BinEditor binEditor = App.getInstance().getController().getBinEditor();
+            BinSelectionModel selection = binEditor.getSelectionModel();
+
+            if (button != MouseButton.PRIMARY) {
+                if (button == MouseButton.SECONDARY && selection.getSelectedItems().size() > 1) {
+                    selection.clearSelection();
+                    binEditor.display(bin);
+                }
+
                 return;
             }
 
-            BinEditor binEditor = App.getInstance().getController().getBinEditor();
-            BinSelectionModel selection = binEditor.getSelectionModel();
+            if (beingEdited) {
+                return;
+            }
 
             if (e.isControlDown()) {
                 if (!selection.isSelected(bin)) {
@@ -108,12 +118,20 @@ public class BinDisplayComponent extends VBox {
                     selection.clearSelection(bin);
                 }
             } else {
-                if (beingEdited) {
-                    return;
+                boolean wasSelected = selection.isSelected(bin) && selection.getSelectedItems().size() > 1;
+
+                if (e.isShiftDown()) {
+                    ObservableList<Integer> selectedIndices = selection.getSelectedIndices();
+                    if (selectedIndices.size() >= 1) {
+                        int mostRecentIndex = selectedIndices.get(selectedIndices.size() - 1);
+                        selection.clearSelection();
+                        selection.selectRange(binEditor.indexOf(bin), mostRecentIndex);
+                        selection.select(binEditor.getBin(mostRecentIndex));
+                    }
+                } else {
+                    selection.clearSelection();
                 }
 
-                boolean wasSelected = selection.isSelected(bin) && selection.getSelectedItems().size() > 1;
-                selection.clearSelection();
                 binEditor.display(wasSelected || binEditor.getDisplayed() != bin ? bin : null);
             }
         });

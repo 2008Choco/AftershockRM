@@ -107,6 +107,26 @@ public class BinEditor {
         return node;
     }
 
+    public int indexOf(ReplayBin bin) {
+        for (int i = 0; i < listed.size(); i++) {
+            Node potentialBin = listed.get(i);
+            if (!(potentialBin instanceof BinDisplayComponent)) {
+                continue;
+            }
+
+            if (bin == ((BinDisplayComponent) potentialBin).getBin()) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public ReplayBin getBin(int index) {
+        Node potentialBin = listed.get(index);
+        return (potentialBin instanceof BinDisplayComponent) ? ((BinDisplayComponent) potentialBin).getBin() : null;
+    }
+
     public void display(ReplayBin bin) {
         this.displayed = bin;
 
