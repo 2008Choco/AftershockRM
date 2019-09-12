@@ -1,6 +1,7 @@
 package wtf.choco.aftershock.controller;
 
 import java.awt.Toolkit;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -171,16 +172,20 @@ public final class AppController {
                 return;
             }
 
-            Dragboard dragboard = replayTable.startDragAndDrop(TransferMode.MOVE);
+            Dragboard dragboard = replayTable.startDragAndDrop(TransferMode.COPY_OR_MOVE);
             dragboard.setDragView(DRAG_IMAGE);
 
             ClipboardContent clipboard = new ClipboardContent();
             StringBuilder replays = new StringBuilder();
+            List<File> files = new ArrayList<>(selection.getSelectedItems().size());
             for (ReplayEntry replay : selection.getSelectedItems()) {
                 replays.append(replay.getReplay().getId());
                 replays.append(";");
+
+                files.add(replay.getReplay().getDemoFile());
             }
 
+            clipboard.putFiles(files);
             clipboard.putString(replays.toString().substring(0, replays.length() - 1));
             dragboard.setContent(clipboard);
         });
