@@ -47,6 +47,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
@@ -294,6 +295,16 @@ public final class AppController {
             FilteredList<ReplayEntry> filteredItems = (FilteredList<ReplayEntry>) items;
             filteredItems.setPredicate(null); // Must set to null first to invalidate the predicate... stupid
             filteredItems.setPredicate(getTableFilter());
+        }
+    }
+
+    @FXML
+    public void exitFilter(KeyEvent event) {
+        KeyCode pressed = event.getCode();
+        if (pressed == KeyCode.ESCAPE || pressed == KeyCode.ENTER) {
+            this.replayTable.requestFocus();
+            event.consume();
+            return;
         }
     }
 
