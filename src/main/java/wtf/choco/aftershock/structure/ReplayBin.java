@@ -20,7 +20,8 @@ import javafx.scene.image.Image;
 
 public class ReplayBin implements Iterable<Replay> {
 
-    private static final Image BIN_GRAPHIC = new Image(App.class.getResourceAsStream("/icons/folder.png"));
+    public static final Image BIN_GRAPHIC_EMPTY = new Image(App.class.getResourceAsStream("/icons/folder.png"));
+    public static final Image BIN_GRAPHIC_FULL = new Image(App.class.getResourceAsStream("/icons/folder-full.png"));
 
     private final UUID uuid;
     private final ObservableList<ReplayEntry> replays;
@@ -39,7 +40,7 @@ public class ReplayBin implements Iterable<Replay> {
         this.replays = FXCollections.observableArrayList(replays);
         this.byId = new HashMap<>(replays.size());
         this.globalBin = isGlobalBin;
-        this.display = new BinDisplayComponent(this, BIN_GRAPHIC);
+        this.display = new BinDisplayComponent(this, replays.isEmpty() ? BIN_GRAPHIC_EMPTY : BIN_GRAPHIC_FULL);
 
         for (ReplayEntry replay : replays) {
             this.byId.put(replay.getReplay().getId(), replay.getReplay());
@@ -54,7 +55,7 @@ public class ReplayBin implements Iterable<Replay> {
         this.replays = FXCollections.observableArrayList();
         this.byId = new HashMap<>(0);
         this.globalBin = isGlobalBin;
-        this.display = new BinDisplayComponent(this, BIN_GRAPHIC);
+        this.display = new BinDisplayComponent(this, BIN_GRAPHIC_EMPTY);
     }
 
     public ReplayBin(UUID uuid, String name, Collection<ReplayEntry> replays) {

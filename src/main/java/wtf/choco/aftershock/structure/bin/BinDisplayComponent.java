@@ -4,7 +4,9 @@ import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.structure.ReplayBin;
+import wtf.choco.aftershock.structure.ReplayEntry;
 
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -28,7 +30,6 @@ public class BinDisplayComponent extends VBox {
 
     private final ReplayBin bin;
 
-    private final ImageView graphic;
     private final Label label;
     private final TextField nameEditor;
     private final ContextMenu contextMenu;
@@ -44,9 +45,8 @@ public class BinDisplayComponent extends VBox {
         this.getStyleClass().add("bin-display");
     }
 
-    public BinDisplayComponent(ReplayBin bin, Image graphic) {
+    public BinDisplayComponent(ReplayBin bin, Image icon) {
         this.bin = bin;
-        this.graphic = new ImageView(graphic);
         this.label = new Label(bin.getName());
         this.nameEditor = new TextField();
 
@@ -184,7 +184,16 @@ public class BinDisplayComponent extends VBox {
             }
         });
 
-        this.getChildren().addAll(this.graphic, label);
+        ImageView graphic = new ImageView(icon);
+        this.bin.getObservableList().addListener((ListChangeListener<ReplayEntry>) c -> {
+            if (c.getList().isEmpty()) {
+                graphic.setImage(ReplayBin.BIN_GRAPHIC_EMPTY);
+            } else {
+                graphic.setImage(ReplayBin.BIN_GRAPHIC_FULL);
+            }
+        });
+
+        this.getChildren().addAll(graphic, label);
     }
 
     public ReplayBin getBin() {
