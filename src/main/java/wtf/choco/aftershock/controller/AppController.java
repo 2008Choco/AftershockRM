@@ -91,10 +91,8 @@ public final class AppController {
     @FXML private ScrollPane binEditorScrollPane;
 
     private BinEditor binEditor;
-    private ContextMenu contextMenu;
 
     private double lastDividerPositionInfo = 0.70;
-    private int expectedReplays = 1, loadedReplays = 0;
 
     private Popup popup = new Popup();
 
@@ -199,22 +197,22 @@ public final class AppController {
         this.binEditorScrollPane.setContextMenu(binEditorContextMenu);
 
         // TODO: Add functionality for "open file location"
-        this.contextMenu = new ContextMenu();
-        this.contextMenu.getItems().add(new MenuItem("Open file location..."));
+        ContextMenu tableContextMenu = new ContextMenu();
+        tableContextMenu.getItems().add(new MenuItem("Open file location..."));
         Menu sendTo = new Menu("Send to...");
 
-        this.replayTable.setContextMenu(contextMenu);
+        this.replayTable.setContextMenu(tableContextMenu);
 
         this.replayTable.setOnContextMenuRequested(e -> {
             if (replayTable.getSelectionModel().isEmpty()) {
-                this.contextMenu.hide();
+                tableContextMenu.hide();
                 e.consume();
                 return;
             }
 
             BinRegistry binRegistry = App.getInstance().getBinRegistry();
 
-            this.contextMenu.getItems().add(1, sendTo);
+            tableContextMenu.getItems().add(1, sendTo);
             sendTo.getItems().clear();
 
             for (ReplayBin bin : binRegistry.getBins()) {
@@ -228,7 +226,7 @@ public final class AppController {
             }
 
             if (sendTo.getItems().isEmpty()) {
-                this.contextMenu.getItems().remove(1);
+                tableContextMenu.getItems().remove(1);
             }
         });
 
@@ -368,20 +366,28 @@ public final class AppController {
         this.splitPane.getItems().add(InfoPanelController.createInfoPanelFor(replay, resources));
     }
 
-    public void prepareLoading(int expectedReplays) {
-        this.expectedReplays = expectedReplays;
-        this.splitPane.setCursor(Cursor.WAIT);
+    public void startLoading() {
+        if (loadProgress.isVisible()) {
+            return;
+        }
+
+        this.setLoadingProgress(0.0);
         this.loadProgress.setVisible(true);
+        App.getInstance().getStage().getScene().setCursor(Cursor.WAIT);
     }
 
-    public void increaseLoadedReplay(int amount) {
-        this.loadedReplays += amount;
-        this.loadProgress.setProgress(Math.min(((double) loadedReplays) / ((double) expectedReplays), 1.0));
+    public void setLoadingProgress(double progress) {
+        this.loadProgress.setProgress(progress);
+    }
 
-        if (loadProgress.getProgress() >= 1.0) {
-            this.splitPane.setCursor(Cursor.DEFAULT);
-            this.loadProgress.setVisible(false);
+    public void stopLoading() {
+        if (!loadProgress.isVisible()) {
+            return;
         }
+
+        this.setLoadingProgress(1.0);
+        this.loadProgress.setVisible(false);
+        App.getInstance().getStage().getScene().setCursor(Cursor.DEFAULT);
     }
 
     public void updateLoadedLabel() {

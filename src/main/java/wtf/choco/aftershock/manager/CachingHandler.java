@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.replay.ReplayModifiable;
 
 import javafx.beans.value.ChangeListener;
@@ -24,6 +25,8 @@ public class CachingHandler {
 
     private MessageDigest md5;
     private Set<File> invalidatedReplays = Collections.EMPTY_SET;
+
+    private double expectedTotalProgress;
 
     private final App app;
     private final File cacheDirectory, headersDirectory;
@@ -58,6 +61,12 @@ public class CachingHandler {
         int cached = 0;
 
         File[] replayFiles = replayDirectory.listFiles(REPLAY_FILE_FILTER);
+
+        double loaded = 0;
+        this.expectedTotalProgress = replayFiles.length;
+        AppController controller = app.getController();
+        controller.startLoading();
+
         for (File replayFile : replayFiles) {
             String replayFileName = replayFile.getName();
 
@@ -86,6 +95,8 @@ public class CachingHandler {
                     e.printStackTrace();
                 }
             }
+
+            controller.setLoadingProgress(loaded / expectedTotalProgress);
         }
 
         if (cached > 0) {
@@ -94,6 +105,8 @@ public class CachingHandler {
         } else {
             logger.info("No new replays were found. Caching not required");
         }
+
+        controller.stopLoading();
     }
 
     @Deprecated(forRemoval = false) // DANGEROUS AND DESTRUCTIVE METHOD
@@ -125,7 +138,11 @@ public class CachingHandler {
         long start = System.currentTimeMillis();
 
         File[] replayFiles = cacheDirectory.listFiles(REPLAY_FILE_FILTER);
-        this.app.getController().prepareLoading(replayFiles.length);
+
+        double loaded = 0;
+        this.expectedTotalProgress = replayFiles.length;
+        AppController controller = app.getController();
+        controller.startLoading();
 
         for (File cachedReplayFile : cacheDirectory.listFiles(REPLAY_FILE_FILTER)) {
             File replayFile = new File(replayDirectory, cachedReplayFile.getName());
@@ -148,12 +165,13 @@ public class CachingHandler {
                 this.app.getController().updateLoadedLabel();
             });
 
-            this.app.getController().increaseLoadedReplay(1);
+            controller.setLoadingProgress(++loaded / expectedTotalProgress);
             BinRegistry.GLOBAL_BIN.addReplay(replay);
         }
 
         long now = System.currentTimeMillis() - start;
         logger.info("Loaded " + BinRegistry.GLOBAL_BIN.size() + " replays in " + now + "ms!");
+        controller.stopLoading();
     }
 
     public void loadReplaysFromCache() {
