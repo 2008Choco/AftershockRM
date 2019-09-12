@@ -114,8 +114,10 @@ public class BinRegistry  {
             JsonObject binRoot = binElement.getAsJsonObject();
             UUID uuid = UUID.fromString(binRoot.get("id").getAsString());
             String name = binRoot.get("name").getAsString();
+            boolean hidden = JsonUtil.getOrCreate(binRoot, "hidden", JsonElement::getAsBoolean, JsonObject::addProperty, false);
 
             ReplayBin bin = new ReplayBin(uuid, name);
+            bin.setHidden(hidden);
 
             JsonArray replays = binRoot.getAsJsonArray("replays");
             for (JsonElement replayIdElement : replays) {
@@ -127,7 +129,7 @@ public class BinRegistry  {
                 bin.addReplay(replay);
             }
 
-            App.getInstance().getLogger().info("Loaded bin: \"" + name + "\"");
+            App.getInstance().getLogger().info("Loaded bin: \"" + name + "\"" + (hidden ? " (hidden)" : ""));
             this.addBin(bin);
         }
     }
@@ -144,6 +146,7 @@ public class BinRegistry  {
 
             binRoot.addProperty("id", bin.getUUID().toString());
             binRoot.addProperty("name", bin.getName());
+            binRoot.addProperty("hidden", bin.isHidden());
 
             List<ReplayEntry> replays = bin.getReplays();
             JsonArray replaysArray = new JsonArray(replays.size());

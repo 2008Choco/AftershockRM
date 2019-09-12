@@ -1,5 +1,8 @@
 package wtf.choco.aftershock.structure.bin;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.manager.BinRegistry;
@@ -9,10 +12,17 @@ import wtf.choco.aftershock.structure.ReplayEntry;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import javafx.collections.transformation.FilteredList;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
 
 public class BinEditor {
 
@@ -23,6 +33,9 @@ public class BinEditor {
     private final BinSelectionModel selectionModel = new BinSelectionModel();
     private final TableView<ReplayEntry> replayTable;
     private final VBox node;
+
+    private final ObservableSet<ReplayBin> hidden = FXCollections.observableSet();
+    private final Label hiddenLabel = new Label();
 
     private final ListChangeListener<ReplayEntry> binChangeListener;
 
@@ -43,9 +56,17 @@ public class BinEditor {
             }
 
             if (c.wasAdded()) {
-                c.getAddedSubList().forEach(b -> listed.add(b.getDisplay()));
+                c.getAddedSubList().forEach(b -> {
+                    this.listed.add(b.getDisplay());
+                    if (b.isHidden()) {
+                        this.hideBin(b);
+                    }
+                });
             } else {
-                c.getRemoved().forEach(b -> listed.remove(b.getDisplay()));
+                c.getRemoved().forEach(b -> {
+                    this.unhide(b);
+                    this.listed.remove(b.getDisplay());
+                });
             }
         });
 
@@ -59,6 +80,26 @@ public class BinEditor {
             } else if (c.wasRemoved()) {
                 c.getRemoved().forEach(b -> b.getDisplay().getStyleClass().remove("bin-display-selected"));
             }
+        });
+
+        this.hiddenLabel.setAlignment(Pos.CENTER);
+        this.hiddenLabel.setMaxWidth(100);
+        this.hiddenLabel.setFont(Font.font(hiddenLabel.getFont().getFamily(), FontWeight.LIGHT, FontPosture.ITALIC, 10));
+
+        this.hidden.addListener((SetChangeListener<ReplayBin>) c -> {
+            ObservableList<Node> children = node.getChildren();
+
+            int newSize = c.getSet().size();
+            if (newSize == 0) {
+                children.remove(1);
+                return;
+            }
+
+            if (children.size() == 2) {
+                children.add(1, hiddenLabel);
+            }
+
+            this.hiddenLabel.setText("(" + newSize + ") bins hidden");
         });
     }
 
@@ -94,6 +135,43 @@ public class BinEditor {
 
     public BinSelectionModel getSelectionModel() {
         return selectionModel;
+    }
+
+    public boolean hideBin(ReplayBin bin) {
+        if (bin.isGlobalBin()) {
+            return false;
+        }
+
+        if (!hidden.add(bin)) {
+            return false;
+        }
+
+        this.selectionModel.clearSelection(bin);
+        if (displayed == bin) {
+            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().get(0));
+        }
+
+        bin.setHidden(true);
+        this.listed.remove(bin.getDisplay());
+        return true;
+    }
+
+    public void unhide(ReplayBin bin) {
+        if (bin.isGlobalBin() || !hidden.contains(bin)) {
+            return;
+        }
+
+        bin.setHidden(false);
+        this.listed.add(bin.getDisplay());
+        this.hidden.remove(bin);
+    }
+
+    public boolean isHidden(ReplayBin bin) {
+        return hidden.contains(bin);
+    }
+
+    public Collection<ReplayBin> getHidden() {
+        return Collections.unmodifiableCollection(hidden);
     }
 
 }

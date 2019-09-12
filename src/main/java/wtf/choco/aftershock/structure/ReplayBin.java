@@ -29,6 +29,7 @@ public class ReplayBin implements Iterable<Replay> {
     private final BinDisplayComponent display;
 
     private String name;
+    private boolean hidden;
 
     public ReplayBin(UUID uuid, String name, Collection<ReplayEntry> replays, boolean isGlobalBin) {
         Preconditions.checkState(!isGlobalBin || (isGlobalBin && BinRegistry.GLOBAL_BIN == null), "Cannot create more than one global bin. Refer to BinRegistry.GLOBAL_BIN");
@@ -75,6 +76,14 @@ public class ReplayBin implements Iterable<Replay> {
     public void setName(String name) {
         this.name = name;
         this.display.updateName();
+    }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 
     public boolean isGlobalBin() {

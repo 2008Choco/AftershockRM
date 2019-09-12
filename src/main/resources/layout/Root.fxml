@@ -33,7 +33,7 @@
 
   <HBox fx:id="primaryDisplay" VBox.vgrow="ALWAYS">
     <VBox fx:id="binEditorPane" minWidth="75.0">
-      <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+      <ScrollPane fx:id="binEditorScrollPane" fitToWidth="true" VBox.vgrow="ALWAYS">
         <VBox fx:id="binEditorList" spacing="5.0" />
       </ScrollPane>
 

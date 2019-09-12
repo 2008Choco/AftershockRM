@@ -34,6 +34,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
@@ -86,6 +87,7 @@ public final class AppController {
 
     @FXML private HBox primaryDisplay;
     @FXML private VBox binEditorPane, binEditorList;
+    @FXML private ScrollPane binEditorScrollPane;
 
     private BinEditor binEditor;
     private ContextMenu contextMenu;
@@ -184,6 +186,12 @@ public final class AppController {
         });
 
         this.binEditor = new BinEditor(this, binEditorPane, binEditorList, c -> setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size()));
+
+        ContextMenu binEditorContextMenu = new ContextMenu();
+        MenuItem showHiddenBins = new MenuItem("Unhide bins");
+        showHiddenBins.setOnAction(e -> new ArrayList<>(binEditor.getHidden()).forEach(binEditor::unhide));
+        binEditorContextMenu.getItems().add(showHiddenBins);
+        this.binEditorScrollPane.setContextMenu(binEditorContextMenu);
 
         // TODO: Add functionality for "open file location"
         this.contextMenu = new ContextMenu();

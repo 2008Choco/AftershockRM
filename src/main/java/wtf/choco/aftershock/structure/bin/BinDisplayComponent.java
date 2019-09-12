@@ -72,7 +72,10 @@ public class BinDisplayComponent extends VBox {
                 e.consume();
             });
 
-            this.contextMenu.getItems().addAll(new SeparatorMenuItem(), renameBin, clearBin, deleteBin);
+            MenuItem hideBin = new MenuItem("Hide");
+            hideBin.setOnAction(e -> App.getInstance().getController().getBinEditor().hideBin(bin));
+
+            this.contextMenu.getItems().addAll(new SeparatorMenuItem(), renameBin, clearBin, deleteBin, new SeparatorMenuItem(), hideBin);
         }
 
         // Layout and listeners
@@ -81,7 +84,10 @@ public class BinDisplayComponent extends VBox {
 
         this.nameEditor.setAlignment(Pos.TOP_CENTER);
 
-        this.setOnContextMenuRequested(e -> contextMenu.show(this, e.getScreenX(), e.getScreenY()));
+        this.setOnContextMenuRequested(e -> {
+            this.contextMenu.show(this, e.getScreenX(), e.getScreenY());
+            e.consume();
+        });
         this.setOnMouseEntered(e -> setCursor(Cursor.HAND));
         this.setOnMouseExited(e -> setCursor(Cursor.DEFAULT));
         this.setOnMouseClicked(e -> {
