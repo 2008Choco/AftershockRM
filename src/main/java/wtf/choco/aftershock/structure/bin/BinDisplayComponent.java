@@ -57,7 +57,10 @@ public class BinDisplayComponent extends VBox {
         MenuItem unloadAllReplays = new MenuItem("Unload all replays");
         unloadAllReplays.setOnAction(e -> bin.forEach(r -> r.getEntryData().setLoaded(false)));
 
-        this.contextMenu.getItems().addAll(loadAllReplays, unloadAllReplays);
+        MenuItem cloneBin = new MenuItem("Clone");
+        cloneBin.setOnAction(e -> App.getInstance().getBinRegistry().addBin(new ReplayBin(bin)));
+
+        this.contextMenu.getItems().addAll(loadAllReplays, unloadAllReplays, new SeparatorMenuItem(), cloneBin);
 
         // Menu items that should not be accessible to the global bin
         if (!bin.isGlobalBin()) {
@@ -75,7 +78,7 @@ public class BinDisplayComponent extends VBox {
             MenuItem hideBin = new MenuItem("Hide");
             hideBin.setOnAction(e -> App.getInstance().getController().getBinEditor().hideBin(bin));
 
-            this.contextMenu.getItems().addAll(new SeparatorMenuItem(), renameBin, clearBin, deleteBin, new SeparatorMenuItem(), hideBin);
+            this.contextMenu.getItems().addAll(renameBin, clearBin, deleteBin, new SeparatorMenuItem(), hideBin);
         }
 
         // Layout and listeners

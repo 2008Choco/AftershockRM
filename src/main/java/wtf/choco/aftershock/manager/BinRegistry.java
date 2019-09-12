@@ -161,4 +161,15 @@ public class BinRegistry  {
         JsonUtil.writeToFile(file, root);
     }
 
+    public String getSafeName(String base) {
+        int duplicateCount = 0;
+        String result = base;
+
+        do {
+            result = (base + (duplicateCount++ >= 1 ? " (" + duplicateCount + ")" : ""));
+        } while (getBin(result) != null);
+
+        return result;
+    }
+
 }

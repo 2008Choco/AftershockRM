@@ -66,6 +66,10 @@ public class ReplayBin implements Iterable<Replay> {
         this(uuid, name, false);
     }
 
+    public ReplayBin(ReplayBin bin) {
+        this(UUID.randomUUID(), App.getInstance().getBinRegistry().getSafeName(bin.name), bin.replays, false);
+    }
+
     public UUID getUUID() {
         return uuid;
     }
@@ -133,6 +137,16 @@ public class ReplayBin implements Iterable<Replay> {
     @Override
     public Iterator<Replay> iterator() {
         return byId.values().iterator();
+    }
+
+    @Override
+    public int hashCode() {
+        return uuid.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj == this || (obj instanceof ReplayBin && ((ReplayBin) obj).uuid.equals(uuid));
     }
 
 }
