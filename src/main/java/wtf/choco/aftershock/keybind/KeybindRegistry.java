@@ -8,8 +8,6 @@ import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
-import wtf.choco.aftershock.structure.bin.BinEditor;
-import wtf.choco.aftershock.structure.bin.BinSelectionModel;
 
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
@@ -137,20 +135,6 @@ public final class KeybindRegistry {
             selection.clearSelection();
             selected.forEach(r -> displayed.removeReplay(r.getReplay()));
             controller.closeInfoPanel();
-        });
-
-        registry.registerKeybind(KeyCode.H).executes(() -> {
-            BinEditor binEditor = App.getInstance().getController().getBinEditor();
-            BinSelectionModel selection = binEditor.getSelectionModel();
-
-            List<ReplayBin> selected = new ArrayList<>(selection.getSelectedItems());
-            for (ReplayBin bin : selected) {
-                if (!binEditor.isHidden(bin)) {
-                    binEditor.hideBin(bin);
-                } else {
-                    binEditor.unhide(bin);
-                }
-            }
         });
 
         registry.registerKeybind(KeyCode.F, KeyCombination.CONTROL_DOWN).executes(() -> controller.getFilterBar().requestFocus());

@@ -13,6 +13,7 @@ module wtf.choco.aftershock {
 
     exports wtf.choco.aftershock;
     exports wtf.choco.aftershock.controller;
+    exports wtf.choco.aftershock.keybind;
     exports wtf.choco.aftershock.manager;
     exports wtf.choco.aftershock.replay;
     exports wtf.choco.aftershock.structure;
