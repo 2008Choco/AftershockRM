@@ -5,6 +5,11 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import wtf.choco.aftershock.App;
@@ -17,6 +22,9 @@ public class CachingHandler {
 
     private static final FilenameFilter REPLAY_FILE_FILTER = (f, name) -> name.endsWith(".replay");
 
+    private MessageDigest md5;
+    private Set<File> invalidatedReplays = Collections.EMPTY_SET;
+
     private final App app;
     private final File cacheDirectory, headersDirectory;
 
@@ -27,6 +35,13 @@ public class CachingHandler {
 
         this.cacheDirectory.mkdirs();
         this.headersDirectory.mkdirs();
+
+        try {
+            this.md5 = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            this.md5 = null;
+            this.app.getLogger().severe("Could not find MD5 algorithm... replay files will not be updated!");
+        }
     }
 
     public void cacheReplays() {
@@ -48,9 +63,22 @@ public class CachingHandler {
 
             // Copy replay file to cache folder
             File cacheDestination = new File(cacheDirectory, replayFileName);
+            boolean shouldCache = false;
             if (!cacheDestination.exists()) {
                 logger.info("(" + App.truncateID(replayFileName) + ") - Caching replay file");
+                shouldCache = true;
+            } else if (md5 != null && !md5(replayFile).equals(md5(cacheDestination))) {
+                logger.info("(" + App.truncateID(replayFileName) + ") - Replay updated. MD5 does not match. Re-caching");
 
+                if (invalidatedReplays == Collections.EMPTY_SET) {
+                    this.invalidatedReplays = new HashSet<>();
+                }
+
+                this.invalidatedReplays.add(cacheDestination);
+                shouldCache = true;
+            }
+
+            if (shouldCache) {
                 try {
                     Files.copy(replayFile.toPath(), cacheDestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     cached++;
@@ -132,15 +160,23 @@ public class CachingHandler {
         this.loadReplaysFromCache(true);
     }
 
-    private File getOrCreateHeaderFile(Logger logger, String rattletrapPath, File replayFile) {
-        String replayFileName = replayFile.getName();
+    private File getOrCreateHeaderFile(Logger logger, String rattletrapPath, File cachedReplayFile) {
+        String replayFileName = cachedReplayFile.getName();
         File destination = new File(headersDirectory, replayFileName.substring(0, replayFileName.lastIndexOf('.')) + ".json");
 
+        boolean shouldCreateHeader = false;
         if (!destination.exists()) {
-            logger.info("(" + App.truncateID(replayFileName) + ") - Creating header file");
+            logger.info("(" + App.truncateID(replayFileName) + ") - Creating new header file");
+            shouldCreateHeader = true;
+        } else if (invalidatedReplays.contains(cachedReplayFile)) {
+            logger.info("(" + App.truncateID(replayFileName) + ") - Updating existing header file");
+            this.invalidatedReplays.remove(cachedReplayFile);
+            shouldCreateHeader = true;
+        }
 
+        if (shouldCreateHeader) {
             try {
-                Runtime.getRuntime().exec(rattletrapPath + " --f --i \"" + replayFile.getAbsolutePath() + "\" --o \"" + destination.getAbsolutePath() + "\"").waitFor();
+                Runtime.getRuntime().exec(rattletrapPath + " --f --i \"" + cachedReplayFile.getAbsolutePath() + "\" --o \"" + destination.getAbsolutePath() + "\"").waitFor();
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
@@ -159,6 +195,33 @@ public class CachingHandler {
         }
 
         return new File(replayDirectoryPath);
+    }
+
+    private String md5(File file) {
+        try {
+            return encodeHexString(md5.digest(Files.readAllBytes(file.toPath())));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    private String encodeHexString(byte[] byteArray) {
+        StringBuffer hexStringBuffer = new StringBuffer();
+
+        for (int i = 0; i < byteArray.length; i++) {
+            hexStringBuffer.append(byteToHex(byteArray[i]));
+        }
+
+        return hexStringBuffer.toString();
+    }
+
+    private String byteToHex(byte num) {
+        char[] hexDigits = new char[2];
+        hexDigits[0] = Character.forDigit((num >> 4) & 0xF, 16);
+        hexDigits[1] = Character.forDigit((num & 0xF), 16);
+
+        return new String(hexDigits);
     }
 
 }
