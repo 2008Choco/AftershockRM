@@ -25,6 +25,10 @@ public class DynamicFilter<T> implements Predicate<T> {
         this.term = term;
     }
 
+    public boolean isInvalid() {
+        return term == null || term.isBlank() || comparator == null;
+    }
+
     @Override
     public boolean test(T t) {
         if (comparator == null || term == null || term.isBlank()) {

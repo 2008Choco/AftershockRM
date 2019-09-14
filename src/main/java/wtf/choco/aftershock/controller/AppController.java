@@ -299,14 +299,22 @@ public final class AppController {
 
     @FXML
     public void updateFilter(@SuppressWarnings("unused") KeyEvent event) {
-        this.getTableFilter().setTerm(filterBar.getText());
+        DynamicFilter<ReplayEntry> filter = getTableFilter();
+        filter.setTerm(filterBar.getText());
+
+        if (filter.isInvalid()) {
+            this.replayTable.setItems(binEditor.getDisplayed().getObservableList());
+            return;
+        }
 
         ObservableList<ReplayEntry> items = replayTable.getItems();
-        if (items instanceof FilteredList) {
-            FilteredList<ReplayEntry> filteredItems = (FilteredList<ReplayEntry>) items;
-            filteredItems.setPredicate(null); // Must set to null first to invalidate the predicate... stupid
-            filteredItems.setPredicate(getTableFilter());
+        if (!(items instanceof FilteredList)) {
+            this.replayTable.setItems(items = new FilteredList<>(binEditor.getDisplayed().getObservableList(), filter));
         }
+
+        FilteredList<ReplayEntry> filteredItems = (FilteredList<ReplayEntry>) items;
+        filteredItems.setPredicate(null); // Must set to null first to invalidate the predicate... stupid
+        filteredItems.setPredicate(getTableFilter());
     }
 
     @FXML
