@@ -73,22 +73,23 @@ public class BinDisplayComponent extends VBox {
             clearBin.setOnAction(e -> bin.clear());
             MenuItem deleteBin = new MenuItem("Delete");
             deleteBin.setOnAction(e -> {
-                if (!bin.getObservableList().isEmpty()) {
-                    Alert alert = new Alert(AlertType.WARNING);
-                    alert.setTitle("Confirm Bin Deletion");
-                    alert.setHeaderText("One or more of the bins selected for deletion contain at least one replay!");
-                    alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: \"" + bin.getName() + "\"?");
-
-                    ButtonType buttonDelete = new ButtonType("Delete");
-                    ButtonType buttonCancel = new ButtonType("Cancel");
-                    alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
-
-                    alert.showAndWait().filter(b -> b == buttonDelete).ifPresent(b -> {
-                        App.getInstance().getBinRegistry().deleteBin(bin);
-                    });
-                } else {
+                if (bin.isEmpty()) {
                     App.getInstance().getBinRegistry().deleteBin(bin);
+                    return;
                 }
+
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.setTitle("Confirm Bin Deletion");
+                alert.setHeaderText("One or more of the bins selected for deletion contain at least one replay!");
+                alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: \"" + bin.getName() + "\"?");
+
+                ButtonType buttonDelete = new ButtonType("Delete");
+                ButtonType buttonCancel = new ButtonType("Cancel");
+                alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
+
+                alert.showAndWait().filter(b -> b == buttonDelete).ifPresent(b -> {
+                    App.getInstance().getBinRegistry().deleteBin(bin);
+                });
             });
 
             MenuItem hideBin = new MenuItem("Hide");
@@ -204,7 +205,7 @@ public class BinDisplayComponent extends VBox {
         });
 
         ImageView graphic = new ImageView(icon);
-        this.bin.getObservableList().addListener((ListChangeListener<ReplayEntry>) c -> {
+        this.bin.getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) c -> {
             if (c.getList().isEmpty()) {
                 graphic.setImage(ReplayBin.BIN_GRAPHIC_EMPTY);
             } else {

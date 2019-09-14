@@ -135,7 +135,7 @@ public class BinEditor {
             return;
         }
 
-        ObservableList<ReplayEntry> entries = (controller.getTableFilter().isInvalid()) ? bin.getObservableList() : new FilteredList<>(bin.getObservableList(), controller.getTableFilter());
+        ObservableList<ReplayEntry> entries = (controller.getTableFilter().isInvalid()) ? bin.getReplaysObservable() : new FilteredList<>(bin.getReplaysObservable(), controller.getTableFilter());
         this.replayTable.setItems(entries);
         this.selectionModel.select(displayed);
 

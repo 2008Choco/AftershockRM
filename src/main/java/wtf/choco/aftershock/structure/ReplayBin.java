@@ -121,8 +121,12 @@ public class ReplayBin implements Iterable<Replay> {
         return Collections.unmodifiableList(replays);
     }
 
-    public ObservableList<ReplayEntry> getObservableList() {
+    public ObservableList<ReplayEntry> getReplaysObservable() {
         return replays;
+    }
+
+    public boolean isEmpty() {
+        return replays.isEmpty();
     }
 
     public void clear() {

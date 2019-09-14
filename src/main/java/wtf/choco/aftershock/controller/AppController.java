@@ -152,7 +152,7 @@ public final class AppController {
             }
         });
 
-        BinRegistry.GLOBAL_BIN.getObservableList().addListener((ListChangeListener<ReplayEntry>) c -> {
+        BinRegistry.GLOBAL_BIN.getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) c -> {
             if (!c.next()) {
                 return;
             }
@@ -289,7 +289,7 @@ public final class AppController {
             Toolkit.getDefaultToolkit().beep();
         }
 
-        boolean allEmpty = toDelete.stream().allMatch(b -> b.getObservableList().isEmpty());
+        boolean allEmpty = toDelete.stream().allMatch(ReplayBin::isEmpty);
         if (!allEmpty) {
             String binNames = toDelete.stream().map(b -> '"' + b.getName() + '"').collect(Collectors.joining(","));
 
@@ -327,13 +327,13 @@ public final class AppController {
         filter.setTerm(filterBar.getText());
 
         if (filter.isInvalid()) {
-            this.replayTable.setItems(binEditor.getDisplayed().getObservableList());
+            this.replayTable.setItems(binEditor.getDisplayed().getReplaysObservable());
             return;
         }
 
         ObservableList<ReplayEntry> items = replayTable.getItems();
         if (!(items instanceof FilteredList)) {
-            this.replayTable.setItems(items = new FilteredList<>(binEditor.getDisplayed().getObservableList(), filter));
+            this.replayTable.setItems(items = new FilteredList<>(binEditor.getDisplayed().getReplaysObservable(), filter));
         }
 
         FilteredList<ReplayEntry> filteredItems = (FilteredList<ReplayEntry>) items;
