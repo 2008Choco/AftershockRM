@@ -66,7 +66,7 @@ public class BinRegistry  {
     }
 
     public void deleteBin(ReplayBin bin) {
-        this.deleteBin(bin.getName().toLowerCase());
+        this.bins.remove(bin);
     }
 
     public void clearBins(boolean clearGlobal) {
