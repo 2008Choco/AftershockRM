@@ -12,6 +12,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -70,9 +73,22 @@ public class BinDisplayComponent extends VBox {
             clearBin.setOnAction(e -> bin.clear());
             MenuItem deleteBin = new MenuItem("Delete");
             deleteBin.setOnAction(e -> {
-                this.contextMenu.hide();
-                App.getInstance().getBinRegistry().deleteBin(bin);
-                e.consume();
+                if (!bin.getObservableList().isEmpty()) {
+                    Alert alert = new Alert(AlertType.WARNING);
+                    alert.setTitle("Confirm Bin Deletion");
+                    alert.setHeaderText("One or more of the bins selected for deletion contain at least one replay!");
+                    alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: \"" + bin.getName() + "\"?");
+
+                    ButtonType buttonDelete = new ButtonType("Delete");
+                    ButtonType buttonCancel = new ButtonType("Cancel");
+                    alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
+
+                    alert.showAndWait().filter(b -> b == buttonDelete).ifPresent(b -> {
+                        App.getInstance().getBinRegistry().deleteBin(bin);
+                    });
+                } else {
+                    App.getInstance().getBinRegistry().deleteBin(bin);
+                }
             });
 
             MenuItem hideBin = new MenuItem("Hide");

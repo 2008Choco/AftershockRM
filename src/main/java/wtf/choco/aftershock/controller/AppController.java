@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
@@ -29,6 +30,9 @@ import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -276,14 +280,34 @@ public final class AppController {
         BinRegistry binRegistry = App.getInstance().getBinRegistry();
 
         BinSelectionModel selection = binEditor.getSelectionModel();
-        ArrayList<ReplayBin> toDelete = new ArrayList<>(selection.getSelectedItems());
+        if (selection.isEmpty()) {
+            return;
+        }
 
-        toDelete.forEach(b -> {
-            if (b.isGlobalBin()) { // Don't delete the global bin
-                Toolkit.getDefaultToolkit().beep();
+        List<ReplayBin> toDelete = new ArrayList<>(selection.getSelectedItems());
+        if (toDelete.remove(BinRegistry.GLOBAL_BIN)) {
+            Toolkit.getDefaultToolkit().beep();
+        }
+
+        boolean allEmpty = toDelete.stream().allMatch(b -> b.getObservableList().isEmpty());
+        if (!allEmpty) {
+            String binNames = toDelete.stream().map(b -> '"' + b.getName() + '"').collect(Collectors.joining(","));
+
+            Alert alert = new Alert(AlertType.WARNING);
+            alert.setTitle("Confirm Bin Deletion");
+            alert.setHeaderText("One or more of the bins selected for deletion contain at least one replay!");
+            alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: " + binNames + "?");
+
+            ButtonType buttonDelete = new ButtonType("Delete");
+            ButtonType buttonCancel = new ButtonType("Cancel");
+            alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
+
+            if (alert.showAndWait().orElse(buttonCancel) == buttonCancel) {
                 return;
             }
+        }
 
+        toDelete.forEach(b -> {
             if (binEditor.getDisplayed() == b) {
                 this.binEditor.clearDisplay();
             }
