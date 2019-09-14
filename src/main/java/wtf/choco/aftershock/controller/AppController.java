@@ -371,7 +371,7 @@ public final class AppController {
 
     public void openInfoPanel(ReplayEntry replay) {
         this.closeInfoPanel();
-        this.splitPane.getItems().add(InfoPanelController.createInfoPanelFor(replay, resources));
+        this.splitPane.getItems().add(replay.getReplay().getInfoPanel());
     }
 
     public void startLoading() {

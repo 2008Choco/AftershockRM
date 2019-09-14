@@ -23,11 +23,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.controller.InfoPanelController;
 import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.Tag;
 import wtf.choco.aftershock.util.JsonUtil;
 import wtf.choco.aftershock.util.TriConsumer;
+
+import javafx.scene.Parent;
 
 public final class ReplayModifiable implements Replay {
 
@@ -43,6 +46,7 @@ public final class ReplayModifiable implements Replay {
     private int length, fps;
 
     private ReplayEntry entryData;
+    private Parent infoPanel;
 
     private boolean modifiedHeader = false;
 
@@ -154,6 +158,15 @@ public final class ReplayModifiable implements Replay {
     @Override
     public ReplayEntry getEntryData() {
         return entryData;
+    }
+
+    @Override
+    public Parent getInfoPanel() {
+        if (infoPanel == null) {
+            this.infoPanel = InfoPanelController.createInfoPanelFor(this, App.getInstance().getResources());
+        }
+
+        return infoPanel;
     }
 
     @Override

@@ -10,13 +10,13 @@ import wtf.choco.aftershock.replay.GoalData;
 import wtf.choco.aftershock.replay.PlayerData;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
-import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.FXUtils;
 
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+import javafx.util.Pair;
 
 public final class InfoPanelController {
 
@@ -97,7 +97,7 @@ public final class InfoPanelController {
     }
 
     public static Parent createInfoPanelFor(Replay replay, ResourceBundle resources) {
-        var root = FXUtils.<Parent, InfoPanelController>loadFXML("/layout/InfoPanel", resources);
+        Pair<Parent, InfoPanelController> root = FXUtils.loadFXML("/layout/InfoPanel", resources);
 
         if (root.getKey() == null) {
             return null;
@@ -105,10 +105,6 @@ public final class InfoPanelController {
 
         root.getValue().loadReplay(replay);
         return root.getKey();
-    }
-
-    public static Parent createInfoPanelFor(ReplayEntry replay, ResourceBundle resources) {
-        return createInfoPanelFor(replay.getReplay(), resources);
     }
 
 }

@@ -6,6 +6,8 @@ import java.util.List;
 
 import wtf.choco.aftershock.structure.ReplayEntry;
 
+import javafx.scene.Parent;
+
 public interface Replay {
 
     public File getDemoFile();
@@ -39,5 +41,7 @@ public interface Replay {
     public int getVersion();
 
     public ReplayEntry getEntryData();
+
+    public Parent getInfoPanel();
 
 }

@@ -31,6 +31,7 @@ import javafx.scene.input.PickResult;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 
 public final class App extends Application {
 
@@ -87,7 +88,7 @@ public final class App extends Application {
     public void start(Stage stage) throws IOException {
         // Stage loading
         this.stage = stage;
-        var root = FXUtils.<Parent, AppController>loadFXML("/layout/Root", resources = ResourceBundle.getBundle("lang."));
+        Pair<Parent, AppController> root = FXUtils.loadFXML("/layout/Root", resources = ResourceBundle.getBundle("lang."));
         this.scene = new Scene(root.getKey());
         this.controller = root.getValue();
 
