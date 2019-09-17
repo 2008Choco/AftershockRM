@@ -1,15 +1,10 @@
 package wtf.choco.aftershock.keybind;
 
-import java.awt.Toolkit;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.controller.AppController;
-import wtf.choco.aftershock.structure.ReplayBin;
-import wtf.choco.aftershock.structure.ReplayEntry;
 
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
@@ -73,38 +68,13 @@ public class KeybindRegistry {
 
         AppController controller = registry.app.getController();
 
+        registry.globalKeybind(KeyCode.F, KeyCombination.CONTROL_DOWN).executes(() -> controller.getFilterBar().requestFocus());
         registry.globalKeybind(KeyCode.ESCAPE).executes(() -> {
             controller.closeInfoPanel();
             controller.getReplayTable().getSelectionModel().clearSelection();
         });
-        registry.nodedKeybind(controller.getReplayTable(), KeyCode.A, KeyCombination.CONTROL_DOWN).executes(() -> controller.getReplayTable().getSelectionModel().selectAll());
-        registry.nodedKeybind(controller.getReplayTable(), KeyCode.SPACE).or(KeyCode.ENTER).executes(() -> {
-            var selectionModel = controller.getReplayTable().getSelectionModel();
-            if (selectionModel.isEmpty()) {
-                return;
-            }
 
-            selectionModel.getSelectedItems().forEach(e -> e.setLoaded(!e.isLoaded()));
-        });
-        registry.nodedKeybind(controller.getReplayTable(), KeyCode.DELETE).executes(() -> {
-            var selection = controller.getReplayTable().getSelectionModel();
-            if (selection.isEmpty()) {
-                return;
-            }
-
-            ReplayBin displayed = controller.getBinEditor().getDisplayed();
-            if (displayed == null || displayed.isGlobalBin()) {
-                Toolkit.getDefaultToolkit().beep();
-                return;
-            }
-
-            List<ReplayEntry> selected = new ArrayList<>(selection.getSelectedItems());
-            selection.clearSelection();
-            selected.forEach(r -> displayed.removeReplay(r.getReplay()));
-            controller.closeInfoPanel();
-        });
-
-        registry.globalKeybind(KeyCode.F, KeyCombination.CONTROL_DOWN).executes(() -> controller.getFilterBar().requestFocus());
+        registry.registeredDefaults = true;
     }
 
 }

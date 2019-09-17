@@ -60,7 +60,7 @@
     </VBox>
 
     <SplitPane fx:id="splitPane" HBox.hgrow="ALWAYS">
-      <TableView fx:id="replayTable" editable="true" focusTraversable="false" style="-fx-focus-color: transparent;">
+      <TableView fx:id="replayTable" editable="true" focusTraversable="false" style="-fx-focus-color: transparent;" onKeyPressed="#tableKeyboardControl">
         <placeholder>
           <Label text="Select a bin to display" />
         </placeholder>

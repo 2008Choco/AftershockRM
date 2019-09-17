@@ -241,6 +241,42 @@ public final class AppController {
     }
 
     @FXML
+    public void tableKeyboardControl(KeyEvent event) {
+        KeyCode key = event.getCode();
+
+        if (key == KeyCode.A && event.isControlDown()) {
+            replayTable.getSelectionModel().selectAll();
+        }
+
+        else if (key == KeyCode.SPACE || key == KeyCode.ENTER) {
+            var selectionModel = replayTable.getSelectionModel();
+            if (selectionModel.isEmpty()) {
+                return;
+            }
+
+            selectionModel.getSelectedItems().forEach(e -> e.setLoaded(!e.isLoaded()));
+        }
+
+        else if (key == KeyCode.DELETE) {
+            var selection = replayTable.getSelectionModel();
+            if (selection.isEmpty()) {
+                return;
+            }
+
+            ReplayBin displayed = binEditor.getDisplayed();
+            if (displayed == null || displayed.isGlobalBin()) {
+                Toolkit.getDefaultToolkit().beep();
+                return;
+            }
+
+            List<ReplayEntry> selected = new ArrayList<>(selection.getSelectedItems());
+            selection.clearSelection();
+            selected.forEach(r -> displayed.removeReplay(r.getReplay()));
+            this.closeInfoPanel();
+        }
+    }
+
+    @FXML
     public void openLink(ActionEvent event) {
         Hyperlink hyperlink = (Hyperlink) event.getTarget();
         App.getInstance().getHostServices().showDocument(hyperlink.getTooltip().getText());
