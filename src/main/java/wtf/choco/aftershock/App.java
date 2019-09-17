@@ -123,6 +123,7 @@ public final class App extends Application {
     @Override
     public void stop() throws Exception {
         this.executor.shutdown();
+        this.keybindRegistry.clearKeybinds();
         this.binRegistry.saveBinsToFile(binsFile);
         this.binRegistry.deleteBins(true);
         this.tagRegistry.clearTags();

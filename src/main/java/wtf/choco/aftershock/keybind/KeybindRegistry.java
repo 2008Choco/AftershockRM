@@ -2,7 +2,9 @@ package wtf.choco.aftershock.keybind;
 
 import java.awt.Toolkit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.controller.AppController;
@@ -15,88 +17,53 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
-public final class KeybindRegistry {
+public class KeybindRegistry {
 
     private boolean registeredDefaults = false;
 
-    private final List<KeybindAction> keyActions = new ArrayList<>();
+    private final Map<Node, KeybindEventHandler> keyEventHandlers = new HashMap<>();
+    private final KeybindEventHandler globalHandler;
     private final App app;
 
     public KeybindRegistry(App app) {
         this.app = app;
-        this.app.getStage().addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            for (KeybindAction keybind : keyActions) {
-                if (keybind.matchesEvent(e) && keybind.action != null) {
-                    keybind.action.accept(app);
-                }
-            }
-        });
+        this.globalHandler = new KeybindEventHandler(app, null);
+        this.app.getStage().addEventFilter(KeyEvent.KEY_PRESSED, globalHandler);
     }
 
-    public KeybindAction registerKeybind(KeyCode character, KeyCombination.Modifier... modifiers) {
-        KeybindAction keybind = new KeybindAction(new KeyCodeCombination(character, modifiers));
-        this.keyActions.add(keybind);
-        return keybind;
+    public KeybindData globalKeybind(KeyCode character, KeyCombination.Modifier... modifiers) {
+        return registerToHandler(globalHandler, character, modifiers);
     }
 
-    public KeybindAction registerKeybind(Node parent, KeyCode character, KeyCombination.Modifier... modifiers) {
-        KeybindAction keybind = new KeybindAction(new KeyCodeCombination(character, modifiers));
-        parent.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            if (keybind.matchesEvent(e) && keybind.action != null) {
-                keybind.action.accept(app);
-            }
-        });
+    public KeybindData nodedKeybind(Node node, KeyCode character, KeyCombination.Modifier... modifiers) {
+        return registerToHandler(keyEventHandlers.computeIfAbsent(node, n -> new KeybindEventHandler(app, n)), character, modifiers);
+    }
 
+    private KeybindData registerToHandler(KeybindEventHandler handler, KeyCode character, KeyCombination.Modifier... modifiers) {
+        KeybindData keybind = new KeybindData(new KeyCodeCombination(character, modifiers));
+        handler.addKeybind(keybind);
         return keybind;
     }
 
     public boolean removeKeybind(KeyCode character, KeyCombination.Modifier... modifiers) {
-        if (modifiers.length == 0) {
-            return removeKeybind(character);
-        }
-
-        return keyActions.removeIf(a -> a.combination.equals(new KeyCodeCombination(character, modifiers)));
+        return globalHandler.removeKeybind(character, modifiers);
     }
 
+    public boolean removeKeybind(Node node, KeyCode character, KeyCombination.Modifier... modifiers) {
+        KeybindEventHandler handler = keyEventHandlers.get(node);
+        return handler != null && handler.removeKeybind(character, modifiers);
+    }
 
-    public final class KeybindAction {
+    public void clearKeybinds() {
+        this.keyEventHandlers.forEach((node, handler) -> {
+            handler.clearKeybinds();
+            node.removeEventHandler(KeyEvent.KEY_PRESSED, handler);
+        });
 
-        private KeybindExecutor action;
-        private final KeyCombination combination;
-        private final List<KeyCombination> altCombinations;
+        this.keyEventHandlers.clear();
 
-        public KeybindAction(KeyCombination combination) {
-            this.combination = combination;
-            this.altCombinations = new ArrayList<>(0);
-        }
-
-        public void executes(KeybindExecutor function) {
-            this.action = function;
-        }
-
-        public void executes(SimpleKeybindExecutor function) {
-            this.action = function;
-        }
-
-        public KeybindAction or(KeyCode character, KeyCombination.Modifier... modifiers) {
-            this.altCombinations.add(new KeyCodeCombination(character, modifiers));
-            return this;
-        }
-
-        private boolean matchesEvent(KeyEvent event) {
-            if (combination.match(event)) {
-                return true;
-            }
-
-            for (KeyCombination combination : altCombinations) {
-                if (combination.match(event)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
+        this.globalHandler.clearKeybinds();
+        this.app.getStage().getScene().removeEventFilter(KeyEvent.KEY_PRESSED, globalHandler);
     }
 
     public static void registerDefaultKeybinds(KeybindRegistry registry) {
@@ -106,12 +73,12 @@ public final class KeybindRegistry {
 
         AppController controller = registry.app.getController();
 
-        registry.registerKeybind(KeyCode.ESCAPE).executes(() -> {
+        registry.globalKeybind(KeyCode.ESCAPE).executes(() -> {
             controller.closeInfoPanel();
             controller.getReplayTable().getSelectionModel().clearSelection();
         });
-        registry.registerKeybind(controller.getReplayTable(), KeyCode.A, KeyCombination.CONTROL_DOWN).executes(() -> controller.getReplayTable().getSelectionModel().selectAll());
-        registry.registerKeybind(controller.getReplayTable(), KeyCode.SPACE).or(KeyCode.ENTER).executes(() -> {
+        registry.nodedKeybind(controller.getReplayTable(), KeyCode.A, KeyCombination.CONTROL_DOWN).executes(() -> controller.getReplayTable().getSelectionModel().selectAll());
+        registry.nodedKeybind(controller.getReplayTable(), KeyCode.SPACE).or(KeyCode.ENTER).executes(() -> {
             var selectionModel = controller.getReplayTable().getSelectionModel();
             if (selectionModel.isEmpty()) {
                 return;
@@ -119,7 +86,7 @@ public final class KeybindRegistry {
 
             selectionModel.getSelectedItems().forEach(e -> e.setLoaded(!e.isLoaded()));
         });
-        registry.registerKeybind(controller.getReplayTable(), KeyCode.DELETE).executes(() -> {
+        registry.nodedKeybind(controller.getReplayTable(), KeyCode.DELETE).executes(() -> {
             var selection = controller.getReplayTable().getSelectionModel();
             if (selection.isEmpty()) {
                 return;
@@ -137,7 +104,7 @@ public final class KeybindRegistry {
             controller.closeInfoPanel();
         });
 
-        registry.registerKeybind(KeyCode.F, KeyCombination.CONTROL_DOWN).executes(() -> controller.getFilterBar().requestFocus());
+        registry.globalKeybind(KeyCode.F, KeyCombination.CONTROL_DOWN).executes(() -> controller.getFilterBar().requestFocus());
     }
 
 }
