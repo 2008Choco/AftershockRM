@@ -61,6 +61,10 @@ public class CachingHandler {
         int cached = 0;
 
         File[] replayFiles = replayDirectory.listFiles(REPLAY_FILE_FILTER);
+        if (replayFiles == null) {
+            logger.warning("Replay directory path does not represent a directory or an IO exception occured. Could not cache");
+            return;
+        }
 
         double loaded = 0;
         this.expectedTotalProgress = replayFiles.length;
@@ -111,12 +115,18 @@ public class CachingHandler {
 
     @Deprecated(forRemoval = false) // DANGEROUS AND DESTRUCTIVE METHOD
     public void invalidateAndDeleteCache() {
-        for (File file : cacheDirectory.listFiles()) {
-            file.delete();
+        File[] cacheFiles = cacheDirectory.listFiles();
+        if (cacheFiles != null) {
+            for (File file : cacheFiles) {
+                file.delete();
+            }
         }
 
-        for (File file : headersDirectory.listFiles()) {
-            file.delete();
+        File[] headerFiles = headersDirectory.listFiles();
+        if (headerFiles != null) {
+            for (File file : headerFiles) {
+                file.delete();
+            }
         }
     }
 
@@ -138,13 +148,17 @@ public class CachingHandler {
         long start = System.currentTimeMillis();
 
         File[] replayFiles = cacheDirectory.listFiles(REPLAY_FILE_FILTER);
+        if (replayFiles == null) {
+            logger.warning("Replay directory path does not represent a directory or an IO exception occured. Could not cache");
+            return;
+        }
 
         double loaded = 0;
         this.expectedTotalProgress = replayFiles.length;
         AppController controller = app.getController();
         controller.startLoading();
 
-        for (File cachedReplayFile : cacheDirectory.listFiles(REPLAY_FILE_FILTER)) {
+        for (File cachedReplayFile : replayFiles) {
             File replayFile = new File(replayDirectory, cachedReplayFile.getName());
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.RATTLETRAP_PATH), cachedReplayFile);
 

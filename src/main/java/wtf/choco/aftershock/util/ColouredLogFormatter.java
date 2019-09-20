@@ -1,7 +1,11 @@
 package wtf.choco.aftershock.util;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -29,7 +33,14 @@ public final class ColouredLogFormatter extends Formatter {
     public static final String CYAN = "\u001B[96m";
     public static final String WHITE = "\u001B[97m";
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    // Format: yyyy-MM-dd HH:mm:ss
+    private static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
+            .appendValue(ChronoField.YEAR, 4).appendLiteral('-')
+            .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
+            .appendValue(ChronoField.DAY_OF_MONTH, 2).appendLiteral(' ')
+            .appendValue(ChronoField.HOUR_OF_DAY, 2).appendLiteral(':')
+            .appendValue(ChronoField.MINUTE_OF_HOUR, 2).appendLiteral(':')
+            .appendValue(ChronoField.SECOND_OF_MINUTE, 2).toFormatter();
     private static final ColouredLogFormatter INSTANCE = new ColouredLogFormatter();
 
     private ColouredLogFormatter() { }
@@ -40,7 +51,7 @@ public final class ColouredLogFormatter extends Formatter {
         builder.append(DARK_CYAN);
 
         builder.append("[");
-        builder.append(DATE_FORMAT.format(new Date(record.getMillis())));
+        builder.append(LocalDateTime.ofInstant(Instant.ofEpochMilli(record.getMillis()), ZoneId.systemDefault()).format(DATE_FORMATTER));
         builder.append("]");
 
         Level level = record.getLevel();
