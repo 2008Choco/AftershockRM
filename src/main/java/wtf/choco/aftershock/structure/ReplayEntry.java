@@ -37,14 +37,15 @@ public class ReplayEntry {
     public ReplayEntry(Replay replay) {
         this.replay = replay;
 
+        App app = App.getInstance();
         this.loaded.addListener((ChangeListener<Boolean>) (l, oldValue, newValue) -> {
             if (oldValue != newValue) {
-                this.writeToHeader(true);
+                app.processReplayIO(this);
             }
         });
 
-        this.comments.addListener((ListChangeListener<String>) c -> writeToHeader(true));
-        this.tags.addListener((ListChangeListener<Tag>) c -> writeToHeader(true));
+        this.comments.addListener((ListChangeListener<String>) c -> app.processReplayIO(this));
+        this.tags.addListener((ListChangeListener<Tag>) c -> app.processReplayIO(this));
     }
 
     public Replay getReplay() {
@@ -114,14 +115,6 @@ public class ReplayEntry {
 
     public ListProperty<Tag> tagsProperty() {
         return tags;
-    }
-
-    public void writeToHeader(boolean async) {
-        if (async) {
-            App.getInstance().getExecutor().execute(this::writeToHeader);
-        } else {
-            this.writeToHeader();
-        }
     }
 
     public void writeToHeader() {

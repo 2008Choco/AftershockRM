@@ -7,6 +7,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Logger;
 
@@ -18,6 +19,7 @@ import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.manager.TagRegistry;
+import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
@@ -55,7 +57,8 @@ public final class App extends Application {
     private File installDirectory;
     private File binsFile;
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService primaryExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService pooledExecutor = Executors.newCachedThreadPool();
     private final Logger logger = Logger.getLogger("AftershockRM");
 
     @Override
@@ -122,7 +125,9 @@ public final class App extends Application {
 
     @Override
     public void stop() throws Exception {
-        this.executor.shutdown();
+        this.primaryExecutor.shutdown();
+        this.pooledExecutor.awaitTermination(15, TimeUnit.SECONDS);
+
         this.keybindRegistry.clearKeybinds();
         this.binRegistry.saveBinsToFile(binsFile);
         this.binRegistry.deleteBins(true);
@@ -147,7 +152,7 @@ public final class App extends Application {
     }
 
     public ExecutorService getExecutor() {
-        return executor;
+        return primaryExecutor;
     }
 
     public BinRegistry getBinRegistry() {
@@ -198,7 +203,11 @@ public final class App extends Application {
         return CompletableFuture.runAsync(() -> {
             this.cacheHandler.cacheReplays();
             this.cacheHandler.loadReplaysFromCache();
-        }, executor);
+        }, primaryExecutor);
+    }
+
+    public void processReplayIO(ReplayEntry replay) {
+        this.pooledExecutor.execute(replay::writeToHeader);
     }
 
     private Locale getLocale(String tag) {
