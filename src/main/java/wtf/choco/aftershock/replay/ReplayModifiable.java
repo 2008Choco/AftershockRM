@@ -194,14 +194,14 @@ public final class ReplayModifiable implements Replay {
         }
 
         // Aftershock-specific data
+        if (!root.has("aftershock")) {
+            this.modifiedHeader = true;
+        }
+
         JsonObject aftershockRoot = getOrCreate(root, "aftershock", JsonElement::getAsJsonObject, JsonObject::add, JsonObject::new);
         this.entryData = new ReplayEntry(this);
         this.entryData.setLoaded(JsonUtil.getOrCreate(aftershockRoot, "loaded", JsonElement::getAsBoolean, JsonObject::addProperty, true));
-
-        JsonArray comments = getOrCreate(aftershockRoot, "comments", JsonElement::getAsJsonArray, JsonObject::add, (Supplier<JsonArray>) JsonArray::new);
-        if (comments.size() > 0) {
-            comments.forEach(e -> entryData.addComment(e.getAsString()));
-        }
+        this.entryData.setComments(JsonUtil.getOrCreate(aftershockRoot, "comments", JsonElement::getAsString, JsonObject::addProperty, ""));
 
         JsonArray tags = getOrCreate(aftershockRoot, "tags", JsonElement::getAsJsonArray, JsonObject::add, (Supplier<JsonArray>) JsonArray::new);
         if (tags.size() > 0) {
@@ -219,6 +219,8 @@ public final class ReplayModifiable implements Replay {
                 this.entryData.addTag(tag);
             }
         }
+
+        this.entryData.registerPropertyListeners(app);
 
         JsonObject header = root.getAsJsonObject("header").getAsJsonObject("body").getAsJsonObject("properties").getAsJsonObject("value");
 

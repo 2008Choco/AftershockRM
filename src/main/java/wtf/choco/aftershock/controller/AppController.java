@@ -113,7 +113,6 @@ public final class AppController {
         this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.ORANGE)));
         this.columnMap.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getMapName()));
         this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getPlayerName()));
-        this.columnComments.setCellFactory(StringListTableCell.getFactoryCallback("None"));
         this.columnComments.setCellValueFactory(new PropertyValueFactory<>("comments"));
         this.columnTags.setCellFactory(StringListTableCell.getFactoryCallback());
         this.columnTags.setCellValueFactory(new PropertyValueFactory<>("tags"));
