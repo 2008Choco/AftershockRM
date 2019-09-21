@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Properties;
 
 public final class ApplicationSettings {
@@ -18,7 +17,7 @@ public final class ApplicationSettings {
 
     public static final Setting REPLAY_DIRECTORY = Setting.of("replay_directory", "");
     public static final Setting RATTLETRAP_PATH = Setting.of("rattletrap_path", App.getInstance().getInstallDirectory().getAbsolutePath() + "\\Rattletrap\\rattletrap.exe");
-    public static final Setting LOCALE = Setting.of("locale_code", Locale.getDefault().toString());
+    public static final Setting LOCALE = Setting.of("locale_code", "en_US");
 
 
     private final Path localFilePath;

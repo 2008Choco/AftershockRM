@@ -61,13 +61,14 @@ public final class App extends Application {
     @Override
     public void init() throws Exception {
         instance = this;
-        Locale.setDefault(new Locale("en", "US"));
 
+        // Logger initialization
         this.logger.setUseParentHandlers(false);
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(ColouredLogFormatter.get());
         this.logger.addHandler(handler);
 
+        // Install directory initialization
         if (getParameters().getRaw().contains("--dev")) {
             this.installDirectory = new File(System.getProperty("user.home"), "AppData/Roaming/AftershockRM/");
             this.logger.warning("Running app in development mode. Installation directory will be at " + installDirectory.getPath());
@@ -75,8 +76,7 @@ public final class App extends Application {
             this.installDirectory = new File(".");
         }
 
-        // POST INSTALL DIRECTORY STARTUP
-
+        // Post-install directory initialization
         this.binsFile = new File(installDirectory, "bins.json");
         this.binsFile.createNewFile();
 
@@ -88,7 +88,7 @@ public final class App extends Application {
     public void start(Stage stage) throws IOException {
         // Stage loading
         this.stage = stage;
-        Pair<Parent, AppController> root = FXUtils.loadFXML("/layout/Root", resources = ResourceBundle.getBundle("lang."));
+        Pair<Parent, AppController> root = FXUtils.loadFXML("/layout/Root", resources = ResourceBundle.getBundle("lang.", getLocale(settings.get(ApplicationSettings.LOCALE))));
         this.scene = new Scene(root.getKey());
         this.controller = root.getValue();
 
@@ -199,6 +199,15 @@ public final class App extends Application {
             this.cacheHandler.cacheReplays();
             this.cacheHandler.loadReplaysFromCache();
         }, executor);
+    }
+
+    private Locale getLocale(String tag) {
+        String[] parts = tag.split("_");
+        if (parts.length < 2) {
+            return null;
+        }
+
+        return new Locale(parts[0], parts[1]);
     }
 
     public static String truncateID(String id) {
