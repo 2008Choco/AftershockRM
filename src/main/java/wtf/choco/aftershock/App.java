@@ -147,6 +147,10 @@ public final class App extends Application {
         return controller;
     }
 
+    public CachingHandler getCacheHandler() {
+        return cacheHandler;
+    }
+
     public ResourceBundle getResources() {
         return resources;
     }

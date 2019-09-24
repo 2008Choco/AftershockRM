@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -68,6 +69,59 @@ public class CachingHandler {
 
         double loaded = 0;
         this.expectedTotalProgress = replayFiles.length;
+        AppController controller = app.getController();
+        controller.startLoading();
+
+        for (File replayFile : replayFiles) {
+            String replayFileName = replayFile.getName();
+
+            // Copy replay file to cache folder
+            File cacheDestination = new File(cacheDirectory, replayFileName);
+            boolean shouldCache = false;
+            if (!cacheDestination.exists()) {
+                logger.info("(" + App.truncateID(replayFileName) + ") - Caching replay file");
+                shouldCache = true;
+            } else if (md5 != null && !md5(replayFile).equals(md5(cacheDestination))) {
+                logger.info("(" + App.truncateID(replayFileName) + ") - Replay updated. MD5 does not match. Re-caching");
+
+                if (invalidatedReplays == Collections.EMPTY_SET) {
+                    this.invalidatedReplays = new HashSet<>();
+                }
+
+                this.invalidatedReplays.add(cacheDestination);
+                shouldCache = true;
+            }
+
+            if (shouldCache) {
+                try {
+                    Files.copy(replayFile.toPath(), cacheDestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    cached++;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            controller.setLoadingProgress(loaded / expectedTotalProgress);
+        }
+
+        if (cached > 0) {
+            long now = System.currentTimeMillis() - start;
+            logger.info("Completed caching in " + now + "ms");
+        } else {
+            logger.info("No new replays were found. Caching not required");
+        }
+
+        controller.stopLoading();
+    }
+
+    public void cacheReplays(Collection<File> replayFiles) {
+        Logger logger = app.getLogger();
+
+        long start = System.currentTimeMillis();
+        int cached = 0;
+        double loaded = 0;
+
+        this.expectedTotalProgress = replayFiles.size();
         AppController controller = app.getController();
         controller.startLoading();
 
@@ -190,6 +244,47 @@ public class CachingHandler {
 
     public void loadReplaysFromCache() {
         this.loadReplaysFromCache(true);
+    }
+
+    public void loadReplays(Collection<File> replayFiles) {
+        Logger logger = app.getLogger();
+        ApplicationSettings settings = app.getSettings();
+
+        long start = System.currentTimeMillis();
+
+        double loaded = 0;
+        this.expectedTotalProgress = replayFiles.size();
+        AppController controller = app.getController();
+        controller.startLoading();
+
+        for (File replayFile : replayFiles) {
+            File cachedReplayFile = new File(cacheDirectory, replayFile.getName());
+            File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.RATTLETRAP_PATH), cachedReplayFile);
+
+            ReplayModifiable replay = new ReplayModifiable(replayFile, cachedReplayFile, headerFile);
+            replay.loadDataFromFile();
+
+            replay.getEntryData().loadedProperty().addListener((ChangeListener<Boolean>) (change, oldValue, newValue) -> {
+                if (newValue) {
+                    try {
+                        Files.copy(cachedReplayFile.toPath(), replayFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    replayFile.delete();
+                }
+
+                this.app.getController().updateLoadedLabel();
+            });
+
+            controller.setLoadingProgress(++loaded / expectedTotalProgress);
+            BinRegistry.GLOBAL_BIN.addReplay(replay);
+        }
+
+        long now = System.currentTimeMillis() - start;
+        logger.info("Loaded " + loaded + " replays in " + now + "ms!");
+        controller.stopLoading();
     }
 
     private File getOrCreateHeaderFile(Logger logger, String rattletrapPath, File cachedReplayFile) {

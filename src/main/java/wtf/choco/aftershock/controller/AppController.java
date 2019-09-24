@@ -2,13 +2,22 @@ package wtf.choco.aftershock.controller;
 
 import java.awt.Toolkit;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.manager.BinRegistry;
+import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.structure.DynamicFilter;
 import wtf.choco.aftershock.structure.ReplayBin;
@@ -189,6 +198,84 @@ public final class AppController {
             clipboard.putFiles(files);
             clipboard.putString(replays.toString().substring(0, replays.length() - 1));
             dragboard.setContent(clipboard);
+        });
+
+        this.replayTable.setOnDragOver(e -> {
+            Dragboard dragboard = e.getDragboard();
+            if (dragboard.hasFiles()) {
+                for (File file : dragboard.getFiles()) {
+                    if (!file.getName().endsWith(".replay")) {
+                        return;
+                    }
+                }
+
+                e.acceptTransferModes(TransferMode.COPY);
+            }
+
+            if (dragboard.hasUrl()) {
+                String url = dragboard.getUrl();
+                if (!url.endsWith(".replay")) {
+                    return;
+                }
+
+                e.acceptTransferModes(TransferMode.ANY);
+            }
+        });
+
+        this.replayTable.setOnDragDropped(e -> {
+            Dragboard dragboard = e.getDragboard();
+            if (dragboard.hasFiles()) {
+                List<File> files = dragboard.getFiles();
+                for (File file : files) {
+                    if (!file.getName().endsWith(".replay")) {
+                        return;
+                    }
+                }
+
+                CachingHandler cacheHandler = App.getInstance().getCacheHandler();
+                cacheHandler.cacheReplays(files);
+                cacheHandler.loadReplays(files);
+            }
+
+            if (dragboard.hasUrl()) {
+                String urlRaw = dragboard.getUrl();
+                if (!urlRaw.endsWith(".replay")) {
+                    return;
+                }
+
+                URL url = null;
+                try {
+                    url = new URL(urlRaw);
+                } catch (MalformedURLException ex) {
+                    App.getInstance().getLogger().warning("Malformed URL. Could not download replay");
+                    ex.printStackTrace();
+                }
+
+                if (url == null) {
+                    return;
+                }
+
+                String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
+                try (ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream())) {
+                    File file = new File(App.getInstance().getSettings().get(ApplicationSettings.REPLAY_DIRECTORY), replayName);
+                    if (file.createNewFile()) {
+                        System.out.println("Downloading file: " + replayName);
+                        FileOutputStream fileOutputStream = new FileOutputStream(file);
+                        fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+                        fileOutputStream.close();
+                        System.out.println("Done");
+                    }
+
+                    List<File> toCache = Arrays.asList(file);
+                    CachingHandler cacheHandler = App.getInstance().getCacheHandler();
+                    cacheHandler.cacheReplays(toCache);
+                    cacheHandler.loadReplays(toCache);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+                e.setDropCompleted(true);
+            }
         });
 
         this.binEditor = new BinEditor(this, binEditorPane, binEditorList, c -> setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size()));
