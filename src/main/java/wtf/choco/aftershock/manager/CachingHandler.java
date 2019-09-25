@@ -68,7 +68,7 @@ public class CachingHandler {
 
         for (File replayFile : replayFiles) {
             String replayFileName = replayFile.getName();
-            this.updateProgress(task, current++, expected, "Caching " + replayFileName.substring(0, replayFileName.lastIndexOf('.')));
+            this.updateProgress(task, current++, expected, "Caching " + replayFileName.substring(0, replayFileName.lastIndexOf('.')) + "...");
 
             // Copy replay file to cache folder
             File cacheDestination = new File(cacheDirectory, replayFileName);
@@ -113,7 +113,7 @@ public class CachingHandler {
 
         for (File replayFile : replayFiles) {
             String replayFileName = replayFile.getName();
-            this.updateProgress(task, current++, expected, "Caching " + replayFileName.substring(0, replayFileName.lastIndexOf('.')));
+            this.updateProgress(task, current++, expected, "Caching " + replayFileName.substring(0, replayFileName.lastIndexOf('.')) + "...");
 
             // Copy replay file to cache folder
             File cacheDestination = new File(cacheDirectory, replayFileName);
@@ -194,7 +194,7 @@ public class CachingHandler {
 
         for (File cachedReplayFile : replayFiles) {
             String replayFileName = cachedReplayFile.getName();
-            this.updateProgress(task, current++, expected, "Caching " + replayFileName.substring(0, replayFileName.lastIndexOf('.')));
+            this.updateProgress(task, current++, expected, "Loading " + replayFileName.substring(0, replayFileName.lastIndexOf('.')) + "...");
 
             File replayFile = new File(replayDirectory, cachedReplayFile.getName());
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.RATTLETRAP_PATH), cachedReplayFile);
@@ -238,7 +238,7 @@ public class CachingHandler {
 
         for (File replayFile : replayFiles) {
             String replayFileName = replayFile.getName();
-            this.updateProgress(task, current++, expected, "Caching " + replayFileName.substring(0, replayFileName.lastIndexOf('.')));
+            this.updateProgress(task, current++, expected, "Loading " + replayFileName.substring(0, replayFileName.lastIndexOf('.')) + "...");
 
             File cachedReplayFile = new File(cacheDirectory, replayFile.getName());
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.RATTLETRAP_PATH), cachedReplayFile);
