@@ -1,5 +1,9 @@
 package wtf.choco.aftershock.util;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -43,6 +47,8 @@ public final class ColouredLogFormatter extends Formatter {
             .appendValue(ChronoField.SECOND_OF_MINUTE, 2).toFormatter();
     private static final ColouredLogFormatter INSTANCE = new ColouredLogFormatter();
 
+    private PrintWriter logWriter;
+
     private ColouredLogFormatter() { }
 
     @Override
@@ -83,7 +89,32 @@ public final class ColouredLogFormatter extends Formatter {
             }
         }
 
-        return builder.append(RESET).append("\n").toString();
+        String result = builder.append(RESET).append("\n").toString();
+
+        if (logWriter != null) {
+            this.logWriter.append(result);
+        }
+
+        return result;
+    }
+
+    public void setLogFile(File file) {
+        if (file == null) {
+            if (logWriter != null) {
+                this.logWriter.close();
+            }
+
+            this.logWriter = null;
+            return;
+        }
+
+        try {
+            file.delete();
+            file.createNewFile();
+            this.logWriter = new PrintWriter(new FileWriter(file, true));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static ColouredLogFormatter get() {

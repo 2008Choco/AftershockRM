@@ -1,5 +1,6 @@
 package wtf.choco.aftershock;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileAlreadyExistsException;
@@ -16,7 +17,7 @@ public final class ApplicationSettings {
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
     public static final Setting REPLAY_DIRECTORY = Setting.of("replay_directory", "");
-    public static final Setting RATTLETRAP_PATH = Setting.of("rattletrap_path", App.getInstance().getInstallDirectory().getAbsolutePath() + "\\Rattletrap\\rattletrap.exe");
+    public static final Setting RATTLETRAP_PATH = Setting.of("rattletrap_path", getCanonicalPath(App.getInstance().getInstallDirectory()) + "\\Rattletrap\\rattletrap.exe");
     public static final Setting LOCALE = Setting.of("locale_code", "en_US");
 
 
@@ -61,6 +62,15 @@ public final class ApplicationSettings {
             this.properties.store(Files.newBufferedWriter(localFilePath, CHARSET, StandardOpenOption.CREATE, StandardOpenOption.WRITE), null);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static String getCanonicalPath(File file) {
+        try {
+            return file.getCanonicalPath();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

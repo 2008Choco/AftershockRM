@@ -78,7 +78,8 @@ public final class App extends Application {
             this.installDirectory = new File(System.getProperty("user.home"), "AppData/Roaming/AftershockRM/");
             this.logger.warning("Running app in development mode. Installation directory will be at " + installDirectory.getPath());
         } else {
-            this.installDirectory = new File("");
+            this.installDirectory = new File(".");
+            ColouredLogFormatter.get().setLogFile(new File("log.txt"));
         }
 
         // Post-install directory initialization
@@ -137,6 +138,8 @@ public final class App extends Application {
         this.binRegistry.deleteBins(true);
         this.tagRegistry.clearTags();
         this.settings.writeToFile();
+
+        ColouredLogFormatter.get().setLogFile(null);
     }
 
     public Logger getLogger() {
@@ -236,12 +239,10 @@ public final class App extends Application {
             id = id.substring(0, id.lastIndexOf('.'));
         }
 
-        int idLength = id.length();
-        StringBuilder formatted = new StringBuilder(idLength);
+        StringBuilder formatted = new StringBuilder(11);
         formatted.append(id.substring(0, 4));
         formatted.append("...");
-        formatted.append(id.substring(idLength - ".replay".length() - 4));
-        formatted.trimToSize();
+        formatted.append(id.substring(id.length() - 4));
         return formatted.toString();
     }
 
