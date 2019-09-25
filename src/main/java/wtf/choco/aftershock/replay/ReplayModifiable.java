@@ -260,7 +260,6 @@ public final class ReplayModifiable implements Replay {
 
             playerData.name = JsonUtil.get(playerRoot, "Name", "str", JsonElement::getAsString);
             playerData.team = Team.fromInternalId(JsonUtil.get(playerRoot, "Team", "int", JsonElement::getAsInt));
-            // TODO: Parse platform
             playerData.score = JsonUtil.get(playerRoot, "Score", "int", JsonElement::getAsInt, 0);
             playerData.goals = JsonUtil.get(playerRoot, "Goals", "int", JsonElement::getAsInt, 0);
             playerData.assists = JsonUtil.get(playerRoot, "Assists", "int", JsonElement::getAsInt, 0);

@@ -5,7 +5,6 @@ import java.util.Objects;
 public final class PlayerDataModifiable implements PlayerData {
 
     String name;
-    Platform platform;
     Team team;
     int score, goals, assists, saves, shots;
 
@@ -18,11 +17,6 @@ public final class PlayerDataModifiable implements PlayerData {
     @Override
     public String getName() {
         return name;
-    }
-
-    @Override
-    public Platform getPlatform() {
-        return platform;
     }
 
     @Override

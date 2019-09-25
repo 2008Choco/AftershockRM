@@ -4,8 +4,6 @@ public interface PlayerData {
 
     public String getName();
 
-    public Platform getPlatform();
-
     public Team getTeam();
 
     public int getScore();
