@@ -86,7 +86,7 @@ public final class SettingsPanelController {
         App app = App.getInstance();
         app.getExecutor().execute(settings::writeToFile);
         if (replayDirectoryChanged) {
-            app.reloadReplays();
+            app.reloadReplays(null);
         }
 
         Logger logger = App.getInstance().getLogger();

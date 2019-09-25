@@ -3,6 +3,8 @@ package wtf.choco.aftershock.util;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import wtf.choco.aftershock.App;
 
@@ -42,6 +44,25 @@ public final class FXUtils {
 
     public static <T> T loadFXMLRoot(String path) {
         return loadFXMLRoot(path, null);
+    }
+
+    public static <T> PublicTask<T> createTask(Function<PublicTask<T>, T> task) {
+        return new PublicTask<>() {
+            @Override
+            protected T call() throws Exception {
+                return task.apply(this);
+            }
+        };
+    }
+
+    public static <T> PublicTask<T> createTask(Consumer<PublicTask<T>> task) {
+        return new PublicTask<>() {
+            @Override
+            protected T call() throws Exception {
+                task.accept(this);
+                return null;
+            }
+        };
     }
 
     private static URL getURL(String path) {

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
@@ -14,8 +15,10 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tooltip?>
+
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
+
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
@@ -60,12 +63,12 @@
     </VBox>
 
     <SplitPane fx:id="splitPane" HBox.hgrow="ALWAYS">
-      <TableView fx:id="replayTable" editable="true" focusTraversable="false" style="-fx-focus-color: transparent;" onKeyPressed="#tableKeyboardControl">
+      <TableView fx:id="replayTable" editable="true" focusTraversable="false" onKeyPressed="#tableKeyboardControl" style="-fx-focus-color: transparent;">
         <placeholder>
           <Label text="Select a bin to display" />
         </placeholder>
         <columns>
-          <TableColumn fx:id="columnLoaded" prefWidth="60" editable="true" sortable="false" text="%ui.table.column.loaded" />
+          <TableColumn fx:id="columnLoaded" editable="true" prefWidth="60" sortable="false" text="%ui.table.column.loaded" />
           <TableColumn fx:id="columnReplayName" prefWidth="200" text="%ui.table.column.replay_name" />
           <TableColumn fx:id="columnLastModified" prefWidth="140" text="%ui.table.column.last_modified" />
           <TableColumn fx:id="columnMode" sortable="false" text="%ui.table.column.mode" />
@@ -102,10 +105,12 @@
         <Insets left="10.0" right="10.0" />
       </padding>
 
-      <ProgressBar fx:id="loadProgress" focusTraversable="false" nodeOrientation="LEFT_TO_RIGHT" prefWidth="200.0" progress="0.0" visible="false" />
+      <Label fx:id="progressStatus" text="Status..." visible="false" />
+      <ProgressBar fx:id="progressBar" focusTraversable="false" prefWidth="200.0" progress="0.0" visible="false" />
+
       <StackPane alignment="CENTER_RIGHT">
-        <TextField fx:id="filterBar" focusTraversable="false" promptText="Filter... (Ctrl + F)" prefWidth="250" onKeyTyped="#updateFilter" onKeyPressed="#exitFilter" />
-        <ImageView fx:id="filterOptionsImage" opacity="0.5" pickOnBounds="true" onMouseClicked="#toggleFilterMenu">
+        <TextField fx:id="filterBar" focusTraversable="false" onKeyPressed="#exitFilter" onKeyTyped="#updateFilter" prefHeight="25.0" prefWidth="200.0" promptText="Filter... (Ctrl + F)" />
+        <ImageView fx:id="filterOptionsImage" onMouseClicked="#toggleFilterMenu" opacity="0.5" pickOnBounds="true">
           <StackPane.margin>
             <Insets right="10.0" />
           </StackPane.margin>

@@ -4,9 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Logger;
 
@@ -17,6 +17,7 @@ import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
+import wtf.choco.aftershock.manager.ProgressiveTaskExecutor;
 import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
@@ -25,6 +26,7 @@ import wtf.choco.aftershock.util.FXUtils;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.concurrent.Worker;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
@@ -48,6 +50,7 @@ public final class App extends Application {
 
     private KeybindRegistry keybindRegistry;
     private ApplicationSettings settings;
+    private ProgressiveTaskExecutor taskExecutor;
     private CachingHandler cacheHandler;
 
     private final BinRegistry binRegistry = new BinRegistry();
@@ -94,6 +97,8 @@ public final class App extends Application {
         this.scene = new Scene(root.getKey());
         this.controller = root.getValue();
 
+        this.taskExecutor = new ProgressiveTaskExecutor(primaryExecutor, controller.getProgressBar(), controller.getProgressStatus());
+
         // TODO: Configurable key binds
         this.keybindRegistry = new KeybindRegistry(this);
         KeybindRegistry.registerDefaultKeybinds(keybindRegistry);
@@ -119,7 +124,7 @@ public final class App extends Application {
 
         // Replay setup
         this.installDirectory.mkdirs();
-        this.reloadReplays().thenRun(() -> Platform.runLater(() -> binRegistry.loadBinsFromFile(binsFile, false)));
+        this.reloadReplays((result, state) -> Platform.runLater(() -> binRegistry.loadBinsFromFile(binsFile, false)));
     }
 
     @Override
@@ -156,6 +161,10 @@ public final class App extends Application {
 
     public ExecutorService getExecutor() {
         return primaryExecutor;
+    }
+
+    public ProgressiveTaskExecutor getTaskExecutor() {
+        return taskExecutor;
     }
 
     public BinRegistry getBinRegistry() {
@@ -202,11 +211,11 @@ public final class App extends Application {
         this.settingsStage = null;
     }
 
-    public CompletableFuture<Void> reloadReplays() {
-        return CompletableFuture.runAsync(() -> {
-            this.cacheHandler.cacheReplays();
-            this.cacheHandler.loadReplaysFromCache();
-        }, primaryExecutor);
+    public void reloadReplays(BiConsumer<?, Worker.State> whenCompleted) {
+        this.taskExecutor.execute(t -> {
+            this.cacheHandler.cacheReplays(t);
+            this.cacheHandler.loadReplaysFromCache(t);
+        }, whenCompleted, primaryExecutor);
     }
 
     public void processReplayIO(ReplayEntry replay) {
@@ -223,6 +232,10 @@ public final class App extends Application {
     }
 
     public static String truncateID(String id) {
+        if (id.endsWith(".replay")) {
+            id = id.substring(0, id.lastIndexOf('.'));
+        }
+
         int idLength = id.length();
         StringBuilder formatted = new StringBuilder(idLength);
         formatted.append(id.substring(0, 4));

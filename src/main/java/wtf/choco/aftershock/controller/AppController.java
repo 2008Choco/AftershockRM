@@ -96,7 +96,9 @@ public final class AppController {
     @FXML private Label labelListed, labelLoaded, labelSelected;
     @FXML private TextField filterBar;
     @FXML private ImageView filterOptionsImage;
-    @FXML private ProgressBar loadProgress;
+
+    @FXML private Label progressStatus;
+    @FXML private ProgressBar progressBar;
 
     @FXML private ResourceBundle resources;
 
@@ -233,8 +235,10 @@ public final class AppController {
 
                 if (files.size() >= 1) {
                     CachingHandler cacheHandler = App.getInstance().getCacheHandler();
-                    cacheHandler.cacheReplays(files);
-                    cacheHandler.loadReplays(files);
+                    app.getTaskExecutor().execute(t -> {
+                        cacheHandler.cacheReplays(t, files);
+                        cacheHandler.loadReplays(t, files);
+                    });
                 }
 
                 e.setDropCompleted(true);
@@ -256,25 +260,39 @@ public final class AppController {
                 }
 
                 final URL urlFinal = url; // Stupid lambdas...
-                app.getExecutor().execute(() -> {
+                app.getTaskExecutor().execute(t -> {
                     String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
+                    t.updateMessage("Fetching file...");
+
                     try (ReadableByteChannel readableByteChannel = Channels.newChannel(urlFinal.openStream())) {
                         File file = new File(app.getSettings().get(ApplicationSettings.REPLAY_DIRECTORY), replayName);
                         if (!file.createNewFile()) {
                             return;
                         }
 
+                        t.updateMessage("Downloading " + replayName.substring(0, replayName.lastIndexOf('.')) + "...");
+                        t.updateProgress(1, 4);
+
                         Logger logger = app.getLogger();
                         logger.info("Downloading file \"" + replayName + "\" (from " + urlFinal + ")");
+
                         FileOutputStream fileOutputStream = new FileOutputStream(file);
                         fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
                         fileOutputStream.close();
                         logger.info("Done");
 
+                        t.updateMessage("Caching replay headers...");
+                        t.updateProgress(2, 4);
+
                         List<File> toCache = Arrays.asList(file);
                         CachingHandler cacheHandler = App.getInstance().getCacheHandler();
-                        cacheHandler.cacheReplays(toCache);
-                        cacheHandler.loadReplays(toCache);
+                        cacheHandler.cacheReplays(null, toCache);
+
+                        t.updateMessage("Loading replay...");
+                        t.updateProgress(3, 4);
+                        cacheHandler.loadReplays(null, toCache);
+
+                        t.updateProgress(4, 4);
                     } catch (IOException ex) {
                         app.getLogger().warning("Could not complete the download due to an IO exception:");
                         ex.printStackTrace();
@@ -502,6 +520,14 @@ public final class AppController {
         return replayTable;
     }
 
+    public ProgressBar getProgressBar() {
+        return progressBar;
+    }
+
+    public Label getProgressStatus() {
+        return progressStatus;
+    }
+
     public TextField getFilterBar() {
         return filterBar;
     }
@@ -525,30 +551,6 @@ public final class AppController {
     public void openInfoPanel(ReplayEntry replay) {
         this.closeInfoPanel();
         this.splitPane.getItems().add(replay.getReplay().getInfoPanel());
-    }
-
-    public void startLoading() {
-        if (loadProgress.isVisible()) {
-            return;
-        }
-
-        this.setLoadingProgress(0.0);
-        this.loadProgress.setVisible(true);
-        App.getInstance().getStage().getScene().setCursor(Cursor.WAIT);
-    }
-
-    public void setLoadingProgress(double progress) {
-        this.loadProgress.setProgress(progress);
-    }
-
-    public void stopLoading() {
-        if (!loadProgress.isVisible()) {
-            return;
-        }
-
-        this.setLoadingProgress(1.0);
-        this.loadProgress.setVisible(false);
-        App.getInstance().getStage().getScene().setCursor(Cursor.DEFAULT);
     }
 
     public void updateLoadedLabel() {
