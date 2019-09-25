@@ -7,7 +7,6 @@ import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Logger;
 
@@ -126,7 +125,7 @@ public final class App extends Application {
     @Override
     public void stop() throws Exception {
         this.primaryExecutor.shutdown();
-        this.pooledExecutor.awaitTermination(15, TimeUnit.SECONDS);
+        this.pooledExecutor.shutdown();
 
         this.keybindRegistry.clearKeybinds();
         this.binRegistry.saveBinsToFile(binsFile);

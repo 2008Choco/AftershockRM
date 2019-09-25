@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import wtf.choco.aftershock.App;
@@ -113,6 +114,8 @@ public final class AppController {
 
     @FXML
     public void initialize() {
+        App app = App.getInstance();
+
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
         this.columnLoaded.setCellValueFactory(new PropertyValueFactory<>("loaded"));
         this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getName()));
@@ -212,13 +215,13 @@ public final class AppController {
                 e.acceptTransferModes(TransferMode.COPY);
             }
 
-            if (dragboard.hasUrl()) {
+            else if (dragboard.hasUrl()) {
                 String url = dragboard.getUrl();
                 if (!url.endsWith(".replay")) {
                     return;
                 }
 
-                e.acceptTransferModes(TransferMode.ANY);
+                e.acceptTransferModes(TransferMode.COPY);
             }
         });
 
@@ -226,28 +229,25 @@ public final class AppController {
             Dragboard dragboard = e.getDragboard();
             if (dragboard.hasFiles()) {
                 List<File> files = dragboard.getFiles();
-                for (File file : files) {
-                    if (!file.getName().endsWith(".replay")) {
-                        return;
-                    }
+                files.removeIf(f -> BinRegistry.GLOBAL_BIN.hasReplay(f.getName().substring(0, f.getName().lastIndexOf('.'))));
+
+                if (files.size() >= 1) {
+                    CachingHandler cacheHandler = App.getInstance().getCacheHandler();
+                    cacheHandler.cacheReplays(files);
+                    cacheHandler.loadReplays(files);
                 }
 
-                CachingHandler cacheHandler = App.getInstance().getCacheHandler();
-                cacheHandler.cacheReplays(files);
-                cacheHandler.loadReplays(files);
+                e.setDropCompleted(true);
             }
 
-            if (dragboard.hasUrl()) {
+            else if (dragboard.hasUrl()) {
                 String urlRaw = dragboard.getUrl();
-                if (!urlRaw.endsWith(".replay")) {
-                    return;
-                }
 
                 URL url = null;
                 try {
                     url = new URL(urlRaw);
                 } catch (MalformedURLException ex) {
-                    App.getInstance().getLogger().warning("Malformed URL. Could not download replay");
+                    app.getLogger().warning("Malformed URL. Could not download replay");
                     ex.printStackTrace();
                 }
 
@@ -255,24 +255,31 @@ public final class AppController {
                     return;
                 }
 
-                String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
-                try (ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream())) {
-                    File file = new File(App.getInstance().getSettings().get(ApplicationSettings.REPLAY_DIRECTORY), replayName);
-                    if (file.createNewFile()) {
-                        System.out.println("Downloading file: " + replayName);
+                final URL urlFinal = url; // Stupid lambdas...
+                app.getExecutor().execute(() -> {
+                    String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
+                    try (ReadableByteChannel readableByteChannel = Channels.newChannel(urlFinal.openStream())) {
+                        File file = new File(app.getSettings().get(ApplicationSettings.REPLAY_DIRECTORY), replayName);
+                        if (!file.createNewFile()) {
+                            return;
+                        }
+
+                        Logger logger = app.getLogger();
+                        logger.info("Downloading file \"" + replayName + "\" (from " + urlFinal + ")");
                         FileOutputStream fileOutputStream = new FileOutputStream(file);
                         fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
                         fileOutputStream.close();
-                        System.out.println("Done");
-                    }
+                        logger.info("Done");
 
-                    List<File> toCache = Arrays.asList(file);
-                    CachingHandler cacheHandler = App.getInstance().getCacheHandler();
-                    cacheHandler.cacheReplays(toCache);
-                    cacheHandler.loadReplays(toCache);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+                        List<File> toCache = Arrays.asList(file);
+                        CachingHandler cacheHandler = App.getInstance().getCacheHandler();
+                        cacheHandler.cacheReplays(toCache);
+                        cacheHandler.loadReplays(toCache);
+                    } catch (IOException ex) {
+                        app.getLogger().warning("Could not complete the download due to an IO exception:");
+                        ex.printStackTrace();
+                    }
+                });
 
                 e.setDropCompleted(true);
             }
@@ -300,7 +307,7 @@ public final class AppController {
                 return;
             }
 
-            BinRegistry binRegistry = App.getInstance().getBinRegistry();
+            BinRegistry binRegistry = app.getBinRegistry();
 
             tableContextMenu.getItems().add(1, sendTo);
             sendTo.getItems().clear();
