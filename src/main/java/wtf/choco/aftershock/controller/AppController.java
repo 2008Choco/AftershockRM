@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -236,6 +237,17 @@ public final class AppController {
                 if (files.size() >= 1) {
                     CachingHandler cacheHandler = App.getInstance().getCacheHandler();
                     app.getTaskExecutor().execute(t -> {
+                        String replayDirectory = app.getSettings().get(ApplicationSettings.REPLAY_DIRECTORY);
+                        files.forEach(f -> {
+                            File demoFile = new File(replayDirectory, f.getName());
+
+                            try {
+                                Files.copy(f.toPath(), demoFile.toPath());
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
+                            }
+                        });
+
                         cacheHandler.cacheReplays(t, files);
                         cacheHandler.loadReplays(t, files);
                     });
