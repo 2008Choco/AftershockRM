@@ -373,7 +373,7 @@ public final class AppController {
             replayTable.getSelectionModel().selectAll();
         }
 
-        else if (key == KeyCode.SPACE || key == KeyCode.ENTER) {
+        else if (key == KeyCode.SPACE) {
             var selectionModel = replayTable.getSelectionModel();
             if (selectionModel.isEmpty()) {
                 return;
