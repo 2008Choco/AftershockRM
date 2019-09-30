@@ -22,6 +22,7 @@ import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.structure.DynamicFilter;
+import wtf.choco.aftershock.structure.EditableTextTableCell;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
@@ -89,7 +90,7 @@ public final class AppController {
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreOrange;
     @FXML private TableColumn<ReplayEntry, String> columnMap;
     @FXML private TableColumn<ReplayEntry, String> columnOwner;
-    @FXML private TableColumn<ReplayEntry, List<String>> columnComments;
+    @FXML private TableColumn<ReplayEntry, String> columnComments;
     @FXML private TableColumn<ReplayEntry, List<Tag>> columnTags;
 
     @FXML private SplitPane splitPane;
@@ -128,6 +129,7 @@ public final class AppController {
         this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.ORANGE)));
         this.columnMap.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getMapName()));
         this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getPlayerName()));
+        this.columnComments.setCellFactory(EditableTextTableCell.getFactoryCallback("None"));
         this.columnComments.setCellValueFactory(new PropertyValueFactory<>("comments"));
         this.columnTags.setCellFactory(StringListTableCell.getFactoryCallback());
         this.columnTags.setCellValueFactory(new PropertyValueFactory<>("tags"));

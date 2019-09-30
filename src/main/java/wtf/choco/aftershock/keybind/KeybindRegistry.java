@@ -70,8 +70,13 @@ public class KeybindRegistry {
 
         registry.globalKeybind(KeyCode.F, KeyCombination.CONTROL_DOWN).executes(() -> controller.getFilterBar().requestFocus());
         registry.globalKeybind(KeyCode.ESCAPE).executes(() -> {
+            var table = controller.getReplayTable();
+            if (table.getEditingCell() != null) {
+                return;
+            }
+
             controller.closeInfoPanel();
-            controller.getReplayTable().getSelectionModel().clearSelection();
+            table.getSelectionModel().clearSelection();
         });
 
         registry.registeredDefaults = true;
