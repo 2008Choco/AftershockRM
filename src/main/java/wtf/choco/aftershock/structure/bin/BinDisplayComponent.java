@@ -1,5 +1,7 @@
 package wtf.choco.aftershock.structure.bin;
 
+import java.util.Optional;
+
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.Replay;
@@ -73,23 +75,30 @@ public class BinDisplayComponent extends VBox {
             clearBin.setOnAction(e -> bin.clear());
             MenuItem deleteBin = new MenuItem("Delete");
             deleteBin.setOnAction(e -> {
-                if (bin.isEmpty()) {
-                    App.getInstance().getBinRegistry().deleteBin(bin);
-                    return;
+                App app = App.getInstance();
+
+                if (!bin.isEmpty()) {
+                    Alert alert = new Alert(AlertType.WARNING);
+                    alert.setTitle("Confirm Bin Deletion");
+                    alert.setHeaderText("One or more of the bins selected for deletion contain at least one replay!");
+                    alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: \"" + bin.getName() + "\"?");
+
+                    ButtonType buttonDelete = new ButtonType("Delete");
+                    ButtonType buttonCancel = new ButtonType("Cancel");
+                    alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
+
+                    Optional<ButtonType> result = alert.showAndWait();
+                    if (!result.isPresent() || result.get() != buttonDelete) {
+                        return;
+                    }
                 }
 
-                Alert alert = new Alert(AlertType.WARNING);
-                alert.setTitle("Confirm Bin Deletion");
-                alert.setHeaderText("One or more of the bins selected for deletion contain at least one replay!");
-                alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: \"" + bin.getName() + "\"?");
+                BinEditor binEditor = app.getController().getBinEditor();
 
-                ButtonType buttonDelete = new ButtonType("Delete");
-                ButtonType buttonCancel = new ButtonType("Cancel");
-                alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
-
-                alert.showAndWait().filter(b -> b == buttonDelete).ifPresent(b -> {
-                    App.getInstance().getBinRegistry().deleteBin(bin);
-                });
+                app.getBinRegistry().deleteBin(bin);
+                if (binEditor.getDisplayed() == bin) {
+                    binEditor.display(BinRegistry.GLOBAL_BIN);
+                }
             });
 
             MenuItem hideBin = new MenuItem("Hide");
