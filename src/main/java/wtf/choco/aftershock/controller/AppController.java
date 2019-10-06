@@ -412,7 +412,7 @@ public final class AppController {
 
     @FXML
     public void deleteBin(@SuppressWarnings("unused") ActionEvent event) {
-        this.binEditor.deleteBins(binEditor.getSelectionModel().getSelectedItems(), true, false);
+        this.binEditor.deleteBins(binEditor.getSelectionModel().getSelectedItems(), true);
     }
 
     @FXML

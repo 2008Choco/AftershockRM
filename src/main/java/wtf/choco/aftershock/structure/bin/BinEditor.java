@@ -154,7 +154,7 @@ public class BinEditor {
         return displayed;
     }
 
-    public boolean deleteBin(ReplayBin bin, boolean shouldAlert, boolean force) {
+    public boolean deleteBin(ReplayBin bin, boolean shouldAlert) {
         if (bin == null) {
             return false;
         }
@@ -167,7 +167,7 @@ public class BinEditor {
             return false;
         }
 
-        if (!bin.isEmpty() && shouldAlert && !force) {
+        if (!bin.isEmpty() && shouldAlert) {
             Alert alert = new Alert(AlertType.WARNING);
             alert.setTitle("Confirm Bin Deletion");
             alert.setHeaderText("The bin selected for deletion contain at least one replay!");
@@ -193,18 +193,18 @@ public class BinEditor {
         return true;
     }
 
-    public boolean deleteBins(Collection<ReplayBin> bins, boolean shouldAlert, boolean force) {
+    public boolean deleteBins(Collection<ReplayBin> bins, boolean shouldAlert) {
         if (bins == null) {
             return false;
         }
 
         if (bins.size() == 1) {
-            return deleteBin(getAtIndex(bins, 0), shouldAlert, force);
+            return deleteBin(getAtIndex(bins, 0), shouldAlert);
         }
 
         bins.removeIf(b -> b == BinRegistry.GLOBAL_BIN);
         boolean allEmpty = bins.stream().allMatch(ReplayBin::isEmpty);
-        if (!allEmpty && shouldAlert && !force) {
+        if (!allEmpty && shouldAlert) {
             String binNames = bins.stream().map(b -> '"' + b.getName() + '"').collect(Collectors.joining(","));
 
             Alert alert = new Alert(AlertType.WARNING);
