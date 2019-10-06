@@ -185,6 +185,10 @@ public final class AppController {
 
         this.replayTable.setOnDragOver(e -> {
             Dragboard dragboard = e.getDragboard();
+            if (e.getGestureSource() == replayTable) {
+                return;
+            }
+
             if (dragboard.hasFiles()) {
                 for (File file : dragboard.getFiles()) {
                     if (!file.getName().endsWith(".replay")) {
