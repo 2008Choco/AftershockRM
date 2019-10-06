@@ -121,9 +121,9 @@
         </ImageView>
       </StackPane>
 
-      <Hyperlink contentDisplay="RIGHT" onAction="#openLink" text="%ui.footer.support">
+      <Hyperlink id="donation" contentDisplay="RIGHT" onAction="#openLink" text="%ui.footer.support">
         <tooltip>
-          <Tooltip text="https://paypal.me/2008Choco" />
+          <Tooltip text="Support this project" />
         </tooltip>
 
         <graphic>
@@ -135,9 +135,9 @@
         </graphic>
       </Hyperlink>
 
-      <Hyperlink contentDisplay="RIGHT" onAction="#openLink" text="%ui.footer.source">
+      <Hyperlink id="source" contentDisplay="RIGHT" onAction="#openLink" text="%ui.footer.source">
         <tooltip>
-          <Tooltip text="https://github.com/2008Choco/AftershockRM" />
+          <Tooltip text="View the source code" />
         </tooltip>
 
         <graphic>

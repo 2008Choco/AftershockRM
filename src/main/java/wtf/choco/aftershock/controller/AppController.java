@@ -377,8 +377,17 @@ public final class AppController {
 
     @FXML
     public void openLink(ActionEvent event) {
-        Hyperlink hyperlink = (Hyperlink) event.getTarget();
-        App.getInstance().getHostServices().showDocument(hyperlink.getTooltip().getText());
+        String toOpen = null;
+        switch (((Hyperlink) event.getTarget()).getId()) {
+            case "donation":
+                toOpen = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=hawkeboyz%40hotmail.com&currency_code=USD&source=Aftershock";
+                break;
+            case "source":
+                toOpen = "https://www.github.com/2008Choco/AftershockRM";
+                break;
+        }
+
+        App.getInstance().getHostServices().showDocument(toOpen);
     }
 
     @FXML
