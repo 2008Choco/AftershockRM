@@ -1,7 +1,10 @@
 package wtf.choco.aftershock.structure.bin;
 
+import java.awt.Toolkit;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.controller.AppController;
@@ -17,6 +20,9 @@ import javafx.collections.SetChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
@@ -28,7 +34,9 @@ public class BinEditor {
 
     private ReplayBin displayed;
 
+    private final App app;
     private final AppController controller;
+
     private final ObservableList<Node> listed;
     private final BinSelectionModel selectionModel = new BinSelectionModel();
     private final TableView<ReplayEntry> replayTable;
@@ -37,13 +45,14 @@ public class BinEditor {
     private final ObservableSet<ReplayBin> hidden = FXCollections.observableSet();
     private final Label hiddenLabel = new Label();
 
-    public BinEditor(AppController controller, VBox node, VBox list) {
+    public BinEditor(App app, AppController controller, VBox node, VBox list) {
+        this.app = app;
         this.controller = controller;
         this.replayTable = controller.getReplayTable();
         this.node = node;
         this.listed = list.getChildren();
 
-        BinRegistry binRegistry = App.getInstance().getBinRegistry();
+        BinRegistry binRegistry = app.getBinRegistry();
         binRegistry.getBins().forEach(b -> listed.add(b.getDisplay()));
 
         // Listeners
@@ -145,8 +154,89 @@ public class BinEditor {
         return displayed;
     }
 
-    public BinSelectionModel getSelectionModel() {
-        return selectionModel;
+    public boolean deleteBin(ReplayBin bin, boolean shouldAlert, boolean force) {
+        if (bin == null) {
+            return false;
+        }
+
+        if (bin == BinRegistry.GLOBAL_BIN) {
+            if (shouldAlert) {
+                Toolkit.getDefaultToolkit().beep();
+            }
+
+            return false;
+        }
+
+        if (!bin.isEmpty() && shouldAlert && !force) {
+            Alert alert = new Alert(AlertType.WARNING);
+            alert.setTitle("Confirm Bin Deletion");
+            alert.setHeaderText("The bin selected for deletion contain at least one replay!");
+            alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: " + bin.getName() + "?");
+
+            ButtonType buttonDelete = new ButtonType("Delete");
+            ButtonType buttonCancel = new ButtonType("Cancel");
+            alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
+
+            if (alert.showAndWait().orElse(buttonCancel) == buttonCancel) {
+                return false;
+            }
+        }
+
+        this.selectionModel.clearSelection(bin);
+        this.hidden.remove(bin); // Just in case it's hidden
+        this.app.getBinRegistry().deleteBin(bin);
+
+        if (displayed == bin) {
+            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().get(0));
+        }
+
+        return true;
+    }
+
+    public boolean deleteBins(Collection<ReplayBin> bins, boolean shouldAlert, boolean force) {
+        if (bins == null) {
+            return false;
+        }
+
+        if (bins.size() == 1) {
+            return deleteBin(getAtIndex(bins, 0), shouldAlert, force);
+        }
+
+        bins.removeIf(b -> b == BinRegistry.GLOBAL_BIN);
+        boolean allEmpty = bins.stream().allMatch(ReplayBin::isEmpty);
+        if (!allEmpty && shouldAlert && !force) {
+            String binNames = bins.stream().map(b -> '"' + b.getName() + '"').collect(Collectors.joining(","));
+
+            Alert alert = new Alert(AlertType.WARNING);
+            alert.setTitle("Confirm Bin Deletion");
+            alert.setHeaderText("One or more of the bins selected for deletion contain at least one replay!");
+            alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: " + binNames + "?");
+
+            ButtonType buttonDelete = new ButtonType("Delete");
+            ButtonType buttonCancel = new ButtonType("Cancel");
+            alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
+
+            if (alert.showAndWait().orElse(buttonCancel) == buttonCancel) {
+                return false;
+            }
+        }
+
+        BinRegistry registry = app.getBinRegistry();
+        for (ReplayBin bin : new ArrayList<>(bins)) {
+            this.selectionModel.clearSelection(bin);
+            this.hidden.remove(bin); // Just in case it's hidden
+            registry.deleteBin(bin);
+
+            if (displayed == bin) {
+                this.clearDisplay();
+            }
+        }
+
+        if (displayed == null) {
+            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().get(0));
+        }
+
+        return true;
     }
 
     public boolean hideBin(ReplayBin bin) {
@@ -184,6 +274,25 @@ public class BinEditor {
 
     public Collection<ReplayBin> getHidden() {
         return Collections.unmodifiableCollection(hidden);
+    }
+
+    public BinSelectionModel getSelectionModel() {
+        return selectionModel;
+    }
+
+    private <T> T getAtIndex(Collection<T> collection, int index) {
+        if (index < 0 || index >= collection.size()) {
+            throw new IllegalArgumentException("Index out of bounds");
+        }
+
+        int current = 0;
+        for (T element : collection) {
+            if (current++ == index) {
+                return element;
+            }
+        }
+
+        return null;
     }
 
 }

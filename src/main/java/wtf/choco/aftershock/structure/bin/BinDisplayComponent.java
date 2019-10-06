@@ -1,7 +1,5 @@
 package wtf.choco.aftershock.structure.bin;
 
-import java.util.Optional;
-
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.replay.Replay;
@@ -14,9 +12,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -74,32 +69,7 @@ public class BinDisplayComponent extends VBox {
             MenuItem clearBin = new MenuItem("Clear");
             clearBin.setOnAction(e -> bin.clear());
             MenuItem deleteBin = new MenuItem("Delete");
-            deleteBin.setOnAction(e -> {
-                App app = App.getInstance();
-
-                if (!bin.isEmpty()) {
-                    Alert alert = new Alert(AlertType.WARNING);
-                    alert.setTitle("Confirm Bin Deletion");
-                    alert.setHeaderText("One or more of the bins selected for deletion contain at least one replay!");
-                    alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: \"" + bin.getName() + "\"?");
-
-                    ButtonType buttonDelete = new ButtonType("Delete");
-                    ButtonType buttonCancel = new ButtonType("Cancel");
-                    alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
-
-                    Optional<ButtonType> result = alert.showAndWait();
-                    if (!result.isPresent() || result.get() != buttonDelete) {
-                        return;
-                    }
-                }
-
-                BinEditor binEditor = app.getController().getBinEditor();
-
-                app.getBinRegistry().deleteBin(bin);
-                if (binEditor.getDisplayed() == bin) {
-                    binEditor.display(BinRegistry.GLOBAL_BIN);
-                }
-            });
+            deleteBin.setOnAction(e -> App.getInstance().getController().getBinEditor().deleteBin(bin, true, false));
 
             MenuItem hideBin = new MenuItem("Hide");
             hideBin.setOnAction(e -> App.getInstance().getController().getBinEditor().hideBin(bin));
