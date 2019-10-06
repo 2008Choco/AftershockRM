@@ -1,7 +1,9 @@
 package wtf.choco.aftershock.keybind;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.controller.AppController;
@@ -11,6 +13,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
 
 public class KeybindRegistry {
 
@@ -20,10 +23,16 @@ public class KeybindRegistry {
     private final KeybindEventHandler globalHandler;
     private final App app;
 
+    private final Set<KeyCode> down = EnumSet.noneOf(KeyCode.class);
+
     public KeybindRegistry(App app) {
         this.app = app;
         this.globalHandler = new KeybindEventHandler(app, null);
-        this.app.getStage().addEventFilter(KeyEvent.KEY_PRESSED, globalHandler);
+
+        Stage stage = app.getStage();
+        stage.addEventFilter(KeyEvent.KEY_PRESSED, globalHandler);
+        stage.addEventHandler(KeyEvent.KEY_PRESSED, e -> down.add(e.getCode()));
+        stage.addEventHandler(KeyEvent.KEY_RELEASED, e -> down.remove(e.getCode()));
     }
 
     public KeybindData globalKeybind(KeyCode character, KeyCombination.Modifier... modifiers) {
@@ -59,6 +68,10 @@ public class KeybindRegistry {
 
         this.globalHandler.clearKeybinds();
         this.app.getStage().getScene().removeEventFilter(KeyEvent.KEY_PRESSED, globalHandler);
+    }
+
+    public boolean isDown(KeyCode key) {
+        return down.contains(key);
     }
 
     public static void registerDefaultKeybinds(KeybindRegistry registry) {

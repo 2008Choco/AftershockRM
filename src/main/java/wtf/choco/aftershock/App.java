@@ -178,6 +178,10 @@ public final class App extends Application {
         return tagRegistry;
     }
 
+    public KeybindRegistry getKeybindRegistry() {
+        return keybindRegistry;
+    }
+
     public ApplicationSettings getSettings() {
         return settings;
     }

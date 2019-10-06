@@ -69,7 +69,7 @@ public class BinDisplayComponent extends VBox {
             MenuItem clearBin = new MenuItem("Clear");
             clearBin.setOnAction(e -> bin.clear());
             MenuItem deleteBin = new MenuItem("Delete");
-            deleteBin.setOnAction(e -> App.getInstance().getController().getBinEditor().deleteBin(bin, true, false));
+            deleteBin.setOnAction(e -> App.getInstance().getController().getBinEditor().deleteBin(bin, true, App.getInstance().getKeybindRegistry().isDown(KeyCode.CONTROL)));
 
             MenuItem hideBin = new MenuItem("Hide");
             hideBin.setOnAction(e -> App.getInstance().getController().getBinEditor().hideBin(bin));
