@@ -37,14 +37,11 @@ public class BinEditor {
     private final ObservableSet<ReplayBin> hidden = FXCollections.observableSet();
     private final Label hiddenLabel = new Label();
 
-    private final ListChangeListener<ReplayEntry> binChangeListener;
-
-    public BinEditor(AppController controller, VBox node, VBox list, ListChangeListener<ReplayEntry> binChangeListener) {
+    public BinEditor(AppController controller, VBox node, VBox list) {
         this.controller = controller;
         this.replayTable = controller.getReplayTable();
         this.node = node;
         this.listed = list.getChildren();
-        this.binChangeListener = binChangeListener;
 
         BinRegistry binRegistry = App.getInstance().getBinRegistry();
         binRegistry.getBins().forEach(b -> listed.add(b.getDisplay()));
@@ -138,10 +135,6 @@ public class BinEditor {
         ObservableList<ReplayEntry> entries = (controller.getTableFilter().isInvalid()) ? bin.getReplaysObservable() : new FilteredList<>(bin.getReplaysObservable(), controller.getTableFilter());
         this.replayTable.setItems(entries);
         this.selectionModel.select(displayed);
-
-        // Ensure there is only ever one instance of the listener by removing it first
-        entries.removeListener(binChangeListener);
-        entries.addListener(binChangeListener);
     }
 
     public void clearDisplay() {

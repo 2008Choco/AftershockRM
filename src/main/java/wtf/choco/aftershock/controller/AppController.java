@@ -33,7 +33,6 @@ import wtf.choco.aftershock.structure.bin.BinSelectionModel;
 import wtf.choco.aftershock.util.FXUtils;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -148,40 +147,21 @@ public final class AppController {
         this.filterOptionsImage.setCursor(Cursor.HAND);
 
         // Label update listeners
-        ListChangeListener<ReplayEntry> changeListener = (c) -> setLabel(labelListed, "ui.footer.listed", c.getList().size());
-        this.replayTable.getItems().addListener(changeListener);
-        this.replayTable.itemsProperty().addListener((ChangeListener<ObservableList<ReplayEntry>>) (c, oldValue, newValue) -> {
-            this.setLabel(labelListed, "ui.footer.listed", newValue.size());
-            newValue.addListener(changeListener);
-        });
+        this.replayTable.itemsProperty().addListener((c, oldValue, newValue) -> setLabel(labelListed, "ui.footer.listed", newValue.size()));
 
         selectionModel.getSelectedItems().addListener((ListChangeListener<ReplayEntry>) c -> {
-            this.setLabel(labelSelected, "ui.footer.selected", selectionModel.getSelectedItems().size());
-
             if (!c.next()) {
                 return;
             }
 
+            this.setLabel(labelSelected, "ui.footer.selected", c.getList().size());
             if (c.getAddedSize() > 0) {
                 this.openInfoPanel(c.getAddedSubList().get(0));
                 this.splitPane.setDividerPosition(splitPane.getDividers().size() - 1, lastDividerPositionInfo);
             }
         });
 
-        BinRegistry.GLOBAL_BIN.getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) c -> {
-            if (!c.next()) {
-                return;
-            }
-
-            int loaded = 0;
-            for (ReplayEntry replay : c.getList()) {
-                if (replay.isLoaded()) {
-                    loaded++;
-                }
-            }
-
-            this.setLabel(labelLoaded, "ui.footer.loaded", loaded);
-        });
+        BinRegistry.GLOBAL_BIN.getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) c -> updateLoadedLabel());
 
         this.replayTable.setOnMouseClicked(e -> replayTable.requestFocus());
         this.replayTable.setOnDragDetected(e -> {
@@ -317,7 +297,7 @@ public final class AppController {
             }
         });
 
-        this.binEditor = new BinEditor(this, binEditorPane, binEditorList, c -> setLabel(labelListed, "ui.footer.listed", replayTable.getItems().size()));
+        this.binEditor = new BinEditor(this, binEditorPane, binEditorList);
 
         ContextMenu binEditorContextMenu = new ContextMenu();
         MenuItem showHiddenBins = new MenuItem("Unhide bins");
@@ -361,7 +341,6 @@ public final class AppController {
 
         // Zero the labels on init (no placeholder %s should be visible)
         this.setLabel(labelListed, "ui.footer.listed", 0);
-        this.setLabel(labelLoaded, "ui.footer.loaded", 0);
         this.setLabel(labelSelected, "ui.footer.selected", 0);
     }
 
