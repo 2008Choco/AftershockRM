@@ -4,6 +4,7 @@ import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -47,6 +48,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -306,8 +308,25 @@ public final class AppController {
 
         // TODO: Add functionality for "open file location"
         ContextMenu tableContextMenu = new ContextMenu();
-        tableContextMenu.getItems().add(new MenuItem("Open file location..."));
+        MenuItem openWithReplayEditor = new MenuItem("Open with Replay Editor...");
+        openWithReplayEditor.setOnAction(e -> {
+            String replayEditorPath = app.getSettings().get(ApplicationSettings.REPLAY_EDITOR_PATH);
+            if (replayEditorPath == null || replayEditorPath.isBlank()) {
+                return;
+            }
+
+            try {
+                new ProcessBuilder().command(replayEditorPath, "-open", replayTable.getSelectionModel().getSelectedItems().get(0).getReplay().getDemoFile().getAbsolutePath())
+                    .redirectError(Redirect.DISCARD).redirectOutput(Redirect.DISCARD).start(); // Do something with the output instead. Write to file?
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        tableContextMenu.getItems().addAll(new MenuItem("Open file location..."), openWithReplayEditor);
+
         Menu sendTo = new Menu("Send to...");
+        MenuItem separator = new SeparatorMenuItem();
 
         this.replayTable.setContextMenu(tableContextMenu);
 
@@ -318,9 +337,14 @@ public final class AppController {
                 return;
             }
 
+            String replayEditorPath = app.getSettings().get(ApplicationSettings.REPLAY_EDITOR_PATH);
+            openWithReplayEditor.setDisable(replayEditorPath == null || replayEditorPath.isBlank());
+
             BinRegistry binRegistry = app.getBinRegistry();
 
-            tableContextMenu.getItems().add(1, sendTo);
+            tableContextMenu.getItems().add(2, separator);
+            tableContextMenu.getItems().add(3, sendTo);
+
             sendTo.getItems().clear();
 
             for (ReplayBin bin : binRegistry.getBins()) {
@@ -334,7 +358,8 @@ public final class AppController {
             }
 
             if (sendTo.getItems().isEmpty()) {
-                tableContextMenu.getItems().remove(1);
+                tableContextMenu.getItems().remove(3);
+                tableContextMenu.getItems().remove(2);
             }
         });
 

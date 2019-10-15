@@ -20,7 +20,7 @@ import javafx.stage.Stage;
 
 public final class SettingsPanelController {
 
-    @FXML private TextField fieldReplayFolder, fieldRattletrapPath;
+    @FXML private TextField fieldReplayFolder, fieldRattletrapPath, fieldReplayEditorPath;
     @FXML private ComboBox<String> languageSelector;
 
     @FXML
@@ -29,6 +29,7 @@ public final class SettingsPanelController {
 
         this.fieldReplayFolder.setText(settings.get(ApplicationSettings.REPLAY_DIRECTORY));
         this.fieldRattletrapPath.setText(settings.get(ApplicationSettings.RATTLETRAP_PATH));
+        this.fieldReplayEditorPath.setText(settings.get(ApplicationSettings.REPLAY_EDITOR_PATH));
         this.languageSelector.setValue(settings.get(ApplicationSettings.LOCALE));
     }
 
@@ -55,7 +56,7 @@ public final class SettingsPanelController {
     public void selectRattletrapFile(ActionEvent event) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Select Rattletrap Executable");
-        chooser.setSelectedExtensionFilter(new ExtensionFilter("Executable File", "*.exe"));
+        chooser.setSelectedExtensionFilter(new ExtensionFilter("Executable File", "exe"));
 
         String rattletrapPath = fieldRattletrapPath.getText();
         if (!rattletrapPath.isBlank()) {
@@ -71,6 +72,25 @@ public final class SettingsPanelController {
 
     @FXML
     @SuppressWarnings("unused")
+    public void selectReplayEditorFile(ActionEvent event) {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Select Replay Editor Executable");
+        chooser.setSelectedExtensionFilter(new ExtensionFilter("Executable File", "exe"));
+
+        String replayEditorPath = fieldReplayEditorPath.getText();
+        if (!replayEditorPath.isBlank()) {
+            File initialDirectory = (isValidPath(replayEditorPath)) ? new File(replayEditorPath).getParentFile() : App.getInstance().getInstallDirectory();
+            chooser.setInitialDirectory(initialDirectory);
+        }
+
+        File file = chooser.showOpenDialog(new Stage());
+        if (file != null) {
+            this.fieldReplayEditorPath.setText(file.getAbsolutePath());
+        }
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
     public void close(ActionEvent event) {
         App.getInstance().closeSettingsStage();
     }
@@ -81,6 +101,7 @@ public final class SettingsPanelController {
 
         boolean replayDirectoryChanged = setIfValid(settings, ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
         this.setIfValid(settings, ApplicationSettings.RATTLETRAP_PATH, fieldRattletrapPath.getText());
+        this.setIfValid(settings, ApplicationSettings.REPLAY_EDITOR_PATH, fieldReplayEditorPath.getText());
         this.setIfValid(settings, ApplicationSettings.LOCALE, languageSelector.getValue());
 
         App app = App.getInstance();
@@ -93,13 +114,14 @@ public final class SettingsPanelController {
         logger.info("Settings updated to: ");
         logger.info("Replay Directory: " + settings.get(ApplicationSettings.REPLAY_DIRECTORY));
         logger.info("Rattletrap Path: " + settings.get(ApplicationSettings.RATTLETRAP_PATH));
+        logger.info("Replay Editor Path: " + settings.get(ApplicationSettings.REPLAY_EDITOR_PATH));
         logger.info("Language: " + settings.get(ApplicationSettings.LOCALE));
 
         this.close(event);
     }
 
     private boolean setIfValid(ApplicationSettings settings, Setting key, String value) {
-        if (value == null || (value = value.trim()).isEmpty()) {
+        if (value == null) {
             return false;
         }
 
