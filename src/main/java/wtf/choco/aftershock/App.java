@@ -40,6 +40,8 @@ public final class App extends Application {
 
     // https://www.flaticon.com
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final String VERSION = "0.1.1A";
+
     private static App instance;
 
     private Stage stage;
@@ -117,7 +119,7 @@ public final class App extends Application {
         });
 
         // Stage setup
-        stage.setTitle("Aftershock Replay Manager");
+        stage.setTitle("Aftershock Replay Manager v" + VERSION);
         stage.setScene(scene);
         stage.show();
 
