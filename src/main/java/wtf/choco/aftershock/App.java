@@ -85,6 +85,7 @@ public final class App extends Application {
         }
 
         // Post-install directory initialization
+        this.installDirectory.mkdirs();
         this.binsFile = new File(installDirectory, "bins.json");
         this.binsFile.createNewFile();
 
