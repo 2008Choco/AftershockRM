@@ -110,7 +110,7 @@ public final class AppController {
 
     private Popup popup = new Popup();
 
-    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((r, t) -> r.getReplay().getName().toLowerCase().startsWith(t.toLowerCase()));
+    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((r, t) -> r.getReplay().getName().toLowerCase().contains(t.toLowerCase()));
 
     @FXML
     public void initialize() {
