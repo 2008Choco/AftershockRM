@@ -20,7 +20,7 @@ import javafx.stage.Stage;
 
 public final class SettingsPanelController {
 
-    @FXML private TextField fieldReplayFolder, fieldRattletrapPath, fieldReplayEditorPath;
+    @FXML private TextField fieldReplayFolder, fieldRocketRPPath, fieldReplayEditorPath;
     @FXML private ComboBox<String> languageSelector;
 
     @FXML
@@ -28,7 +28,7 @@ public final class SettingsPanelController {
         ApplicationSettings settings = App.getInstance().getSettings();
 
         this.fieldReplayFolder.setText(settings.get(ApplicationSettings.REPLAY_DIRECTORY));
-        this.fieldRattletrapPath.setText(settings.get(ApplicationSettings.RATTLETRAP_PATH));
+        this.fieldRocketRPPath.setText(settings.get(ApplicationSettings.ROCKETRP_PATH));
         this.fieldReplayEditorPath.setText(settings.get(ApplicationSettings.REPLAY_EDITOR_PATH));
         this.languageSelector.setValue(settings.get(ApplicationSettings.LOCALE));
     }
@@ -53,20 +53,20 @@ public final class SettingsPanelController {
 
     @FXML
     @SuppressWarnings("unused")
-    public void selectRattletrapFile(ActionEvent event) {
+    public void selectRocketRPPath(ActionEvent event) {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Select Rattletrap Executable");
+        chooser.setTitle("Select RocketRP Executable");
         chooser.setSelectedExtensionFilter(new ExtensionFilter("Executable File", "exe"));
 
-        String rattletrapPath = fieldRattletrapPath.getText();
-        if (!rattletrapPath.isBlank()) {
-            File initialDirectory = (isValidPath(rattletrapPath)) ? new File(rattletrapPath).getParentFile() : App.getInstance().getInstallDirectory();
+        String rocketRPPath = fieldRocketRPPath.getText();
+        if (!rocketRPPath.isBlank()) {
+            File initialDirectory = (isValidPath(rocketRPPath)) ? new File(rocketRPPath).getParentFile() : App.getInstance().getInstallDirectory();
             chooser.setInitialDirectory(initialDirectory);
         }
 
         File file = chooser.showOpenDialog(new Stage());
         if (file != null) {
-            this.fieldRattletrapPath.setText(file.getAbsolutePath());
+            this.fieldRocketRPPath.setText(file.getAbsolutePath());
         }
     }
 
@@ -100,7 +100,7 @@ public final class SettingsPanelController {
         ApplicationSettings settings = App.getInstance().getSettings();
 
         boolean replayDirectoryChanged = setIfValid(settings, ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
-        this.setIfValid(settings, ApplicationSettings.RATTLETRAP_PATH, fieldRattletrapPath.getText());
+        this.setIfValid(settings, ApplicationSettings.ROCKETRP_PATH, fieldRocketRPPath.getText());
         this.setIfValid(settings, ApplicationSettings.REPLAY_EDITOR_PATH, fieldReplayEditorPath.getText());
         this.setIfValid(settings, ApplicationSettings.LOCALE, languageSelector.getValue());
 
@@ -113,7 +113,7 @@ public final class SettingsPanelController {
         Logger logger = App.getInstance().getLogger();
         logger.info("Settings updated to: ");
         logger.info("Replay Directory: " + settings.get(ApplicationSettings.REPLAY_DIRECTORY));
-        logger.info("Rattletrap Path: " + settings.get(ApplicationSettings.RATTLETRAP_PATH));
+        logger.info("RocketRP Path: " + settings.get(ApplicationSettings.ROCKETRP_PATH));
         logger.info("Replay Editor Path: " + settings.get(ApplicationSettings.REPLAY_EDITOR_PATH));
         logger.info("Language: " + settings.get(ApplicationSettings.LOCALE));
 

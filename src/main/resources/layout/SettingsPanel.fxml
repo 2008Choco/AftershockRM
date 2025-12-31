@@ -39,12 +39,12 @@
     </rowConstraints>
 
     <Label text="%ui.settings.replay_folder" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.vgrow="NEVER" />
-    <Label text="%ui.settings.rattletrap_path" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="NEVER" />
+    <Label text="%ui.settings.rocketrp_path" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="NEVER" />
     <Label text="%ui.settings.replay_editor_path" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.vgrow="NEVER" />
     <Label text="%ui.settings.language" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.vgrow="NEVER" />
 
     <TextField fx:id="fieldReplayFolder" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-    <TextField fx:id="fieldRattletrapPath" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+    <TextField fx:id="fieldRocketRPPath" GridPane.columnIndex="1" GridPane.rowIndex="1" />
     <TextField fx:id="fieldReplayEditorPath" GridPane.columnIndex="1" GridPane.rowIndex="2" />
  
     <Button maxHeight="1E10" maxWidth="1E10" GridPane.columnIndex="2" GridPane.rowIndex="0" onAction="#selectReplayFolder">
@@ -56,7 +56,7 @@
         </ImageView>
       </graphic>
     </Button>
-    <Button maxHeight="1E10" maxWidth="1E10" GridPane.columnIndex="2" GridPane.rowIndex="1" onAction="#selectRattletrapFile">
+    <Button maxHeight="1E10" maxWidth="1E10" GridPane.columnIndex="2" GridPane.rowIndex="1" onAction="#selectRocketRPPath">
       <graphic>
         <ImageView>
           <image>

@@ -45,7 +45,7 @@ public class ProgressiveTaskExecutor {
         messageProperty.bind(task.messageProperty());
 
         task.setOnSucceeded(completionTask(whenCompleted, task::getValue));
-        task.setOnFailed(completionTask(whenCompleted, () -> null));
+        task.setOnFailed(completionTask(whenCompleted, () -> null)); // TODO: This hides exceptions! This is a problem!
         task.setOnCancelled(completionTask(whenCompleted, () -> null));
 
         executor.execute(task);

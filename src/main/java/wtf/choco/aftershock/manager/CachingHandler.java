@@ -197,7 +197,7 @@ public class CachingHandler {
             this.updateProgress(task, current++, expected, "Loading " + replayFileName.substring(0, replayFileName.lastIndexOf('.')) + "...");
 
             File replayFile = new File(replayDirectory, cachedReplayFile.getName());
-            File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.RATTLETRAP_PATH), cachedReplayFile);
+            File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
 
             ReplayModifiable replay = new ReplayModifiable(replayFile, cachedReplayFile, headerFile);
             replay.loadDataFromFile();
@@ -241,7 +241,7 @@ public class CachingHandler {
             this.updateProgress(task, current++, expected, "Loading " + replayFileName.substring(0, replayFileName.lastIndexOf('.')) + "...");
 
             File cachedReplayFile = new File(cacheDirectory, replayFile.getName());
-            File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.RATTLETRAP_PATH), cachedReplayFile);
+            File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
 
             ReplayModifiable replay = new ReplayModifiable(replayFile, cachedReplayFile, headerFile);
             replay.loadDataFromFile();
@@ -268,7 +268,7 @@ public class CachingHandler {
         logger.info("Loaded " + loaded + " replays in " + now + "ms!");
     }
 
-    private File getOrCreateHeaderFile(Logger logger, String rattletrapPath, File cachedReplayFile) {
+    private File getOrCreateHeaderFile(Logger logger, String rocketRPPath, File cachedReplayFile) {
         String replayFileName = cachedReplayFile.getName();
         File destination = new File(headersDirectory, replayFileName.substring(0, replayFileName.lastIndexOf('.')) + ".json");
 
@@ -284,7 +284,7 @@ public class CachingHandler {
 
         if (shouldCreateHeader) {
             try {
-                Runtime.getRuntime().exec(rattletrapPath + " --f --i \"" + cachedReplayFile.getAbsolutePath() + "\" --o \"" + destination.getAbsolutePath() + "\"").waitFor();
+                Runtime.getRuntime().exec(rocketRPPath + " --f --r \"" + cachedReplayFile.getAbsolutePath() + "\" --o \"" + headersDirectory.getAbsolutePath() + "\"").waitFor();
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }

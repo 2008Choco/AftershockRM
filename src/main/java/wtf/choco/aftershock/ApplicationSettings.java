@@ -17,7 +17,7 @@ public final class ApplicationSettings {
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
     public static final Setting REPLAY_DIRECTORY = Setting.of("replay_directory", "");
-    public static final Setting RATTLETRAP_PATH = Setting.of("rattletrap_path", getCanonicalPath(App.getInstance().getInstallDirectory()) + "\\Rattletrap\\rattletrap.exe");
+    public static final Setting ROCKETRP_PATH = Setting.of("rocketrp_path", getCanonicalPath(App.getInstance().getInstallDirectory()) + "\\RocketRP\\RocketRP.CLI.exe");
     public static final Setting REPLAY_EDITOR_PATH = Setting.of("replay_editor_path", "");
     public static final Setting LOCALE = Setting.of("locale_code", "en_US");
 

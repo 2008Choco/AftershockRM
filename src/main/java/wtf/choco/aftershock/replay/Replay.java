@@ -34,7 +34,7 @@ public interface Replay {
 
     public LocalDateTime getDate();
 
-    public int getFPS();
+    public float getFPS();
 
     public int getLength();
 

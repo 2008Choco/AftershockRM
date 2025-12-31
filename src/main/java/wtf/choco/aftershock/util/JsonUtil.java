@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
@@ -17,6 +18,31 @@ import wtf.choco.aftershock.App;
 public final class JsonUtil {
 
     private JsonUtil() { }
+
+    public static String getString(JsonObject root, String propertyKey, String defaultValue) {
+        JsonElement element = root.get(propertyKey);
+        return (element != null) ? element.getAsString() : defaultValue;
+    }
+
+    public static int getInt(JsonObject root, String propertyKey, int defaultValue) {
+        JsonElement element = root.get(propertyKey);
+        return (element != null) ? element.getAsInt() : defaultValue;
+    }
+
+    public static float getFloat(JsonObject root, String propertyKey, float defaultValue) {
+        JsonElement element = root.get(propertyKey);
+        return (element != null) ? element.getAsFloat() : defaultValue;
+    }
+
+    public static JsonArray getArray(JsonObject root, String propertyKey) {
+        JsonElement element = root.get(propertyKey);
+        return (element != null) ? element.getAsJsonArray() : new JsonArray();
+    }
+
+    public static JsonObject getObject(JsonObject root, String propertyKey) {
+        JsonElement element = root.get(propertyKey);
+        return (element != null) ? element.getAsJsonObject() : new JsonObject();
+    }
 
     public static <T> T get(JsonObject root, String propertyKey, String type, Function<JsonElement, T> caster) {
         return get(root, propertyKey, type, caster, null);

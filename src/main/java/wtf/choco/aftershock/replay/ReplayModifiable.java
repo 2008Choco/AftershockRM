@@ -43,7 +43,8 @@ public final class ReplayModifiable implements Replay {
     private String name, id, mapName, playerName;
     private LocalDateTime date;
     private int replayVersion;
-    private int length, fps;
+    private int length;
+    private float fps;
 
     private ReplayEntry entryData;
     private Parent infoPanel;
@@ -146,7 +147,7 @@ public final class ReplayModifiable implements Replay {
     }
 
     @Override
-    public int getFPS() {
+    public float getFPS() {
         return fps;
     }
 
@@ -222,67 +223,67 @@ public final class ReplayModifiable implements Replay {
 
         this.entryData.registerPropertyListeners(app);
 
-        JsonObject header = root.getAsJsonObject("header").getAsJsonObject("body").getAsJsonObject("properties").getAsJsonObject("value");
+        JsonObject propertiesObject = root.getAsJsonObject("Properties");
 
         // Basic primitive data
-        this.teamSize = JsonUtil.get(header, "TeamSize", "int", JsonElement::getAsInt);
-        if (playerData == Collections.EMPTY_LIST) {
+        this.teamSize = JsonUtil.getInt(propertiesObject, "TeamSize", 3);
+        if (playerData.isEmpty()) {
             this.playerData = new ArrayList<>(teamSize * 2);
         }
 
-        this.blueScore = JsonUtil.get(header, "Team0Score", "int", JsonElement::getAsInt, 0);
-        this.orangeScore = JsonUtil.get(header, "Team1Score", "int", JsonElement::getAsInt, 0);
-        this.replayVersion = JsonUtil.get(header, "ReplayVersion", "int", JsonElement::getAsInt);
+        this.blueScore = JsonUtil.getInt(propertiesObject, "Team0Score", 0);
+        this.orangeScore = JsonUtil.getInt(propertiesObject, "Team1Score", 0);
+        this.replayVersion = JsonUtil.getInt(propertiesObject, "ReplayVersion", -1);
 
-        String mapId = JsonUtil.get(header, "MapName", "name", JsonElement::getAsString);
-        this.mapName = (mapId != null ? app.getResources().getString("map.name." + mapId.toLowerCase()) : "%unknown_map%");
-        this.name = JsonUtil.get(header, "ReplayName", "str", JsonElement::getAsString, "[" + getMapName() + " - " + teamSize + "v" + teamSize + "]");
-        this.id = JsonUtil.get(header, "Id", "str", JsonElement::getAsString);
-        this.playerName = JsonUtil.get(header, "PlayerName", "str", JsonElement::getAsString);
-        this.fps = JsonUtil.get(header, "RecordFPS", "float", JsonElement::getAsInt, 30);
-        this.length = JsonUtil.get(header, "NumFrames", "int", JsonElement::getAsInt, -fps) / fps; // (defaults to -1)
+        String mapId = JsonUtil.getString(JsonUtil.getObject(propertiesObject, "MapName"), "Value", "UNKNOWN_MAP");
+        String mapTranslationKey = "map.name." + mapId.toLowerCase();
+        this.mapName = (mapId != null && app.getResources().containsKey(mapTranslationKey) ? app.getResources().getString(mapTranslationKey) : "%unknown_map__" + mapId + "__%");
+        this.name = JsonUtil.getString(propertiesObject, "ReplayName", "[" + getMapName() + " - " + teamSize + "v" + teamSize + "]");
+        this.id = JsonUtil.getString(propertiesObject, "Id", cachedFile.getName().substring(0, cachedFile.getName().lastIndexOf('.')));
+        this.playerName = JsonUtil.getString(propertiesObject, "PlayerName", "%unknown_player%");
+        this.fps = JsonUtil.getFloat(propertiesObject, "RecordFPS", 30.0F);
+        this.length = (int) (JsonUtil.getInt(propertiesObject, "NumFrames", -1) / fps);
 
         // More complex data
-        String dateString = JsonUtil.get(header, "Date", "str", JsonElement::getAsString, "1970-00-00 00-00-00");
-        LocalDateTime date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("uuuu-MM-dd HH-mm-ss"));
-        this.date = ((date != null) ? date : LocalDateTime.MIN);
+        String dateString = JsonUtil.getString(propertiesObject, "Date", "1970-00-00 00-00-00");
+        this.date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("uuuu-MM-dd HH-mm-ss"));
 
         /* Players */
         Map<String, PlayerData> nameToPlayerData = new HashMap<>();
-        JsonArray players = JsonUtil.get(header, "PlayerStats", "array", JsonElement::getAsJsonArray, new JsonArray(0));
+        JsonArray players = JsonUtil.getArray(propertiesObject, "PlayerStats");
         for (JsonElement playerElement : players) {
             if (!playerElement.isJsonObject()) {
                 throw new IllegalStateException("Expected player object, received " + playerElement.getClass().getSimpleName());
             }
 
-            JsonObject playerRoot = playerElement.getAsJsonObject().getAsJsonObject("value");
+            JsonObject playerRoot = playerElement.getAsJsonObject();
             PlayerDataModifiable playerData = new PlayerDataModifiable(this);
 
-            playerData.name = JsonUtil.get(playerRoot, "Name", "str", JsonElement::getAsString);
-            playerData.team = Team.fromInternalId(JsonUtil.get(playerRoot, "Team", "int", JsonElement::getAsInt));
-            playerData.score = JsonUtil.get(playerRoot, "Score", "int", JsonElement::getAsInt, 0);
-            playerData.goals = JsonUtil.get(playerRoot, "Goals", "int", JsonElement::getAsInt, 0);
-            playerData.assists = JsonUtil.get(playerRoot, "Assists", "int", JsonElement::getAsInt, 0);
-            playerData.saves = JsonUtil.get(playerRoot, "Saves", "int", JsonElement::getAsInt, 0);
-            playerData.shots = JsonUtil.get(playerRoot, "Shots", "int", JsonElement::getAsInt, 0);
+            playerData.name = JsonUtil.getString(playerRoot, "Name", "%unknown_player%");
+            playerData.team = Team.fromInternalId(JsonUtil.getInt(playerRoot, "Team", 0));
+            playerData.score = JsonUtil.getInt(playerRoot, "Score", 0);
+            playerData.goals = JsonUtil.getInt(playerRoot, "Goals", 0);
+            playerData.assists = JsonUtil.getInt(playerRoot, "Assists", 0);
+            playerData.saves = JsonUtil.getInt(playerRoot, "Saves", 0);
+            playerData.shots = JsonUtil.getInt(playerRoot, "Shots", 0);
 
             nameToPlayerData.put(playerData.getName(), playerData);
             this.addPlayer(playerData);
         }
 
         /* Goals */
-        JsonArray goals = JsonUtil.get(header, "Goals", "array", JsonElement::getAsJsonArray, new JsonArray(0));
+        JsonArray goals = JsonUtil.getArray(propertiesObject, "Goals");
         for (JsonElement goalElement : goals) {
             if (!goalElement.isJsonObject()) {
                 throw new IllegalStateException("Expected goal object, received " + goalElement.getClass().getSimpleName());
             }
 
-            JsonObject goalRoot = goalElement.getAsJsonObject().getAsJsonObject("value");
+            JsonObject goalRoot = goalElement.getAsJsonObject();
             GoalDataModifiable goalData = new GoalDataModifiable(this);
 
-            goalData.secondsIn = JsonUtil.get(goalRoot, "frame", "int", JsonElement::getAsInt) / fps;
-            goalData.team = Team.fromInternalId(JsonUtil.get(goalRoot, "PlayerTeam", "int", JsonElement::getAsInt));
-            goalData.player = nameToPlayerData.get(JsonUtil.get(goalRoot, "PlayerName", "str", JsonElement::getAsString));
+            goalData.secondsIn = (int) (JsonUtil.getInt(goalRoot, "frame", 0) / fps);
+            goalData.team = Team.fromInternalId(JsonUtil.getInt(goalRoot, "PlayerTeam", 0));
+            goalData.player = nameToPlayerData.get(JsonUtil.getString(goalRoot, "PlayerName", ""));
 
             this.addGoal(goalData);
         }
