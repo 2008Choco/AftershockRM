@@ -1,5 +1,21 @@
 package wtf.choco.aftershock.structure;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.replay.Replay;
+import wtf.choco.aftershock.util.JsonUtil;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -7,25 +23,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonWriter;
-
-import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.replay.Replay;
-import wtf.choco.aftershock.util.JsonUtil;
-
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 
 public class ReplayEntry {
 
@@ -106,7 +103,7 @@ public class ReplayEntry {
         aftershockRoot.addProperty("comments", comments.getValueSafe());
 
         JsonArray tagsArray = new JsonArray();
-        this.tags.forEach(t -> tagsArray.add(t.getUUID().toString()));
+        this.tags.forEach(tag -> tagsArray.add(tag.getUUID().toString()));
         aftershockRoot.add("tags", tagsArray);
 
         try (JsonWriter writer = App.GSON.newJsonWriter(new FileWriter(headerFile))) {
@@ -117,19 +114,19 @@ public class ReplayEntry {
     }
 
     public void registerPropertyListeners(App app) {
-        this.loaded.addListener((ChangeListener<Boolean>) (l, oldValue, newValue) -> {
+        this.loaded.addListener((_, oldValue, newValue) -> {
             if (oldValue != newValue) {
                 app.processReplayIO(this);
             }
         });
 
-        this.comments.addListener((ChangeListener<String>) (c, oldValue, newValue) -> {
+        this.comments.addListener((_, oldValue, newValue) -> {
             if (!Objects.equals(oldValue, newValue)) {
                 app.processReplayIO(this);
             }
         });
 
-        this.tags.addListener((ListChangeListener<Tag>) c -> app.processReplayIO(this));
+        this.tags.addListener((ListChangeListener<Tag>) _ -> app.processReplayIO(this));
     }
 
 }

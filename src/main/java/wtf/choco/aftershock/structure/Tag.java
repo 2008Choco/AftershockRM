@@ -1,8 +1,8 @@
 package wtf.choco.aftershock.structure;
 
-import java.util.UUID;
-
 import javafx.scene.paint.Color;
+
+import java.util.UUID;
 
 public class Tag {
 

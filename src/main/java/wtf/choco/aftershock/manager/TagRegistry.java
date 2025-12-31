@@ -1,14 +1,13 @@
 package wtf.choco.aftershock.manager;
 
+import javafx.scene.paint.Color;
+import wtf.choco.aftershock.structure.Tag;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
-import wtf.choco.aftershock.structure.Tag;
-
-import javafx.scene.paint.Color;
 
 public class TagRegistry {
 

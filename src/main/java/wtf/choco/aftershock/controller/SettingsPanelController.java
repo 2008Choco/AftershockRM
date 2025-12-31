@@ -1,14 +1,5 @@
 package wtf.choco.aftershock.controller;
 
-import java.io.File;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Paths;
-import java.util.logging.Logger;
-
-import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.ApplicationSettings;
-import wtf.choco.aftershock.ApplicationSettings.Setting;
-
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
@@ -17,6 +8,14 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.ApplicationSettings.Setting;
+
+import java.io.File;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 public final class SettingsPanelController {
 

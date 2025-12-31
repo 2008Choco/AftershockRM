@@ -1,21 +1,19 @@
 package wtf.choco.aftershock.manager;
 
-import java.io.File;
-import java.util.List;
-import java.util.UUID;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.JsonUtil;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import java.io.File;
+import java.util.List;
+import java.util.UUID;
 
 public class BinRegistry  {
 
@@ -28,7 +26,7 @@ public class BinRegistry  {
     }
 
     public ReplayBin createBin(String name) {
-        if (name == null || name.toLowerCase().equals("global")) {
+        if (name == null || name.equalsIgnoreCase("global")) {
             throw new IllegalStateException("'Global' is a reserved bin identifier");
         }
 
@@ -59,10 +57,6 @@ public class BinRegistry  {
         }
 
         return null;
-    }
-
-    public void deleteBin(String name) {
-        this.bins.removeIf(b -> b.getName().equalsIgnoreCase(name));
     }
 
     public void deleteBin(ReplayBin bin) {

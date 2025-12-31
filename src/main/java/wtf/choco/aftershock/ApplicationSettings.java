@@ -2,7 +2,7 @@ package wtf.choco.aftershock;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,20 +14,18 @@ import java.util.Properties;
 public final class ApplicationSettings {
 
     private static final List<Setting> SETTINGS = new ArrayList<>();
-    private static final Charset CHARSET = Charset.forName("UTF-8");
 
-    public static final Setting REPLAY_DIRECTORY = Setting.of("replay_directory", "");
-    public static final Setting ROCKETRP_PATH = Setting.of("rocketrp_path", getCanonicalPath(App.getInstance().getInstallDirectory()) + "\\RocketRP\\RocketRP.CLI.exe");
-    public static final Setting REPLAY_EDITOR_PATH = Setting.of("replay_editor_path", "");
-    public static final Setting LOCALE = Setting.of("locale_code", "en_US");
-
+    public static final Setting REPLAY_DIRECTORY = createSetting("replay_directory");
+    public static final Setting ROCKETRP_PATH = createSetting("rocketrp_path", getCanonicalPath(App.getInstance().getInstallDirectory()) + "\\RocketRP\\RocketRP.CLI.exe");
+    public static final Setting REPLAY_EDITOR_PATH = createSetting("replay_editor_path");
+    public static final Setting LOCALE = createSetting("locale_code", "en_US");
 
     private final Path localFilePath;
     private final Properties properties;
 
-    protected ApplicationSettings(App app) {
+    ApplicationSettings(App app) {
         this.properties = new Properties();
-        SETTINGS.forEach(s -> properties.put(s.key, s.defaultValue));
+        SETTINGS.forEach(setting -> setting.saveTo(properties));
 
         this.localFilePath = app.getInstallDirectory().toPath().resolve("app.properties");
 
@@ -43,16 +41,16 @@ public final class ApplicationSettings {
     }
 
     public String get(Setting setting) {
-        return properties.computeIfAbsent(setting.key, k -> setting.defaultValue).toString();
+        return properties.computeIfAbsent(setting.key(), _ -> setting.defaultValue()).toString();
     }
 
     public void set(Setting setting, String value) {
-        this.properties.setProperty(setting.key, value);
+        this.properties.setProperty(setting.key(), value);
     }
 
     public void readFromFile() {
         try {
-            this.properties.load(Files.newBufferedReader(localFilePath, CHARSET));
+            this.properties.load(Files.newBufferedReader(localFilePath, StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -60,7 +58,7 @@ public final class ApplicationSettings {
 
     public void writeToFile() {
         try {
-            this.properties.store(Files.newBufferedWriter(localFilePath, CHARSET, StandardOpenOption.CREATE, StandardOpenOption.WRITE), null);
+            this.properties.store(Files.newBufferedWriter(localFilePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.WRITE), null);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -75,7 +73,6 @@ public final class ApplicationSettings {
         }
     }
 
-
     public static final class Setting {
 
         private final String key, defaultValue;
@@ -86,18 +83,26 @@ public final class ApplicationSettings {
             SETTINGS.add(this);
         }
 
-        public String getKey() {
+        public String key() {
             return key;
         }
 
-        public String getDefaultValue() {
+        public String defaultValue() {
             return defaultValue;
         }
 
-        private static Setting of(String key, String defaultValue) {
-            return new Setting(key, defaultValue);
+        private void saveTo(Properties properties) {
+            properties.put(key, defaultValue);
         }
 
+    }
+
+    private static Setting createSetting(String key, String defaultValue) {
+        return new Setting(key, defaultValue);
+    }
+
+    private static Setting createSetting(String key) {
+        return createSetting(key, "");
     }
 
 }

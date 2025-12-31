@@ -1,36 +1,5 @@
 package wtf.choco.aftershock.controller;
 
-import java.awt.Toolkit;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.lang.ProcessBuilder.Redirect;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.logging.Logger;
-
-import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.ApplicationSettings;
-import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.manager.CachingHandler;
-import wtf.choco.aftershock.replay.Team;
-import wtf.choco.aftershock.structure.DynamicFilter;
-import wtf.choco.aftershock.structure.EditableTextTableCell;
-import wtf.choco.aftershock.structure.ReplayBin;
-import wtf.choco.aftershock.structure.ReplayEntry;
-import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
-import wtf.choco.aftershock.structure.StringListTableCell;
-import wtf.choco.aftershock.structure.Tag;
-import wtf.choco.aftershock.structure.bin.BinEditor;
-import wtf.choco.aftershock.util.FXUtils;
-
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -69,6 +38,36 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.manager.BinRegistry;
+import wtf.choco.aftershock.manager.CachingHandler;
+import wtf.choco.aftershock.replay.Team;
+import wtf.choco.aftershock.structure.DynamicFilter;
+import wtf.choco.aftershock.structure.EditableTextTableCell;
+import wtf.choco.aftershock.structure.ReplayBin;
+import wtf.choco.aftershock.structure.ReplayEntry;
+import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
+import wtf.choco.aftershock.structure.StringListTableCell;
+import wtf.choco.aftershock.structure.Tag;
+import wtf.choco.aftershock.structure.bin.BinEditor;
+import wtf.choco.aftershock.util.FXUtils;
+
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public final class AppController {
 
@@ -110,7 +109,7 @@ public final class AppController {
 
     private Popup popup = new Popup();
 
-    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((r, t) -> r.getReplay().getName().toLowerCase().contains(t.toLowerCase()));
+    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((replay, term) -> replay.getReplay().getName().toLowerCase().contains(term.toLowerCase()));
 
     @FXML
     public void initialize() {
@@ -217,7 +216,7 @@ public final class AppController {
                 List<File> files = dragboard.getFiles();
                 files.removeIf(f -> BinRegistry.GLOBAL_BIN.hasReplay(f.getName().substring(0, f.getName().lastIndexOf('.'))));
 
-                if (files.size() >= 1) {
+                if (!files.isEmpty()) {
                     CachingHandler cacheHandler = App.getInstance().getCacheHandler();
                     app.getTaskExecutor().execute(t -> {
                         String replayDirectory = app.getSettings().get(ApplicationSettings.REPLAY_DIRECTORY);
@@ -406,17 +405,15 @@ public final class AppController {
 
     @FXML
     public void openLink(ActionEvent event) {
-        String toOpen = null;
-        switch (((Hyperlink) event.getTarget()).getId()) {
-            case "donation":
-                toOpen = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=hawkeboyz%40hotmail.com&currency_code=USD&source=Aftershock";
-                break;
-            case "source":
-                toOpen = "https://www.github.com/2008Choco/AftershockRM";
-                break;
-        }
+        String toOpen = switch (((Hyperlink) event.getTarget()).getId()) {
+            case "donation" -> "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=hawkeboyz%40hotmail.com&currency_code=USD&source=Aftershock";
+            case "source" -> "https://www.github.com/2008Choco/AftershockRM";
+            default -> null;
+        };
 
-        App.getInstance().getHostServices().showDocument(toOpen);
+        if (toOpen != null) {
+            App.getInstance().getHostServices().showDocument(toOpen);
+        }
     }
 
     @FXML
@@ -428,7 +425,7 @@ public final class AppController {
     public void toggleBinEditor(@SuppressWarnings("unused") ActionEvent event) {
         ObservableList<Node> primaryDisplayChildren = primaryDisplay.getChildren();
         if (primaryDisplayChildren.size() == 1) {
-            primaryDisplayChildren.add(0, binEditor.getNode());
+            primaryDisplayChildren.addFirst(binEditor.getNode());
         } else {
             primaryDisplayChildren.remove(binEditor.getNode());
         }
@@ -479,25 +476,23 @@ public final class AppController {
         if (pressed == KeyCode.ESCAPE || pressed == KeyCode.ENTER) {
             this.replayTable.requestFocus();
             event.consume();
-            return;
         }
     }
 
     @FXML
     public void toggleFilterMenu(MouseEvent event) {
-        Object clicked = event.getSource();
-        if (clicked instanceof ImageView) {
-            ImageView clickedImage = (ImageView) clicked;
+        if (!(event.getSource() instanceof ImageView image)) {
+            return;
+        }
 
-            if (!popup.isShowing()) {
-                clickedImage.setOpacity(1.0);
+        if (!popup.isShowing()) {
+            image.setOpacity(1.0);
 
-                Bounds imageBounds = clickedImage.localToScreen(clickedImage.getBoundsInLocal());
-                this.popup.show(clickedImage, imageBounds.getCenterX() - (popup.getWidth() / 2), imageBounds.getCenterY() - 15 - popup.getHeight());
-            } else {
-                clickedImage.setOpacity(0.5);
-                this.popup.hide();
-            }
+            Bounds imageBounds = image.localToScreen(image.getBoundsInLocal());
+            this.popup.show(image, imageBounds.getCenterX() - (popup.getWidth() / 2), imageBounds.getCenterY() - 15 - popup.getHeight());
+        } else {
+            image.setOpacity(0.5);
+            this.popup.hide();
         }
     }
 
@@ -527,9 +522,9 @@ public final class AppController {
 
     public void closeInfoPanel() {
         ObservableList<Node> items = splitPane.getItems();
-        if (items.get(items.size() - 1) != replayTable) {
+        if (items.getLast() != replayTable) {
             this.lastDividerPositionInfo = splitPane.getDividerPositions()[splitPane.getDividers().size() - 1];
-            items.remove(items.size() - 1);
+            items.removeLast();
         }
     }
 

@@ -1,4 +1,4 @@
-package wtf.choco.aftershock.util;
+package wtf.choco.aftershock.util.function;
 
 @FunctionalInterface
 public interface TriConsumer<T, U, V> {

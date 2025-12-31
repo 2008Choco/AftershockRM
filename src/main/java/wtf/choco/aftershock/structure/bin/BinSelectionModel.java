@@ -1,12 +1,11 @@
 package wtf.choco.aftershock.structure.bin;
 
-import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.structure.ReplayBin;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.MultipleSelectionModel;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.manager.BinRegistry;
+import wtf.choco.aftershock.structure.ReplayBin;
 
 public class BinSelectionModel extends MultipleSelectionModel<ReplayBin> {
 

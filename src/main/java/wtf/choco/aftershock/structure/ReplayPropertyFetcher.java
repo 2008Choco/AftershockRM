@@ -1,11 +1,11 @@
 package wtf.choco.aftershock.structure;
 
-import java.util.function.Function;
-
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.util.Callback;
+
+import java.util.function.Function;
 
 public class ReplayPropertyFetcher<R> implements Callback<CellDataFeatures<ReplayEntry, R>, ObservableValue<R>> {
 

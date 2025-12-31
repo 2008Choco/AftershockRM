@@ -1,15 +1,14 @@
 package wtf.choco.aftershock.util;
 
+import javafx.fxml.FXMLLoader;
+import javafx.util.Pair;
+import wtf.choco.aftershock.App;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import wtf.choco.aftershock.App;
-
-import javafx.fxml.FXMLLoader;
-import javafx.util.Pair;
 
 public final class FXUtils {
 

@@ -19,4 +19,5 @@ module wtf.choco.aftershock {
     exports wtf.choco.aftershock.structure;
     exports wtf.choco.aftershock.structure.bin;
     exports wtf.choco.aftershock.util;
+    exports wtf.choco.aftershock.util.function;
 }

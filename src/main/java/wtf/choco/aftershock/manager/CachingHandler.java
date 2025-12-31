@@ -1,5 +1,11 @@
 package wtf.choco.aftershock.manager;
 
+import javafx.beans.value.ChangeListener;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.replay.ReplayModifiable;
+import wtf.choco.aftershock.util.PublicTask;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -13,19 +19,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.ApplicationSettings;
-import wtf.choco.aftershock.replay.ReplayModifiable;
-import wtf.choco.aftershock.util.PublicTask;
-
-import javafx.beans.value.ChangeListener;
-
 public class CachingHandler {
 
-    private static final FilenameFilter REPLAY_FILE_FILTER = (f, name) -> name.endsWith(".replay");
+    private static final FilenameFilter REPLAY_FILE_FILTER = (_, name) -> name.endsWith(".replay");
 
     private MessageDigest md5;
-    private Set<File> invalidatedReplays = Collections.EMPTY_SET;
+    private Set<File> invalidatedReplays = Collections.emptySet();
 
     private final App app;
     private final File cacheDirectory, headersDirectory;
@@ -51,7 +50,7 @@ public class CachingHandler {
         ApplicationSettings settings = app.getSettings();
 
         File replayDirectory = getReplayDirectory(logger, settings);
-        if (!replayDirectory.exists() || !replayDirectory.isDirectory()) {
+        if (replayDirectory == null || !replayDirectory.exists() || !replayDirectory.isDirectory()) {
             logger.warning("Replay directory path does not exist or is not a directory. Could not cache");
             return;
         }
@@ -177,7 +176,7 @@ public class CachingHandler {
         ApplicationSettings settings = app.getSettings();
 
         File replayDirectory = getReplayDirectory(logger, settings);
-        if (!replayDirectory.exists() || !replayDirectory.isDirectory()) {
+        if (replayDirectory == null || !replayDirectory.exists() || !replayDirectory.isDirectory()) {
             logger.warning("Replay directory path does not exist or is not a directory. Could not load replays");
             return;
         }
@@ -315,13 +314,13 @@ public class CachingHandler {
     }
 
     private String encodeHexString(byte[] byteArray) {
-        StringBuffer hexStringBuffer = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
 
-        for (int i = 0; i < byteArray.length; i++) {
-            hexStringBuffer.append(byteToHex(byteArray[i]));
+        for (byte b : byteArray) {
+            builder.append(byteToHex(b));
         }
 
-        return hexStringBuffer.toString();
+        return builder.toString();
     }
 
     private String byteToHex(byte num) {

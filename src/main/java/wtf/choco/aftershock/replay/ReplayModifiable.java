@@ -1,5 +1,19 @@
 package wtf.choco.aftershock.replay;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
+import javafx.scene.Parent;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.controller.InfoPanelController;
+import wtf.choco.aftershock.manager.TagRegistry;
+import wtf.choco.aftershock.structure.ReplayEntry;
+import wtf.choco.aftershock.structure.Tag;
+import wtf.choco.aftershock.util.JsonUtil;
+import wtf.choco.aftershock.util.function.TriConsumer;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -16,30 +30,14 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonWriter;
-
-import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.controller.InfoPanelController;
-import wtf.choco.aftershock.manager.TagRegistry;
-import wtf.choco.aftershock.structure.ReplayEntry;
-import wtf.choco.aftershock.structure.Tag;
-import wtf.choco.aftershock.util.JsonUtil;
-import wtf.choco.aftershock.util.TriConsumer;
-
-import javafx.scene.Parent;
-
 public final class ReplayModifiable implements Replay {
 
     private final File demoFile, cachedFile, headerFile;
 
     private int teamSize;
     private int blueScore, orangeScore;
-    private List<PlayerData> playerData = Collections.EMPTY_LIST;
-    private List<GoalData> goalData = Collections.EMPTY_LIST;
+    private List<PlayerData> playerData = Collections.emptyList();
+    private List<GoalData> goalData = Collections.emptyList();
     private String name, id, mapName, playerName;
     private LocalDateTime date;
     private int replayVersion;
@@ -205,7 +203,7 @@ public final class ReplayModifiable implements Replay {
         this.entryData.setComments(JsonUtil.getOrCreate(aftershockRoot, "comments", JsonElement::getAsString, JsonObject::addProperty, ""));
 
         JsonArray tags = getOrCreate(aftershockRoot, "tags", JsonElement::getAsJsonArray, JsonObject::add, (Supplier<JsonArray>) JsonArray::new);
-        if (tags.size() > 0) {
+        if (!tags.isEmpty()) {
             TagRegistry tagRegistry = app.getTagRegistry();
 
             for (JsonElement tagIdElement : tags) {
@@ -237,7 +235,7 @@ public final class ReplayModifiable implements Replay {
 
         String mapId = JsonUtil.getString(JsonUtil.getObject(propertiesObject, "MapName"), "Value", "UNKNOWN_MAP");
         String mapTranslationKey = "map.name." + mapId.toLowerCase();
-        this.mapName = (mapId != null && app.getResources().containsKey(mapTranslationKey) ? app.getResources().getString(mapTranslationKey) : "%unknown_map__" + mapId + "__%");
+        this.mapName = (app.getResources().containsKey(mapTranslationKey) ? app.getResources().getString(mapTranslationKey) : "%unknown_map__" + mapId + "__%");
         this.name = JsonUtil.getString(propertiesObject, "ReplayName", "[" + getMapName() + " - " + teamSize + "v" + teamSize + "]");
         this.id = JsonUtil.getString(propertiesObject, "Id", cachedFile.getName().substring(0, cachedFile.getName().lastIndexOf('.')));
         this.playerName = JsonUtil.getString(propertiesObject, "PlayerName", "%unknown_player%");

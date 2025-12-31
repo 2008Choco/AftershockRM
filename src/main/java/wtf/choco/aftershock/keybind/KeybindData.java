@@ -1,11 +1,5 @@
 package wtf.choco.aftershock.keybind;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
-
-import wtf.choco.aftershock.App;
-
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -13,11 +7,16 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
+import wtf.choco.aftershock.App;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 
 public final class KeybindData {
 
     private KeybindExecutor action;
-    private Predicate<Node> targetPredicate = (n) -> true;
+    private Predicate<Node> targetPredicate = _ -> true;
 
     private final KeyCombination combination;
     private final List<KeyCombination> altCombinations;
@@ -86,15 +85,12 @@ public final class KeybindData {
     }
 
     private Node asNode(Object target) {
-        if (target instanceof Stage) {
-            return ((Stage) target).getScene().getRoot();
-        } else if (target instanceof Scene) {
-            return ((Scene) target).getRoot();
-        } else if (target instanceof Node) {
-            return (Node) target;
-        }
-
-        return null;
+        return switch (target) {
+            case Stage stage -> stage.getScene().getRoot();
+            case Scene scene -> scene.getRoot();
+            case Node node -> node;
+            default -> null;
+        };
     }
 
 }

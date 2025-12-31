@@ -1,12 +1,11 @@
 package wtf.choco.aftershock.replay;
 
+import javafx.scene.Parent;
+import wtf.choco.aftershock.structure.ReplayEntry;
+
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import wtf.choco.aftershock.structure.ReplayEntry;
-
-import javafx.scene.Parent;
 
 public interface Replay {
 

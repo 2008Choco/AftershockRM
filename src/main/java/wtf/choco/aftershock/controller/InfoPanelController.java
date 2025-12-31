@@ -1,22 +1,21 @@
 package wtf.choco.aftershock.controller;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-
+import javafx.fxml.FXML;
+import javafx.scene.Parent;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.util.Pair;
 import wtf.choco.aftershock.replay.GoalData;
 import wtf.choco.aftershock.replay.PlayerData;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.util.FXUtils;
 
-import javafx.fxml.FXML;
-import javafx.scene.Parent;
-import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
-import javafx.util.Pair;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
 
 public final class InfoPanelController {
 

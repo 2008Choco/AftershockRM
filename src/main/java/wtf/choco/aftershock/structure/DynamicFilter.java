@@ -17,10 +17,6 @@ public class DynamicFilter<T> implements Predicate<T> {
         this(comparator, null);
     }
 
-    public void setComparator(BiPredicate<T, String> comparator) {
-        this.comparator = comparator;
-    }
-
     public void setTerm(String term) {
         this.term = term;
     }

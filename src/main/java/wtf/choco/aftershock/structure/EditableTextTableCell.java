@@ -1,13 +1,13 @@
 package wtf.choco.aftershock.structure;
 
-import java.util.Objects;
-
 import javafx.scene.Node;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.util.Callback;
+
+import java.util.Objects;
 
 public class EditableTextTableCell<S> extends TableCell<S, String> {
 
@@ -19,9 +19,9 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
         this.commentEditor = new TextField();
         this.commentEditor.prefWidthProperty().bind(widthProperty());
 
-        this.setOnMouseClicked(e -> {
+        this.setOnMouseClicked(event -> {
             Node currentGraphic = getGraphic();
-            if (!isEditable() || currentGraphic == commentEditor || e.getClickCount() != 2) {
+            if (!isEditable() || currentGraphic == commentEditor || event.getClickCount() != 2) {
                 return;
             }
 
@@ -34,8 +34,8 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
         });
 
         // FIXME: These keys... work? Enter randomly throws an exception and escape just sets the text to empty
-        this.commentEditor.setOnKeyPressed(e -> {
-            KeyCode key = e.getCode();
+        this.commentEditor.setOnKeyPressed(event -> {
+            KeyCode key = event.getCode();
             if (key != KeyCode.ENTER && key != KeyCode.ESCAPE) {
                 return;
             }
@@ -44,7 +44,7 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
             this.commitEdit(safe(commentEditor.getText()));
         });
 
-        this.commentEditor.focusedProperty().addListener((observable, oldValue, newValue) -> {
+        this.commentEditor.focusedProperty().addListener((_, _, newValue) -> {
             if (!newValue) {
                 this.setGraphic(null);
                 this.commitEdit(safe(commentEditor.getText()));
@@ -54,7 +54,7 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
 
     @Override
     protected void updateItem(String item, boolean empty) {
-        if (item == getItem()) {
+        if (item.equals(getItem())) {
             return;
         }
 
@@ -67,7 +67,7 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
         }
 
         if (getGraphic() == null) {
-            this.setText((item != null && !item.isBlank()) ? item : emptyText);
+            this.setText(!item.isBlank() ? item : emptyText);
         }
     }
 

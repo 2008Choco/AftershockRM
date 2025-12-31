@@ -1,14 +1,5 @@
 package wtf.choco.aftershock.manager;
 
-import java.util.concurrent.Executor;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import wtf.choco.aftershock.util.FXUtils;
-import wtf.choco.aftershock.util.PublicTask;
-
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
@@ -17,6 +8,13 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import wtf.choco.aftershock.util.FXUtils;
+import wtf.choco.aftershock.util.PublicTask;
+
+import java.util.concurrent.Executor;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class ProgressiveTaskExecutor {
 
@@ -51,44 +49,8 @@ public class ProgressiveTaskExecutor {
         executor.execute(task);
     }
 
-    public <T> void execute(Task<T> task, BiConsumer<T, Worker.State> whenCompleted) {
-        this.execute(task, whenCompleted, defaultExecutor);
-    }
-
-    public <T> void execute(Task<T> task, Executor executor) {
-        this.execute(task, null, executor);
-    }
-
-    public <T> void execute(Task<T> task) {
-        this.execute(task, null, defaultExecutor);
-    }
-
-    public <T> void execute(Function<PublicTask<T>, T> task, BiConsumer<T, Worker.State> whenCompleted, Executor executor) {
-        this.execute(FXUtils.createTask(task), whenCompleted, executor);
-    }
-
-    public <T> void execute(Function<PublicTask<T>, T> task, BiConsumer<T, Worker.State> whenCompleted) {
-        this.execute(FXUtils.createTask(task), whenCompleted, defaultExecutor);
-    }
-
-    public <T> void execute(Function<PublicTask<T>, T> task, Executor executor) {
-        this.execute(FXUtils.createTask(task), null, executor);
-    }
-
-    public <T> void execute(Function<PublicTask<T>, T> task) {
-        this.execute(FXUtils.createTask(task), null, defaultExecutor);
-    }
-
     public <T> void execute(Consumer<PublicTask<T>> task, BiConsumer<T, Worker.State> whenCompleted, Executor executor) {
         this.execute(FXUtils.createTask(task), whenCompleted, executor);
-    }
-
-    public <T> void execute(Consumer<PublicTask<T>> task, BiConsumer<T, Worker.State> whenCompleted) {
-        this.execute(FXUtils.createTask(task), whenCompleted, defaultExecutor);
-    }
-
-    public <T> void execute(Consumer<PublicTask<T>> task, Executor executor) {
-        this.execute(FXUtils.createTask(task), null, executor);
     }
 
     public <T> void execute(Consumer<PublicTask<T>> task) {

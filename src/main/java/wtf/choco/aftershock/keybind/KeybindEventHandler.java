@@ -1,16 +1,15 @@
 package wtf.choco.aftershock.keybind;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import wtf.choco.aftershock.App;
-
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import wtf.choco.aftershock.App;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class KeybindEventHandler implements EventHandler<KeyEvent> {
 
@@ -31,7 +30,7 @@ public class KeybindEventHandler implements EventHandler<KeyEvent> {
 
     public boolean removeKeybind(KeyCode character, KeyCombination.Modifier... modifiers) {
         KeyCombination combination = new KeyCodeCombination(character, modifiers);
-        return keybinds.removeIf(a -> a.matches(combination));
+        return keybinds.removeIf(keybind -> keybind.matches(combination));
     }
 
     public void clearKeybinds() {

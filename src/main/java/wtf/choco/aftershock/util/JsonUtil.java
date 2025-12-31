@@ -1,19 +1,18 @@
 package wtf.choco.aftershock.util;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.util.function.TriConsumer;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.function.Function;
-import java.util.function.Supplier;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonWriter;
-
-import wtf.choco.aftershock.App;
 
 public final class JsonUtil {
 
@@ -60,14 +59,6 @@ public final class JsonUtil {
     public static <T> T getOrCreate(JsonObject root, String key, Function<JsonElement, T> retriever, TriConsumer<JsonObject, String, T> addFunction, T defaultValue) {
         if (!root.has(key)) {
             addFunction.accept(root, key, defaultValue);
-        }
-
-        return retriever.apply(root.get(key));
-    }
-
-    public static <T> T getOrCreate(JsonObject root, String key, Function<JsonElement, T> retriever, TriConsumer<JsonObject, String, T> addFunction, Supplier<T> defaultValue) {
-        if (!root.has(key)) {
-            addFunction.accept(root, key, defaultValue.get());
         }
 
         return retriever.apply(root.get(key));

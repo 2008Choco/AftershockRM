@@ -1,5 +1,14 @@
 package wtf.choco.aftershock.structure;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.image.Image;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.manager.BinRegistry;
+import wtf.choco.aftershock.replay.Replay;
+import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
+import wtf.choco.aftershock.util.Preconditions;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,16 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.replay.Replay;
-import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
-import wtf.choco.aftershock.util.Preconditions;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.image.Image;
 
 public class ReplayBin implements Iterable<Replay> {
 
@@ -113,7 +112,7 @@ public class ReplayBin implements Iterable<Replay> {
     }
 
     public void removeReplay(Replay replay) {
-        this.replays.removeIf(r -> r.getReplay() == replay);
+        this.replays.removeIf(otherReplay -> otherReplay.getReplay() == replay);
         this.byId.remove(replay.getId());
     }
 

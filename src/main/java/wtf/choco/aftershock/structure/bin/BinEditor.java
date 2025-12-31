@@ -1,17 +1,5 @@
 package wtf.choco.aftershock.structure.bin;
 
-import java.awt.Toolkit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.stream.Collectors;
-
-import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.controller.AppController;
-import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.structure.ReplayBin;
-import wtf.choco.aftershock.structure.ReplayEntry;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -29,6 +17,17 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.controller.AppController;
+import wtf.choco.aftershock.manager.BinRegistry;
+import wtf.choco.aftershock.structure.ReplayBin;
+import wtf.choco.aftershock.structure.ReplayEntry;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 public class BinEditor {
 
@@ -53,7 +52,7 @@ public class BinEditor {
         this.listed = list.getChildren();
 
         BinRegistry binRegistry = app.getBinRegistry();
-        binRegistry.getBins().forEach(b -> listed.add(b.getDisplay()));
+        binRegistry.getBins().forEach(bin -> listed.add(bin.getDisplay()));
 
         // Listeners
         binRegistry.getBins().addListener((ListChangeListener<ReplayBin>) c -> {

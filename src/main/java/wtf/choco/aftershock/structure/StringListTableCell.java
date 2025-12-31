@@ -1,10 +1,10 @@
 package wtf.choco.aftershock.structure;
 
-import java.util.List;
-
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.util.Callback;
+
+import java.util.List;
 
 public class StringListTableCell<T> extends TableCell<ReplayEntry, List<T>> {
 

@@ -1,11 +1,5 @@
 package wtf.choco.aftershock.structure.bin;
 
-import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.replay.Replay;
-import wtf.choco.aftershock.structure.ReplayBin;
-import wtf.choco.aftershock.structure.ReplayEntry;
-
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -25,6 +19,11 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.manager.BinRegistry;
+import wtf.choco.aftershock.replay.Replay;
+import wtf.choco.aftershock.structure.ReplayBin;
+import wtf.choco.aftershock.structure.ReplayEntry;
 
 public class BinDisplayComponent extends VBox {
 
@@ -53,26 +52,26 @@ public class BinDisplayComponent extends VBox {
         // Context menu
         this.contextMenu = new ContextMenu();
         MenuItem loadAllReplays = new MenuItem("Load all replays");
-        loadAllReplays.setOnAction(e -> BinRegistry.GLOBAL_BIN.forEach(r -> r.getEntryData().setLoaded(bin.hasReplay(r))));
+        loadAllReplays.setOnAction(_ -> BinRegistry.GLOBAL_BIN.forEach(replay -> replay.getEntryData().setLoaded(bin.hasReplay(replay))));
         MenuItem unloadAllReplays = new MenuItem("Unload all replays");
-        unloadAllReplays.setOnAction(e -> bin.forEach(r -> r.getEntryData().setLoaded(false)));
+        unloadAllReplays.setOnAction(_ -> bin.forEach(replay -> replay.getEntryData().setLoaded(false)));
 
         MenuItem cloneBin = new MenuItem("Clone");
-        cloneBin.setOnAction(e -> App.getInstance().getBinRegistry().addBin(new ReplayBin(bin)));
+        cloneBin.setOnAction(_ -> App.getInstance().getBinRegistry().addBin(new ReplayBin(bin)));
 
         this.contextMenu.getItems().addAll(loadAllReplays, unloadAllReplays, new SeparatorMenuItem(), cloneBin);
 
         // Menu items that should not be accessible to the global bin
         if (!bin.isGlobalBin()) {
             MenuItem renameBin = new MenuItem("Rename");
-            renameBin.setOnAction(e -> openNameEditor());
+            renameBin.setOnAction(_ -> openNameEditor());
             MenuItem clearBin = new MenuItem("Clear");
-            clearBin.setOnAction(e -> bin.clear());
+            clearBin.setOnAction(_ -> bin.clear());
             MenuItem deleteBin = new MenuItem("Delete");
-            deleteBin.setOnAction(e -> App.getInstance().getController().getBinEditor().deleteBin(bin, !App.getInstance().getKeybindRegistry().isDown(KeyCode.CONTROL)));
+            deleteBin.setOnAction(_ -> App.getInstance().getController().getBinEditor().deleteBin(bin, !App.getInstance().getKeybindRegistry().isDown(KeyCode.CONTROL)));
 
             MenuItem hideBin = new MenuItem("Hide");
-            hideBin.setOnAction(e -> App.getInstance().getController().getBinEditor().hideBin(bin));
+            hideBin.setOnAction(_ -> App.getInstance().getController().getBinEditor().hideBin(bin));
 
             this.contextMenu.getItems().addAll(renameBin, clearBin, deleteBin, new SeparatorMenuItem(), hideBin);
         }
@@ -83,14 +82,14 @@ public class BinDisplayComponent extends VBox {
 
         this.nameEditor.setAlignment(Pos.TOP_CENTER);
 
-        this.setOnContextMenuRequested(e -> {
-            this.contextMenu.show(this, e.getScreenX(), e.getScreenY());
-            e.consume();
+        this.setOnContextMenuRequested(event -> {
+            this.contextMenu.show(this, event.getScreenX(), event.getScreenY());
+            event.consume();
         });
-        this.setOnMouseEntered(e -> setCursor(Cursor.HAND));
-        this.setOnMouseExited(e -> setCursor(Cursor.DEFAULT));
-        this.setOnMouseClicked(e -> {
-            MouseButton button = e.getButton();
+        this.setOnMouseEntered(_ -> setCursor(Cursor.HAND));
+        this.setOnMouseExited(_ -> setCursor(Cursor.DEFAULT));
+        this.setOnMouseClicked(event -> {
+            MouseButton button = event.getButton();
             BinEditor binEditor = App.getInstance().getController().getBinEditor();
             BinSelectionModel selection = binEditor.getSelectionModel();
 
@@ -107,7 +106,7 @@ public class BinDisplayComponent extends VBox {
                 return;
             }
 
-            if (e.isControlDown()) {
+            if (event.isControlDown()) {
                 if (!selection.isSelected(bin)) {
                     selection.select(bin);
                     if (binEditor.getDisplayed() == null) {
@@ -119,10 +118,10 @@ public class BinDisplayComponent extends VBox {
             } else {
                 boolean wasSelected = selection.isSelected(bin) && selection.getSelectedItems().size() > 1;
 
-                if (e.isShiftDown()) {
+                if (event.isShiftDown()) {
                     ObservableList<Integer> selectedIndices = selection.getSelectedIndices();
-                    if (selectedIndices.size() >= 1) {
-                        int mostRecentIndex = selectedIndices.get(selectedIndices.size() - 1);
+                    if (!selectedIndices.isEmpty()) {
+                        int mostRecentIndex = selectedIndices.getLast();
                         selection.clearSelection();
                         selection.selectRange(binEditor.indexOf(bin), mostRecentIndex);
                         selection.select(binEditor.getBin(mostRecentIndex));
@@ -135,14 +134,14 @@ public class BinDisplayComponent extends VBox {
             }
         });
 
-        this.setOnDragOver(e -> {
-            if (!bin.isGlobalBin() && e.getGestureSource() == App.getInstance().getController().getReplayTable()) {
-                e.acceptTransferModes(TransferMode.MOVE);
+        this.setOnDragOver(event -> {
+            if (!bin.isGlobalBin() && event.getGestureSource() == App.getInstance().getController().getReplayTable()) {
+                event.acceptTransferModes(TransferMode.MOVE);
             }
         });
 
-        this.setOnDragDropped(e -> {
-            Dragboard dragboard = e.getDragboard();
+        this.setOnDragDropped(event -> {
+            Dragboard dragboard = event.getDragboard();
             boolean success = false;
 
             if (dragboard.hasString()) {
@@ -162,19 +161,19 @@ public class BinDisplayComponent extends VBox {
             BinEditor binEditor = App.getInstance().getController().getBinEditor();
             binEditor.getSelectionModel().clearSelection();
             binEditor.display(bin);
-            e.setDropCompleted(success);
+            event.setDropCompleted(success);
         });
 
-        this.label.setOnMouseEntered(e -> selectedOnly(() -> label.setCursor(Cursor.TEXT)));
-        this.label.setOnMouseExited(e -> selectedOnly(() -> label.setCursor(getCursor())));
-        this.label.setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.PRIMARY) {
+        this.label.setOnMouseEntered(_ -> selectedOnly(() -> label.setCursor(Cursor.TEXT)));
+        this.label.setOnMouseExited(_ -> selectedOnly(() -> label.setCursor(getCursor())));
+        this.label.setOnMouseClicked(event -> {
+            if (event.getButton() == MouseButton.PRIMARY) {
                 this.selectedOnly(this::openNameEditor);
             }
         });
 
-        this.nameEditor.setOnKeyPressed(e -> {
-            KeyCode key = e.getCode();
+        this.nameEditor.setOnKeyPressed(event -> {
+            KeyCode key = event.getCode();
 
             if (key == KeyCode.ESCAPE) {
                 this.closeNameEditor(false);
@@ -184,8 +183,8 @@ public class BinDisplayComponent extends VBox {
         });
 
         ImageView graphic = new ImageView(icon);
-        this.bin.getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) c -> {
-            if (c.getList().isEmpty()) {
+        this.bin.getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) change -> {
+            if (change.getList().isEmpty()) {
                 graphic.setImage(ReplayBin.BIN_GRAPHIC_EMPTY);
             } else {
                 graphic.setImage(ReplayBin.BIN_GRAPHIC_FULL);
@@ -203,10 +202,10 @@ public class BinDisplayComponent extends VBox {
         this.label.setText(bin.getName());
     }
 
-    public boolean openNameEditor() {
+    public void openNameEditor() {
         ObservableList<Node> children = getChildren();
         if (!children.contains(label)) {
-            return false;
+            return;
         }
 
         this.nameEditor.setText(label.getText());
@@ -215,15 +214,13 @@ public class BinDisplayComponent extends VBox {
         children.add(nameEditor);
 
         this.nameEditor.requestFocus();
-
         this.beingEdited = true;
-        return true;
     }
 
-    public boolean closeNameEditor(boolean updateName) {
+    public void closeNameEditor(boolean updateName) {
         ObservableList<Node> children = getChildren();
         if (!children.contains(nameEditor)) {
-            return false;
+            return;
         }
 
         if (updateName) {
@@ -234,7 +231,6 @@ public class BinDisplayComponent extends VBox {
         children.add(label);
 
         this.beingEdited = false;
-        return true;
     }
 
     public boolean isBeingEdited() {

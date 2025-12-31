@@ -1,29 +1,7 @@
 package wtf.choco.aftershock;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Logger;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import wtf.choco.aftershock.controller.AppController;
-import wtf.choco.aftershock.keybind.KeybindRegistry;
-import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.manager.CachingHandler;
-import wtf.choco.aftershock.manager.ProgressiveTaskExecutor;
-import wtf.choco.aftershock.manager.TagRegistry;
-import wtf.choco.aftershock.structure.ReplayEntry;
-import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
-import wtf.choco.aftershock.util.ColouredLogFormatter;
-import wtf.choco.aftershock.util.FXUtils;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Worker;
@@ -35,6 +13,25 @@ import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Pair;
+import wtf.choco.aftershock.controller.AppController;
+import wtf.choco.aftershock.keybind.KeybindRegistry;
+import wtf.choco.aftershock.manager.BinRegistry;
+import wtf.choco.aftershock.manager.CachingHandler;
+import wtf.choco.aftershock.manager.ProgressiveTaskExecutor;
+import wtf.choco.aftershock.manager.TagRegistry;
+import wtf.choco.aftershock.structure.ReplayEntry;
+import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
+import wtf.choco.aftershock.util.ColouredLogFormatter;
+import wtf.choco.aftershock.util.FXUtils;
+
+import java.io.File;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Logger;
 
 public final class App extends Application {
 
@@ -45,7 +42,6 @@ public final class App extends Application {
     private static App instance;
 
     private Stage stage;
-    private Scene scene;
     private AppController controller;
     private ResourceBundle resources;
     private Stage settingsStage = null;
@@ -94,11 +90,20 @@ public final class App extends Application {
     }
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) {
         // Stage loading
         this.stage = stage;
-        Pair<Parent, AppController> root = FXUtils.loadFXML("/layout/Root", resources = ResourceBundle.getBundle("lang.", getLocale(settings.get(ApplicationSettings.LOCALE))));
-        this.scene = new Scene(root.getKey());
+        this.resources = ResourceBundle.getBundle("lang.", getLocale(settings.get(ApplicationSettings.LOCALE)));
+
+        Pair<Parent, AppController> root = FXUtils.loadFXML("/layout/Root", resources);
+        if (root == null) {
+            // TODO: Do proper exception handling here. Print the reason and stacktrace
+            this.logger.severe("Failed to load Root layout!");
+            Platform.exit();
+            return;
+        }
+
+        Scene scene = new Scene(root.getKey());
         this.controller = root.getValue();
 
         this.taskExecutor = new ProgressiveTaskExecutor(primaryExecutor, controller.getProgressBar(), controller.getProgressStatus());
@@ -108,11 +113,11 @@ public final class App extends Application {
         KeybindRegistry.registerDefaultKeybinds(keybindRegistry);
 
         // Listen for clicks outside of bin name editor, cancel editing
-        this.scene.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            PickResult result = e.getPickResult();
+        scene.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
+            PickResult result = event.getPickResult();
 
-            this.binRegistry.getBins().forEach(b -> {
-                BinDisplayComponent binDisplay = b.getDisplay();
+            this.binRegistry.getBins().forEach(bin -> {
+                BinDisplayComponent binDisplay = bin.getDisplay();
                 if (binDisplay.isBeingEdited() && !(result.getIntersectedNode() instanceof Text)) {
                     binDisplay.closeNameEditor(true);
                 }
@@ -128,7 +133,7 @@ public final class App extends Application {
 
         // Replay setup
         this.installDirectory.mkdirs();
-        this.reloadReplays((result, state) -> Platform.runLater(() -> binRegistry.loadBinsFromFile(binsFile, false)));
+        this.reloadReplays((_, _) -> Platform.runLater(() -> binRegistry.loadBinsFromFile(binsFile, false)));
     }
 
     @Override
@@ -193,14 +198,14 @@ public final class App extends Application {
         return installDirectory;
     }
 
-    public Stage openSettingsStage() {
+    public void openSettingsStage() {
         if (settingsStage != null) {
-            return settingsStage;
+            return;
         }
 
         Parent root = FXUtils.loadFXMLRoot("/layout/SettingsPanel", resources);
         if (root == null) {
-            return null;
+            return;
         }
 
         Scene scene = new Scene(root);
@@ -208,12 +213,10 @@ public final class App extends Application {
         stage.setTitle("Aftershock Replay Manager - Application Settings");
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setResizable(false);
-
         stage.setScene(scene);
-        stage.show();
 
         this.settingsStage = stage;
-        return stage;
+        stage.show();
     }
 
     public void closeSettingsStage() {
@@ -222,9 +225,9 @@ public final class App extends Application {
     }
 
     public void reloadReplays(BiConsumer<?, Worker.State> whenCompleted) {
-        this.taskExecutor.execute(t -> {
-            this.cacheHandler.cacheReplays(t);
-            this.cacheHandler.loadReplaysFromCache(t);
+        this.taskExecutor.execute(task -> {
+            this.cacheHandler.cacheReplays(task);
+            this.cacheHandler.loadReplaysFromCache(task);
         }, whenCompleted, primaryExecutor);
     }
 
@@ -233,12 +236,13 @@ public final class App extends Application {
     }
 
     private Locale getLocale(String tag) {
+        // TODO: This is not safe at all and prone to exceptions. Improve this implementation
         String[] parts = tag.split("_");
         if (parts.length < 2) {
-            return null;
+            return Locale.US;
         }
 
-        return new Locale(parts[0], parts[1]);
+        return Locale.of(parts[0], parts[1]);
     }
 
     public static String truncateID(String id) {
@@ -246,11 +250,7 @@ public final class App extends Application {
             id = id.substring(0, id.lastIndexOf('.'));
         }
 
-        StringBuilder formatted = new StringBuilder(11);
-        formatted.append(id.substring(0, 4));
-        formatted.append("...");
-        formatted.append(id.substring(id.length() - 4));
-        return formatted.toString();
+        return id.substring(0, 4) + "..." + id.substring(id.length() - 4);
     }
 
     public static App getInstance() {
