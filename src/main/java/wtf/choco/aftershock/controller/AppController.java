@@ -311,10 +311,22 @@ public final class AppController {
         binEditorContextMenu.getItems().add(showHiddenBins);
         this.binEditorScrollPane.setContextMenu(binEditorContextMenu);
 
-        // TODO: Add functionality for "open file location"
+        MenuItem openFileLocation = new MenuItem("Open file location...");
+        openFileLocation.setOnAction(event -> {
+            try {
+                String selectedReplayFilePath = replayTable.getSelectionModel().getSelectedItems().getFirst().getReplayFile().getAbsolutePath();
+                new ProcessBuilder("explorer.exe", "/select,", selectedReplayFilePath)
+                    .redirectOutput(Redirect.DISCARD)
+                    .redirectError(Redirect.DISCARD)
+                    .start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
         ContextMenu tableContextMenu = new ContextMenu();
         MenuItem openWithReplayEditor = new MenuItem("Open with Replay Editor...");
-        openWithReplayEditor.setOnAction(e -> {
+        openWithReplayEditor.setOnAction(event -> {
             String replayEditorPath = app.getSettings().get(ApplicationSettings.REPLAY_EDITOR_PATH);
             if (replayEditorPath == null || replayEditorPath.isBlank()) {
                 return;
@@ -328,7 +340,7 @@ public final class AppController {
             }
         });
 
-        tableContextMenu.getItems().addAll(new MenuItem("Open file location..."), openWithReplayEditor);
+        tableContextMenu.getItems().addAll(openFileLocation, openWithReplayEditor);
 
         Menu sendTo = new Menu("Send to...");
         MenuItem separator = new SeparatorMenuItem();
