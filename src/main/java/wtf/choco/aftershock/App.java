@@ -76,13 +76,7 @@ public final class App extends Application {
         this.logger.addHandler(handler);
 
         // Install directory initialization
-        if (getParameters().getRaw().contains("--dev")) {
-            this.installDirectory = new File(System.getProperty("user.home"), "AppData/Roaming/AftershockRM/");
-            this.logger.warning("Running app in development mode. Installation directory will be at " + installDirectory.getPath());
-        } else {
-            this.installDirectory = new File(".");
-            ColouredLogFormatter.get().setLogFile(new File("log.txt"));
-        }
+        this.installDirectory = new File(System.getProperty("user.home"), "AppData/Roaming/AftershockRM/");
 
         // Post-install directory initialization
         this.installDirectory.mkdirs();
