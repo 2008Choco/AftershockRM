@@ -16,8 +16,7 @@ public record Replay(
         double framesPerSecond,
         LocalDateTime date,
         List<Player> players,
-        List<Goal> goals,
-        AftershockData aftershockData
+        List<Goal> goals
 ) implements IReplay {
 
     public Replay {

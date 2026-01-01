@@ -1,9 +1,11 @@
 package wtf.choco.aftershock.manager;
 
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import javafx.beans.value.ChangeListener;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.replay.AftershockData;
+import wtf.choco.aftershock.replay.IReplay;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.PublicTask;
@@ -12,13 +14,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -28,6 +33,7 @@ public class CachingHandler {
 
     private MessageDigest md5;
     private Set<File> invalidatedReplays = Collections.emptySet();
+    private Map<String, AftershockData> replayAftershockData = new HashMap<>();
 
     private final App app;
     private final File cacheDirectory, headersDirectory;
@@ -152,23 +158,6 @@ public class CachingHandler {
         }
     }
 
-    @Deprecated(forRemoval = false) // DANGEROUS AND DESTRUCTIVE METHOD
-    public void invalidateAndDeleteCache() {
-        File[] cacheFiles = cacheDirectory.listFiles();
-        if (cacheFiles != null) {
-            for (File file : cacheFiles) {
-                file.delete();
-            }
-        }
-
-        File[] headerFiles = headersDirectory.listFiles();
-        if (headerFiles != null) {
-            for (File file : headerFiles) {
-                file.delete();
-            }
-        }
-    }
-
     public void loadReplaysFromCache(PublicTask<?> task, boolean clearBins) throws IOException, JsonParseException {
         if (clearBins) {
             this.app.getBinRegistry().clearBins(true);
@@ -202,7 +191,7 @@ public class CachingHandler {
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
 
             Replay replayData = App.GSON.fromJson(new FileReader(headerFile), Replay.class);
-            ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData);
+            ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData, replayAftershockData.computeIfAbsent(replayData.id(), _ -> new AftershockData()));
 
             // TODO: This listener registration needs to be moved elsewhere!
             replayEntry.loadedProperty().addListener((_, _, newValue) -> {
@@ -247,10 +236,10 @@ public class CachingHandler {
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
 
             Replay replayData = App.GSON.fromJson(new FileReader(headerFile), Replay.class);
-            ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData);
+            ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData, replayAftershockData.computeIfAbsent(replayData.id(), _ -> new AftershockData()));
 
             // TODO: This listener registration needs to be moved elsewhere!
-            replayEntry.loadedProperty().addListener((ChangeListener<Boolean>) (change, oldValue, newValue) -> {
+            replayEntry.loadedProperty().addListener((_, _, newValue) -> {
                 if (newValue) {
                     try {
                         Files.copy(cachedReplayFile.toPath(), replayFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -348,6 +337,42 @@ public class CachingHandler {
 
         task.updateMessage(message);
         task.updateProgress(done, max);
+    }
+
+    public void loadReplayData(File replayDataFile) throws IOException, JsonParseException {
+        this.replayAftershockData.clear();
+
+        JsonObject root = App.GSON.fromJson(new FileReader(replayDataFile), JsonObject.class);
+        if (root == null) {
+            root = new JsonObject();
+        }
+
+        int loaded = 0;
+        for (String replayID : root.keySet()) {
+            AftershockData data = App.GSON.fromJson(root.getAsJsonObject(replayID), AftershockData.class);
+            this.replayAftershockData.put(replayID, data);
+            loaded++;
+        }
+
+        this.app.getLogger().info("Loaded replay data of " + loaded + " replays!");
+    }
+
+    public void writeReplayData(File replayDataFile) {
+        JsonObject root = new JsonObject();
+        for (String replayID : replayAftershockData.keySet()) {
+            AftershockData data = replayAftershockData.get(replayID);
+            root.add(replayID, App.GSON.toJsonTree(data));
+        }
+
+        try {
+            Files.writeString(replayDataFile.toPath(), App.GSON.toJson(root), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public AftershockData getAftershockData(IReplay replay) {
+        return replayAftershockData.get(replay.id());
     }
 
 }

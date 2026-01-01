@@ -387,7 +387,7 @@ public final class AppController {
                 return;
             }
 
-            selectionModel.getSelectedItems().forEach(e -> e.setLoaded(!e.isLoaded()));
+            selectionModel.getSelectedItems().forEach(replay -> replay.setLoaded(!replay.isLoaded()));
         }
 
         else if (key == KeyCode.DELETE) {

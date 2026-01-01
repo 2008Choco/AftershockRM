@@ -60,6 +60,7 @@ public final class App extends Application {
 
     private File installDirectory;
     private File binsFile;
+    private File replayDataFile;
 
     private final ExecutorService primaryExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService pooledExecutor = Executors.newCachedThreadPool();
@@ -82,6 +83,8 @@ public final class App extends Application {
         this.installDirectory.mkdirs();
         this.binsFile = new File(installDirectory, "bins.json");
         this.binsFile.createNewFile();
+        this.replayDataFile = new File(installDirectory, "replay_data.json");
+        this.replayDataFile.createNewFile();
 
         this.settings = new ApplicationSettings(this);
         this.cacheHandler = new CachingHandler(this);
@@ -130,8 +133,9 @@ public final class App extends Application {
         this.controller.getBinEditor().display(BinRegistry.GLOBAL_BIN);
 
         // Replay setup
-        this.installDirectory.mkdirs();
-        this.reloadReplays((_, _) -> Platform.runLater(() -> binRegistry.loadBinsFromFile(binsFile, false)));
+        this.reloadReplays((_, _) -> {
+            Platform.runLater(() -> binRegistry.loadBinsFromFile(binsFile, false));
+        });
     }
 
     @Override
@@ -142,6 +146,7 @@ public final class App extends Application {
         this.keybindRegistry.clearKeybinds();
         this.binRegistry.saveBinsToFile(binsFile);
         this.binRegistry.deleteBins(true);
+        this.cacheHandler.writeReplayData(replayDataFile);
         this.tagRegistry.clearTags();
         this.settings.writeToFile();
 
@@ -225,16 +230,13 @@ public final class App extends Application {
         this.taskExecutor.execute(task -> {
             this.cacheHandler.cacheReplays(task);
             try {
+                this.cacheHandler.loadReplayData(replayDataFile);
                 this.cacheHandler.loadReplaysFromCache(task);
             } catch (Exception e) {
                 // TODO: This really sucks. I need better exception handling!
                 e.printStackTrace();
             }
         }, whenCompleted, primaryExecutor);
-    }
-
-    public void processReplayIO(ReplayEntry replay) {
-        this.pooledExecutor.execute(replay::writeToHeader);
     }
 
     private Locale getLocale(String tag) {

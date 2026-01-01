@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import wtf.choco.aftershock.replay.AftershockData;
 import wtf.choco.aftershock.replay.Goal;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Player;
@@ -30,7 +29,6 @@ public final class ReplayTypeAdapter extends TypeAdapter<Replay> {
      * Maybe one day I'll read from binary. I think it's smarter and would increase the speed of Aftershock's parsing significantly.
      */
 
-    private static final String NAME_AFTERSHOCK = "Aftershock";
     private static final String NAME_PROPERTIES = "Properties";
     private static final String NAME_REPLAY_ID = "Id";
     private static final String NAME_REPLAY_NAME = "ReplayName";
@@ -57,7 +55,6 @@ public final class ReplayTypeAdapter extends TypeAdapter<Replay> {
     public Replay read(JsonReader in) throws IOException {
         in.beginObject();
 
-        AftershockData aftershockData = null;
         String replayId = "[UNKNOWN_REPLAY_ID]";
         String replayName = "[UNKNOWN_REPLAY_NAME]";
         String playerName = "[UNKNOWN_PLAYER]";
@@ -71,65 +68,60 @@ public final class ReplayTypeAdapter extends TypeAdapter<Replay> {
         List<Goal> goals = new ArrayList<>();
 
         while (in.hasNext()) {
-            switch (in.nextName()) {
-                case NAME_AFTERSHOCK -> aftershockData = gson.getAdapter(AftershockData.class).read(in);
-                case NAME_PROPERTIES -> {
-                    in.beginObject();
-
-                    while (in.hasNext()) {
-                        switch (in.nextName()) {
-                            case NAME_REPLAY_ID -> replayId = in.nextString();
-                            case NAME_REPLAY_NAME -> replayName = in.nextString();
-                            case NAME_PLAYER_NAME -> playerName = in.nextString();
-                            case NAME_MAP_ID -> {
-                                // Map name is special because it's an object with a "Value" field, e.g. "MapName": { "Value": "the_map_id" }
-                                in.beginObject();
-                                while (in.hasNext()) {
-                                    if (in.nextName().equals("Value")) {
-                                        mapId = in.nextString();
-                                    } else {
-                                        in.skipValue();
-                                    }
-                                }
-                                in.endObject();
-                            }
-                            case NAME_TEAM_SIZE -> teamSize = in.nextInt();
-                            case NAME_TEAM_0_SCORE -> scores.put(Team.BLUE, in.nextInt());
-                            case NAME_TEAM_1_SCORE -> scores.put(Team.ORANGE, in.nextInt());
-                            case NAME_DURATION -> duration = in.nextInt();
-                            case NAME_FPS -> framesPerSecond = in.nextDouble();
-                            case NAME_DATE -> date = LocalDateTime.parse(in.nextString(), DATE_FORMATTER);
-                            case NAME_PLAYERS -> {
-                                in.beginArray();
-                                while (in.hasNext()) {
-                                    players.add(gson.getAdapter(Player.class).read(in));
-                                }
-                                in.endArray();
-                            }
-                            case NAME_GOALS -> {
-                                in.beginArray();
-                                while (in.hasNext()) {
-                                    goals.add(gson.getAdapter(Goal.class).read(in));
-                                }
-                                in.endArray();
-                            }
-                            default -> in.skipValue();
-                        }
-                    }
-
-                    in.endObject();
-                }
-                default -> in.skipValue();
+            if (!in.nextName().equals(NAME_PROPERTIES)) {
+                in.skipValue();
+                continue;
             }
+
+            in.beginObject();
+
+            while (in.hasNext()) {
+                switch (in.nextName()) {
+                    case NAME_REPLAY_ID -> replayId = in.nextString();
+                    case NAME_REPLAY_NAME -> replayName = in.nextString();
+                    case NAME_PLAYER_NAME -> playerName = in.nextString();
+                    case NAME_MAP_ID -> {
+                        // Map name is special because it's an object with a "Value" field, e.g. "MapName": { "Value": "the_map_id" }
+                        in.beginObject();
+                        while (in.hasNext()) {
+                            if (in.nextName().equals("Value")) {
+                                mapId = in.nextString();
+                            } else {
+                                in.skipValue();
+                            }
+                        }
+                        in.endObject();
+                    }
+                    case NAME_TEAM_SIZE -> teamSize = in.nextInt();
+                    case NAME_TEAM_0_SCORE -> scores.put(Team.BLUE, in.nextInt());
+                    case NAME_TEAM_1_SCORE -> scores.put(Team.ORANGE, in.nextInt());
+                    case NAME_DURATION -> duration = in.nextInt();
+                    case NAME_FPS -> framesPerSecond = in.nextDouble();
+                    case NAME_DATE -> date = LocalDateTime.parse(in.nextString(), DATE_FORMATTER);
+                    case NAME_PLAYERS -> {
+                        in.beginArray();
+                        while (in.hasNext()) {
+                            players.add(gson.getAdapter(Player.class).read(in));
+                        }
+                        in.endArray();
+                    }
+                    case NAME_GOALS -> {
+                        in.beginArray();
+                        while (in.hasNext()) {
+                            goals.add(gson.getAdapter(Goal.class).read(in));
+                        }
+                        in.endArray();
+                    }
+                    default -> in.skipValue();
+                }
+            }
+
+            in.endObject();
         }
 
         in.endObject();
 
-        if (aftershockData == null) {
-            aftershockData = new AftershockData();
-        }
-
-        return new Replay(replayId, replayName, playerName, mapId, teamSize, scores, duration, framesPerSecond, date, players, goals, aftershockData);
+        return new Replay(replayId, replayName, playerName, mapId, teamSize, scores, duration, framesPerSecond, date, players, goals);
     }
 
     @Override

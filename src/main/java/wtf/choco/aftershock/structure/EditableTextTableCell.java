@@ -62,12 +62,12 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
 
         if (empty) {
             this.setGraphic(null);
-            this.setText(null);
+            this.setText(emptyText);
             return;
         }
 
         if (getGraphic() == null) {
-            this.setText(!item.isBlank() ? item : emptyText);
+            this.setText(item != null && !item.isBlank() ? item : emptyText);
         }
     }
 
