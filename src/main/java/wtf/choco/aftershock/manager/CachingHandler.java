@@ -288,7 +288,12 @@ public class CachingHandler {
 
         if (shouldCreateHeader) {
             try {
-                Runtime.getRuntime().exec(rocketRPPath + " --f --r \"" + cachedReplayFile.getAbsolutePath() + "\" --o \"" + headersDirectory.getAbsolutePath() + "\"").waitFor();
+                new ProcessBuilder(
+                    rocketRPPath,
+                    "--fast",
+                    "--replay", cachedReplayFile.getAbsolutePath(),
+                    "--output", headersDirectory.getAbsolutePath()
+                ).inheritIO().start().waitFor();
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
