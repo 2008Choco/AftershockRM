@@ -42,6 +42,7 @@ import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
+import wtf.choco.aftershock.replay.IReplay;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.structure.DynamicFilter;
 import wtf.choco.aftershock.structure.EditableTextTableCell;
@@ -109,7 +110,7 @@ public final class AppController {
 
     private Popup popup = new Popup();
 
-    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((replay, term) -> replay.getReplayData().name().toLowerCase().contains(term.toLowerCase()));
+    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((replay, term) -> replay.name().toLowerCase().contains(term.toLowerCase()));
 
     @FXML
     public void initialize() {
@@ -117,13 +118,13 @@ public final class AppController {
 
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
         this.columnLoaded.setCellValueFactory(new PropertyValueFactory<>("loaded"));
-        this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().name()));
-        this.columnLastModified.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().date().toString().replace('T', ' ')));
-        this.columnMode.setCellValueFactory(new ReplayPropertyFetcher<>(r -> String.format("%dv%1$d", r.getReplayData().teamSize())));
-        this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().score(Team.BLUE)));
-        this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().score(Team.ORANGE)));
-        this.columnMap.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().mapId())); // TODO: Translate map name!
-        this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().playerName()));
+        this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::name));
+        this.columnLastModified.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.date().toString().replace('T', ' ')));
+        this.columnMode.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> String.format("%dv%1$d", replay.teamSize())));
+        this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.score(Team.BLUE)));
+        this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.score(Team.ORANGE)));
+        this.columnMap.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::mapId)); // TODO: Translate map name!
+        this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::playerName));
         this.columnComments.setCellFactory(EditableTextTableCell.getFactoryCallback("None"));
         this.columnComments.setCellValueFactory(new PropertyValueFactory<>("comments"));
         this.columnTags.setCellFactory(StringListTableCell.getFactoryCallback());
@@ -173,7 +174,7 @@ public final class AppController {
             StringBuilder replays = new StringBuilder();
             List<File> files = new ArrayList<>(selection.getSelectedItems().size());
             for (ReplayEntry replay : selection.getSelectedItems()) {
-                replays.append(replay.getReplayData().id());
+                replays.append(replay.id());
                 replays.append(";");
 
                 files.add(replay.getReplayFile());

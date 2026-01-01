@@ -4,7 +4,7 @@ import com.google.gson.JsonParseException;
 import javafx.beans.value.ChangeListener;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
-import wtf.choco.aftershock.replay.NewReplay;
+import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.PublicTask;
 
@@ -201,7 +201,7 @@ public class CachingHandler {
             File replayFile = new File(replayDirectory, cachedReplayFile.getName());
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
 
-            NewReplay replayData = App.GSON.fromJson(new FileReader(headerFile), NewReplay.class);
+            Replay replayData = App.GSON.fromJson(new FileReader(headerFile), Replay.class);
             ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData);
 
             // TODO: This listener registration needs to be moved elsewhere!
@@ -246,7 +246,7 @@ public class CachingHandler {
             File cachedReplayFile = new File(cacheDirectory, replayFile.getName());
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
 
-            NewReplay replayData = App.GSON.fromJson(new FileReader(headerFile), NewReplay.class);
+            Replay replayData = App.GSON.fromJson(new FileReader(headerFile), Replay.class);
             ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData);
 
             // TODO: This listener registration needs to be moved elsewhere!

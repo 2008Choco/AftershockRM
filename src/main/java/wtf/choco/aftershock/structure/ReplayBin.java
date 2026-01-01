@@ -41,7 +41,7 @@ public class ReplayBin implements Iterable<ReplayEntry> {
         this.display = new BinDisplayComponent(this, replays.isEmpty() ? BIN_GRAPHIC_EMPTY : BIN_GRAPHIC_FULL);
 
         for (ReplayEntry replay : replays) {
-            this.byId.put(replay.getReplayData().id(), replay);
+            this.byId.put(replay.id(), replay);
         }
     }
 
@@ -54,10 +54,6 @@ public class ReplayBin implements Iterable<ReplayEntry> {
         this.byId = new HashMap<>(0);
         this.globalBin = isGlobalBin;
         this.display = new BinDisplayComponent(this, BIN_GRAPHIC_EMPTY);
-    }
-
-    public ReplayBin(UUID uuid, String name, Collection<ReplayEntry> replays) {
-        this(uuid, name, replays, false);
     }
 
     public ReplayBin(UUID uuid, String name) {
@@ -99,7 +95,7 @@ public class ReplayBin implements Iterable<ReplayEntry> {
 
     public void addReplay(ReplayEntry replay) {
         this.replays.add(replay);
-        this.byId.put(replay.getReplayData().id(), replay);
+        this.byId.put(replay.id(), replay);
     }
 
     public boolean hasReplay(ReplayEntry replay) {
@@ -112,7 +108,7 @@ public class ReplayBin implements Iterable<ReplayEntry> {
 
     public void removeReplay(ReplayEntry replay) {
         this.replays.remove(replay);
-        this.byId.remove(replay.getReplayData().id());
+        this.byId.remove(replay.id());
     }
 
     public ReplayEntry getReplayById(String id) {
@@ -152,7 +148,7 @@ public class ReplayBin implements Iterable<ReplayEntry> {
 
     @Override
     public boolean equals(Object obj) {
-        return obj == this || (obj instanceof ReplayBin && ((ReplayBin) obj).uuid.equals(uuid));
+        return obj == this || (obj instanceof ReplayBin other && uuid.equals(other.uuid));
     }
 
 }

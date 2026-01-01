@@ -16,19 +16,26 @@ import javafx.scene.Parent;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.controller.InfoPanelController;
 import wtf.choco.aftershock.replay.AftershockData;
-import wtf.choco.aftershock.replay.NewReplay;
+import wtf.choco.aftershock.replay.Goal;
+import wtf.choco.aftershock.replay.IReplay;
+import wtf.choco.aftershock.replay.Player;
+import wtf.choco.aftershock.replay.Replay;
+import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.util.JsonUtil;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
 
-public class ReplayEntry {
+public class ReplayEntry implements IReplay {
 
     private Parent infoPanel;
 
@@ -39,9 +46,9 @@ public class ReplayEntry {
     private final File replayFile;
     private final File cachedReplayFile;
     private final File headerJsonFile;
-    private final NewReplay replayData;
+    private final Replay replayData;
 
-    public ReplayEntry(File replayFile, File cachedReplayFile, File headerJsonFile, NewReplay replayData) {
+    public ReplayEntry(File replayFile, File cachedReplayFile, File headerJsonFile, Replay replayData) {
         this.replayFile = replayFile;
         this.cachedReplayFile = cachedReplayFile;
         this.headerJsonFile = headerJsonFile;
@@ -65,8 +72,69 @@ public class ReplayEntry {
         return headerJsonFile;
     }
 
-    public NewReplay getReplayData() {
-        return replayData;
+    @Override
+    public String id() {
+        return replayData.id();
+    }
+
+    @Override
+    public String name() {
+        return replayData.name();
+    }
+
+    @Override
+    public String playerName() {
+        return replayData.playerName();
+    }
+
+    @Override
+    public String mapId() {
+        return replayData.mapId();
+    }
+
+    @Override
+    public int teamSize() {
+        return replayData.teamSize();
+    }
+
+    @Override
+    public Map<Team, Integer> score() {
+        return replayData.score();
+    }
+
+    @Override
+    public int score(Team team) {
+        return replayData.score(team);
+    }
+
+    @Override
+    public int duration() {
+        return replayData.duration();
+    }
+
+    @Override
+    public int duration(TimeUnit unit) {
+        return replayData.duration(unit);
+    }
+
+    @Override
+    public double framesPerSecond() {
+        return replayData.framesPerSecond();
+    }
+
+    @Override
+    public LocalDateTime date() {
+        return replayData.date();
+    }
+
+    @Override
+    public List<Player> players() {
+        return replayData.players();
+    }
+
+    @Override
+    public List<Goal> goals() {
+        return replayData.goals();
     }
 
     public Parent getInfoPanel(ResourceBundle resources) {

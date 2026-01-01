@@ -144,7 +144,7 @@ public class BinRegistry  {
             List<ReplayEntry> replays = bin.getReplays();
             JsonArray replaysArray = new JsonArray(replays.size());
             for (ReplayEntry replay : replays) {
-                replaysArray.add(replay.getReplayData().id());
+                replaysArray.add(replay.id());
             }
 
             binRoot.add("replays", replaysArray);

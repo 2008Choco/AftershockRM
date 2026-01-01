@@ -6,7 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.util.Pair;
 import wtf.choco.aftershock.replay.Goal;
-import wtf.choco.aftershock.replay.NewReplay;
+import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Player;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.util.FXUtils;
@@ -40,7 +40,7 @@ public final class InfoPanelController {
 
     @FXML private ResourceBundle resources;
 
-    private void loadReplay(NewReplay replay) {
+    private void loadReplay(Replay replay) {
         int teamSize = replay.teamSize();
         this.blueGrid.getChildren().removeIf(node -> GridPane.getRowIndex(node) > teamSize);
         this.blueGrid.getRowConstraints().remove(teamSize + 1, blueGrid.getRowCount());
@@ -96,7 +96,7 @@ public final class InfoPanelController {
         shots.setText(String.valueOf(player.shots()));
     }
 
-    public static Parent createInfoPanelFor(NewReplay replay, ResourceBundle resources) {
+    public static Parent createInfoPanelFor(Replay replay, ResourceBundle resources) {
         Pair<Parent, InfoPanelController> root = FXUtils.loadFXML("/layout/InfoPanel", resources);
 
         if (root.getKey() == null) {

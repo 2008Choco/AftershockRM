@@ -6,7 +6,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import wtf.choco.aftershock.replay.AftershockData;
 import wtf.choco.aftershock.replay.Goal;
-import wtf.choco.aftershock.replay.NewReplay;
+import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Player;
 import wtf.choco.aftershock.replay.Team;
 
@@ -19,7 +19,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-public final class ReplayTypeAdapter extends TypeAdapter<NewReplay> {
+public final class ReplayTypeAdapter extends TypeAdapter<Replay> {
 
     /*
      * It would be WAY more efficient to read these files directly from binary rather than having to run the replay files through
@@ -54,7 +54,7 @@ public final class ReplayTypeAdapter extends TypeAdapter<NewReplay> {
     }
 
     @Override
-    public NewReplay read(JsonReader in) throws IOException {
+    public Replay read(JsonReader in) throws IOException {
         in.beginObject();
 
         AftershockData aftershockData = null;
@@ -129,11 +129,11 @@ public final class ReplayTypeAdapter extends TypeAdapter<NewReplay> {
             aftershockData = new AftershockData();
         }
 
-        return new NewReplay(replayId, replayName, playerName, mapId, teamSize, scores, duration, framesPerSecond, date, players, goals, aftershockData);
+        return new Replay(replayId, replayName, playerName, mapId, teamSize, scores, duration, framesPerSecond, date, players, goals, aftershockData);
     }
 
     @Override
-    public void write(JsonWriter out, NewReplay value) throws IOException {
+    public void write(JsonWriter out, Replay value) throws IOException {
         // NO-OP: We don't ever serialize this
     }
 
