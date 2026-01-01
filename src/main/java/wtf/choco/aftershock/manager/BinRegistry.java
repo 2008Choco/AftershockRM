@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.JsonUtil;
@@ -115,7 +114,7 @@ public class BinRegistry  {
 
             JsonArray replays = binRoot.getAsJsonArray("replays");
             for (JsonElement replayIdElement : replays) {
-                Replay replay = GLOBAL_BIN.getReplayById(replayIdElement.getAsString());
+                ReplayEntry replay = GLOBAL_BIN.getReplayById(replayIdElement.getAsString());
                 if (replay == null) {
                     continue;
                 }
@@ -145,7 +144,7 @@ public class BinRegistry  {
             List<ReplayEntry> replays = bin.getReplays();
             JsonArray replaysArray = new JsonArray(replays.size());
             for (ReplayEntry replay : replays) {
-                replaysArray.add(replay.getReplay().getId());
+                replaysArray.add(replay.getReplayData().id());
             }
 
             binRoot.add("replays", replaysArray);

@@ -5,9 +5,9 @@ import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.util.Pair;
-import wtf.choco.aftershock.replay.GoalData;
-import wtf.choco.aftershock.replay.PlayerData;
-import wtf.choco.aftershock.replay.Replay;
+import wtf.choco.aftershock.replay.Goal;
+import wtf.choco.aftershock.replay.NewReplay;
+import wtf.choco.aftershock.replay.Player;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.util.FXUtils;
 
@@ -16,6 +16,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
 
 public final class InfoPanelController {
 
@@ -39,27 +40,27 @@ public final class InfoPanelController {
 
     @FXML private ResourceBundle resources;
 
-    private void loadReplay(Replay replay) {
-        int teamSize = replay.getTeamSize();
+    private void loadReplay(NewReplay replay) {
+        int teamSize = replay.teamSize();
         this.blueGrid.getChildren().removeIf(node -> GridPane.getRowIndex(node) > teamSize);
         this.blueGrid.getRowConstraints().remove(teamSize + 1, blueGrid.getRowCount());
         this.orangeGrid.getChildren().removeIf(node -> GridPane.getRowIndex(node) > teamSize);
         this.orangeGrid.getRowConstraints().remove(teamSize + 1, orangeGrid.getRowCount());
 
-        this.replayName.setText(replay.getName());
-        this.replayId.setText(replay.getId());
+        this.replayName.setText(replay.name());
+        this.replayId.setText(replay.id());
 
-        List<PlayerData> bluePlayers = new ArrayList<>(teamSize), orangePlayers = new ArrayList<>(teamSize);
-        for (PlayerData player : replay.getPlayers()) {
-            if (player.getTeam() == Team.BLUE) {
+        List<Player> bluePlayers = new ArrayList<>(teamSize), orangePlayers = new ArrayList<>(teamSize);
+        for (Player player : replay.players()) {
+            if (player.team() == Team.BLUE) {
                 bluePlayers.add(player);
             } else {
                 orangePlayers.add(player);
             }
         }
 
-        this.blueHeader.setText(String.format(resources.getString("ui.replay.stats.team.blue"), replay.getScore(Team.BLUE)));
-        this.orangeHeader.setText(String.format(resources.getString("ui.replay.stats.team.orange"), replay.getScore(Team.ORANGE)));
+        this.blueHeader.setText(String.format(resources.getString("ui.replay.stats.team.blue"), replay.score(Team.BLUE)));
+        this.orangeHeader.setText(String.format(resources.getString("ui.replay.stats.team.orange"), replay.score(Team.ORANGE)));
 
         this.setPlayer(bluePlayers, 0, bluePlayerOne, bluePlayerOneScore, bluePlayerOneGoals, bluePlayerOneAssists, bluePlayerOneSaves, bluePlayerOneShots);
         this.setPlayer(bluePlayers, 1, bluePlayerTwo, bluePlayerTwoScore, bluePlayerTwoGoals, bluePlayerTwoAssists, bluePlayerTwoSaves, bluePlayerTwoShots);
@@ -70,32 +71,32 @@ public final class InfoPanelController {
         this.setPlayer(orangePlayers, 2, orangePlayerThree, orangePlayerThreeScore, orangePlayerThreeGoals, orangePlayerThreeAssists, orangePlayerThreeSaves, orangePlayerThreeShots);
 
         int index = 1;
-        for (GoalData goal : replay.getGoals()) {
-            int time = goal.getSecondsIn();
+        for (Goal goal : replay.goals()) {
+            long time = goal.timestamp(replay, TimeUnit.SECONDS);
             Label timeLabel = new Label((time / 60) + ":" + TIME_FORMATTER.format((time % 60)));
-            Label playerLabel = new Label(goal.getPlayer() != null ? goal.getPlayer().getName() : "%unknown_player%");
+            Label playerLabel = new Label(goal.playerName());
 
             this.goalGrid.add(timeLabel, 0, index);
             this.goalGrid.add(playerLabel, 1, index++);
         }
     }
 
-    private void setPlayer(List<PlayerData> players, int playerIndex, Label name, Label score, Label goals, Label assists, Label saves, Label shots) {
+    private void setPlayer(List<Player> players, int playerIndex, Label name, Label score, Label goals, Label assists, Label saves, Label shots) {
         if (playerIndex >= players.size()) {
             return; // Just ignore it
         }
 
-        PlayerData player = players.get(playerIndex);
+        Player player = players.get(playerIndex);
 
-        name.setText(player.getName());
-        score.setText(String.valueOf(player.getScore()));
-        goals.setText(String.valueOf(player.getGoals()));
-        assists.setText(String.valueOf(player.getAssists()));
-        saves.setText(String.valueOf(player.getSaves()));
-        shots.setText(String.valueOf(player.getShots()));
+        name.setText(player.name());
+        score.setText(String.valueOf(player.score()));
+        goals.setText(String.valueOf(player.goals()));
+        assists.setText(String.valueOf(player.assists()));
+        saves.setText(String.valueOf(player.saves()));
+        shots.setText(String.valueOf(player.shots()));
     }
 
-    public static Parent createInfoPanelFor(Replay replay, ResourceBundle resources) {
+    public static Parent createInfoPanelFor(NewReplay replay, ResourceBundle resources) {
         Pair<Parent, InfoPanelController> root = FXUtils.loadFXML("/layout/InfoPanel", resources);
 
         if (root.getKey() == null) {

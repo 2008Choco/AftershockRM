@@ -1,12 +1,15 @@
 package wtf.choco.aftershock.manager;
 
+import com.google.gson.JsonParseException;
 import javafx.beans.value.ChangeListener;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
-import wtf.choco.aftershock.replay.ReplayModifiable;
+import wtf.choco.aftershock.replay.NewReplay;
+import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.PublicTask;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -166,7 +169,7 @@ public class CachingHandler {
         }
     }
 
-    public void loadReplaysFromCache(PublicTask<?> task, boolean clearBins) {
+    public void loadReplaysFromCache(PublicTask<?> task, boolean clearBins) throws IOException, JsonParseException {
         if (clearBins) {
             this.app.getBinRegistry().clearBins(true);
             BinRegistry.GLOBAL_BIN.clear();
@@ -198,10 +201,11 @@ public class CachingHandler {
             File replayFile = new File(replayDirectory, cachedReplayFile.getName());
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
 
-            ReplayModifiable replay = new ReplayModifiable(replayFile, cachedReplayFile, headerFile);
-            replay.loadDataFromFile();
+            NewReplay replayData = App.GSON.fromJson(new FileReader(headerFile), NewReplay.class);
+            ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData);
 
-            replay.getEntryData().loadedProperty().addListener((ChangeListener<Boolean>) (change, oldValue, newValue) -> {
+            // TODO: This listener registration needs to be moved elsewhere!
+            replayEntry.loadedProperty().addListener((_, _, newValue) -> {
                 if (newValue) {
                     try {
                         Files.copy(cachedReplayFile.toPath(), replayFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -215,7 +219,7 @@ public class CachingHandler {
                 this.app.getController().updateLoadedLabel();
             });
 
-            BinRegistry.GLOBAL_BIN.addReplay(replay);
+            BinRegistry.GLOBAL_BIN.addReplay(replayEntry);
             loaded++;
         }
 
@@ -223,11 +227,11 @@ public class CachingHandler {
         logger.info("Loaded " + loaded + " replays in " + now + "ms!");
     }
 
-    public void loadReplaysFromCache(PublicTask<?> task) {
+    public void loadReplaysFromCache(PublicTask<?> task) throws IOException, JsonParseException {
         this.loadReplaysFromCache(task, true);
     }
 
-    public void loadReplays(PublicTask<?> task, Collection<File> replayFiles) {
+    public void loadReplays(PublicTask<?> task, Collection<File> replayFiles) throws IOException, JsonParseException {
         Logger logger = app.getLogger();
         ApplicationSettings settings = app.getSettings();
 
@@ -242,10 +246,11 @@ public class CachingHandler {
             File cachedReplayFile = new File(cacheDirectory, replayFile.getName());
             File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
 
-            ReplayModifiable replay = new ReplayModifiable(replayFile, cachedReplayFile, headerFile);
-            replay.loadDataFromFile();
+            NewReplay replayData = App.GSON.fromJson(new FileReader(headerFile), NewReplay.class);
+            ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData);
 
-            replay.getEntryData().loadedProperty().addListener((ChangeListener<Boolean>) (change, oldValue, newValue) -> {
+            // TODO: This listener registration needs to be moved elsewhere!
+            replayEntry.loadedProperty().addListener((ChangeListener<Boolean>) (change, oldValue, newValue) -> {
                 if (newValue) {
                     try {
                         Files.copy(cachedReplayFile.toPath(), replayFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -259,7 +264,7 @@ public class CachingHandler {
                 this.app.getController().updateLoadedLabel();
             });
 
-            BinRegistry.GLOBAL_BIN.addReplay(replay);
+            BinRegistry.GLOBAL_BIN.addReplay(replayEntry);
             loaded++;
         }
 

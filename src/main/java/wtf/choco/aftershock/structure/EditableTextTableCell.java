@@ -54,7 +54,7 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
 
     @Override
     protected void updateItem(String item, boolean empty) {
-        if (item.equals(getItem())) {
+        if (Objects.equals(item, getItem())) {
             return;
         }
 

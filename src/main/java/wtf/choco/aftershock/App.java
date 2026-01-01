@@ -19,6 +19,7 @@ import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.manager.ProgressiveTaskExecutor;
 import wtf.choco.aftershock.manager.TagRegistry;
+import wtf.choco.aftershock.replay.schema.ReplayTypeAdapterFactory;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
@@ -36,7 +37,10 @@ import java.util.logging.Logger;
 public final class App extends Application {
 
     // https://www.flaticon.com
-    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapterFactory(new ReplayTypeAdapterFactory())
+            .create();
+
     public static final String VERSION = "0.1.1A";
 
     private static App instance;
@@ -227,7 +231,12 @@ public final class App extends Application {
     public void reloadReplays(BiConsumer<?, Worker.State> whenCompleted) {
         this.taskExecutor.execute(task -> {
             this.cacheHandler.cacheReplays(task);
-            this.cacheHandler.loadReplaysFromCache(task);
+            try {
+                this.cacheHandler.loadReplaysFromCache(task);
+            } catch (Exception e) {
+                // TODO: This really sucks. I need better exception handling!
+                e.printStackTrace();
+            }
         }, whenCompleted, primaryExecutor);
     }
 

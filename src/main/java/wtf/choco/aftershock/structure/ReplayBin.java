@@ -5,7 +5,6 @@ import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 import wtf.choco.aftershock.util.Preconditions;
 
@@ -17,14 +16,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class ReplayBin implements Iterable<Replay> {
+public class ReplayBin implements Iterable<ReplayEntry> {
 
     public static final Image BIN_GRAPHIC_EMPTY = new Image(App.class.getResourceAsStream("/icons/folder.png"));
     public static final Image BIN_GRAPHIC_FULL = new Image(App.class.getResourceAsStream("/icons/folder-full.png"));
 
     private final UUID uuid;
     private final ObservableList<ReplayEntry> replays;
-    private final Map<String, Replay> byId;
+    private final Map<String, ReplayEntry> byId;
     private final boolean globalBin;
     private final BinDisplayComponent display;
 
@@ -42,7 +41,7 @@ public class ReplayBin implements Iterable<Replay> {
         this.display = new BinDisplayComponent(this, replays.isEmpty() ? BIN_GRAPHIC_EMPTY : BIN_GRAPHIC_FULL);
 
         for (ReplayEntry replay : replays) {
-            this.byId.put(replay.getReplay().getId(), replay.getReplay());
+            this.byId.put(replay.getReplayData().id(), replay);
         }
     }
 
@@ -98,12 +97,12 @@ public class ReplayBin implements Iterable<Replay> {
         return display;
     }
 
-    public void addReplay(Replay replay) {
-        this.replays.add(replay.getEntryData());
-        this.byId.put(replay.getId(), replay);
+    public void addReplay(ReplayEntry replay) {
+        this.replays.add(replay);
+        this.byId.put(replay.getReplayData().id(), replay);
     }
 
-    public boolean hasReplay(Replay replay) {
+    public boolean hasReplay(ReplayEntry replay) {
         return byId.containsValue(replay);
     }
 
@@ -111,12 +110,12 @@ public class ReplayBin implements Iterable<Replay> {
         return byId.containsKey(id);
     }
 
-    public void removeReplay(Replay replay) {
-        this.replays.removeIf(otherReplay -> otherReplay.getReplay() == replay);
-        this.byId.remove(replay.getId());
+    public void removeReplay(ReplayEntry replay) {
+        this.replays.remove(replay);
+        this.byId.remove(replay.getReplayData().id());
     }
 
-    public Replay getReplayById(String id) {
+    public ReplayEntry getReplayById(String id) {
         return byId.get(id);
     }
 
@@ -142,7 +141,7 @@ public class ReplayBin implements Iterable<Replay> {
     }
 
     @Override
-    public Iterator<Replay> iterator() {
+    public Iterator<ReplayEntry> iterator() {
         return byId.values().iterator();
     }
 

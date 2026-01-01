@@ -21,7 +21,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 
@@ -52,9 +51,9 @@ public class BinDisplayComponent extends VBox {
         // Context menu
         this.contextMenu = new ContextMenu();
         MenuItem loadAllReplays = new MenuItem("Load all replays");
-        loadAllReplays.setOnAction(_ -> BinRegistry.GLOBAL_BIN.forEach(replay -> replay.getEntryData().setLoaded(bin.hasReplay(replay))));
+        loadAllReplays.setOnAction(_ -> BinRegistry.GLOBAL_BIN.forEach(replay -> replay.setLoaded(bin.hasReplay(replay))));
         MenuItem unloadAllReplays = new MenuItem("Unload all replays");
-        unloadAllReplays.setOnAction(_ -> bin.forEach(replay -> replay.getEntryData().setLoaded(false)));
+        unloadAllReplays.setOnAction(_ -> bin.forEach(replay -> replay.setLoaded(false)));
 
         MenuItem cloneBin = new MenuItem("Clone");
         cloneBin.setOnAction(_ -> App.getInstance().getBinRegistry().addBin(new ReplayBin(bin)));
@@ -147,7 +146,7 @@ public class BinDisplayComponent extends VBox {
             if (dragboard.hasString()) {
                 String[] replayIds = dragboard.getString().split(";");
                 for (String replayId : replayIds) {
-                    Replay replay = BinRegistry.GLOBAL_BIN.getReplayById(replayId);
+                    ReplayEntry replay = BinRegistry.GLOBAL_BIN.getReplayById(replayId);
                     if (replay == null || bin.hasReplay(replay)) {
                         continue;
                     }

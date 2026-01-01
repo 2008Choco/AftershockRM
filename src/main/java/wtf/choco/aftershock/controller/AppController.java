@@ -109,7 +109,7 @@ public final class AppController {
 
     private Popup popup = new Popup();
 
-    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((replay, term) -> replay.getReplay().getName().toLowerCase().contains(term.toLowerCase()));
+    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((replay, term) -> replay.getReplayData().name().toLowerCase().contains(term.toLowerCase()));
 
     @FXML
     public void initialize() {
@@ -117,13 +117,13 @@ public final class AppController {
 
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
         this.columnLoaded.setCellValueFactory(new PropertyValueFactory<>("loaded"));
-        this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getName()));
-        this.columnLastModified.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getDate().toString().replace('T', ' ')));
-        this.columnMode.setCellValueFactory(new ReplayPropertyFetcher<>(r -> String.format("%dv%1$d", r.getReplay().getTeamSize())));
-        this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.BLUE)));
-        this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getScore(Team.ORANGE)));
-        this.columnMap.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getMapName()));
-        this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplay().getPlayerName()));
+        this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().name()));
+        this.columnLastModified.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().date().toString().replace('T', ' ')));
+        this.columnMode.setCellValueFactory(new ReplayPropertyFetcher<>(r -> String.format("%dv%1$d", r.getReplayData().teamSize())));
+        this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().score(Team.BLUE)));
+        this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().score(Team.ORANGE)));
+        this.columnMap.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().mapId())); // TODO: Translate map name!
+        this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(r -> r.getReplayData().playerName()));
         this.columnComments.setCellFactory(EditableTextTableCell.getFactoryCallback("None"));
         this.columnComments.setCellValueFactory(new PropertyValueFactory<>("comments"));
         this.columnTags.setCellFactory(StringListTableCell.getFactoryCallback());
@@ -173,10 +173,10 @@ public final class AppController {
             StringBuilder replays = new StringBuilder();
             List<File> files = new ArrayList<>(selection.getSelectedItems().size());
             for (ReplayEntry replay : selection.getSelectedItems()) {
-                replays.append(replay.getReplay().getId());
+                replays.append(replay.getReplayData().id());
                 replays.append(";");
 
-                files.add(replay.getReplay().getDemoFile());
+                files.add(replay.getReplayFile());
             }
 
             clipboard.putFiles(files);
@@ -231,7 +231,12 @@ public final class AppController {
                         });
 
                         cacheHandler.cacheReplays(t, files);
-                        cacheHandler.loadReplays(t, files);
+                        try {
+                            cacheHandler.loadReplays(t, files);
+                        } catch (Exception e1) {
+                            // TODO: This really sucks, I need better exception handling!
+                            e1.printStackTrace();
+                        }
                     });
                 }
 
@@ -315,7 +320,7 @@ public final class AppController {
             }
 
             try {
-                new ProcessBuilder().command(replayEditorPath, "-open", replayTable.getSelectionModel().getSelectedItems().get(0).getReplay().getDemoFile().getAbsolutePath())
+                new ProcessBuilder().command(replayEditorPath, "-open", replayTable.getSelectionModel().getSelectedItems().getFirst().getReplayFile().getAbsolutePath())
                     .redirectError(Redirect.DISCARD).redirectOutput(Redirect.DISCARD).start(); // Do something with the output instead. Write to file?
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -352,7 +357,7 @@ public final class AppController {
                 }
 
                 MenuItem item = new MenuItem(bin.getName());
-                item.setOnAction(itemEvent -> replayTable.getSelectionModel().getSelectedItems().forEach(i -> bin.addReplay(i.getReplay())));
+                item.setOnAction(_ -> replayTable.getSelectionModel().getSelectedItems().forEach(bin::addReplay));
                 sendTo.getItems().add(item);
             }
 
@@ -398,7 +403,7 @@ public final class AppController {
 
             List<ReplayEntry> selected = new ArrayList<>(selection.getSelectedItems());
             selection.clearSelection();
-            selected.forEach(r -> displayed.removeReplay(r.getReplay()));
+            selected.forEach(displayed::removeReplay);
             this.closeInfoPanel();
         }
     }
@@ -530,7 +535,7 @@ public final class AppController {
 
     public void openInfoPanel(ReplayEntry replay) {
         this.closeInfoPanel();
-        this.splitPane.getItems().add(replay.getReplay().getInfoPanel());
+        this.splitPane.getItems().add(replay.getInfoPanel(resources));
     }
 
     public void updateLoadedLabel() {
