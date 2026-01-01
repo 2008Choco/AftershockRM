@@ -203,24 +203,23 @@ public final class App extends Application {
     }
 
     public void openSettingsStage() {
-        if (settingsStage != null) {
-            return;
+        if (settingsStage == null) {
+            Parent root = FXUtils.loadFXMLRoot("/layout/SettingsPanel", resources);
+            if (root == null) {
+                return;
+            }
+
+            Scene scene = new Scene(root);
+            Stage stage = new Stage();
+            stage.setTitle("Aftershock Replay Manager - Application Settings");
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
+            stage.setScene(scene);
+
+            this.settingsStage = stage;
         }
 
-        Parent root = FXUtils.loadFXMLRoot("/layout/SettingsPanel", resources);
-        if (root == null) {
-            return;
-        }
-
-        Scene scene = new Scene(root);
-        Stage stage = new Stage();
-        stage.setTitle("Aftershock Replay Manager - Application Settings");
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.setResizable(false);
-        stage.setScene(scene);
-
-        this.settingsStage = stage;
-        stage.show();
+        this.settingsStage.show();
     }
 
     public void closeSettingsStage() {
