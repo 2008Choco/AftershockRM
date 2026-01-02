@@ -351,7 +351,7 @@ public final class AppController {
 
         MenuItem separator = new SeparatorMenuItem();
         Menu sendTo = new Menu("Send to...");
-        separator.visibleProperty().bind(propertyHasSufficientBins);
+        separator.visibleProperty().bindBidirectional(sendTo.visibleProperty());
         sendTo.visibleProperty().bind(propertyHasSufficientBins);
 
         bins.addListener((InvalidationListener) _ -> {
