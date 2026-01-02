@@ -4,7 +4,6 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-import javafx.util.Pair;
 import wtf.choco.aftershock.replay.Goal;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Player;
@@ -97,14 +96,9 @@ public final class InfoPanelController {
     }
 
     public static Parent createInfoPanelFor(Replay replay, ResourceBundle resources) {
-        Pair<Parent, InfoPanelController> root = FXUtils.loadFXML("/layout/InfoPanel", resources);
-
-        if (root.getKey() == null) {
-            return null;
-        }
-
-        root.getValue().loadReplay(replay);
-        return root.getKey();
+        var infoPanelFXML = FXUtils.<Parent, InfoPanelController>loadFXML("/layout/InfoPanel", resources);
+        infoPanelFXML.controller().loadReplay(replay);
+        return infoPanelFXML.root();
     }
 
 }

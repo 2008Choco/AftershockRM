@@ -1,33 +1,28 @@
 package wtf.choco.aftershock.util;
 
 import javafx.fxml.FXMLLoader;
-import javafx.util.Pair;
+import javafx.scene.Node;
 import wtf.choco.aftershock.App;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public final class FXUtils {
 
     private FXUtils() { }
 
-    public static <T, C> Pair<T, C> loadFXML(String path, ResourceBundle resources) {
+    public static <T extends Node, C> LoadedFXMLObject<T, C> loadFXML(String path, ResourceBundle resources) {
         URL fxmlLocation = getURL(path);
 
         try {
             FXMLLoader loader = new FXMLLoader(fxmlLocation, resources);
-            return new Pair<>(loader.load(), loader.getController());
+            return new LoadedFXMLObject<>(loader.load(), loader.getController());
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
-    }
-
-    public static <T, C> Pair<T, C> loadFXML(String path) {
-        return loadFXML(path, null);
     }
 
     public static <T> T loadFXMLRoot(String path, ResourceBundle resources) {
@@ -39,19 +34,6 @@ public final class FXUtils {
             e.printStackTrace();
             return null;
         }
-    }
-
-    public static <T> T loadFXMLRoot(String path) {
-        return loadFXMLRoot(path, null);
-    }
-
-    public static <T> PublicTask<T> createTask(Function<PublicTask<T>, T> task) {
-        return new PublicTask<>() {
-            @Override
-            protected T call() throws Exception {
-                return task.apply(this);
-            }
-        };
     }
 
     public static <T> PublicTask<T> createTask(Consumer<PublicTask<T>> task) {

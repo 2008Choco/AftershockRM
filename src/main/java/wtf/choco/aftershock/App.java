@@ -12,7 +12,6 @@ import javafx.scene.input.PickResult;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Pair;
 import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
@@ -94,16 +93,9 @@ public final class App extends Application {
         this.stage = stage;
         this.resources = ResourceBundle.getBundle("lang.", getLocale(ApplicationSettings.LOCALE.get()));
 
-        Pair<Parent, AppController> root = FXUtils.loadFXML("/layout/Root", resources);
-        if (root == null) {
-            // TODO: Do proper exception handling here. Print the reason and stacktrace
-            this.logger.severe("Failed to load Root layout!");
-            Platform.exit();
-            return;
-        }
-
-        Scene scene = new Scene(root.getKey());
-        this.controller = root.getValue();
+        var appFXML = FXUtils.<Parent, AppController>loadFXML("/layout/Root", resources);
+        Scene scene = new Scene(appFXML.root());
+        this.controller = appFXML.controller();
 
         this.taskExecutor = new ProgressiveTaskExecutor(primaryExecutor, controller.getProgressBar(), controller.getProgressStatus());
 
