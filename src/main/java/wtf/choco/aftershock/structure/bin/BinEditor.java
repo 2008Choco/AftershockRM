@@ -30,11 +30,12 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 public class BinEditor {
 
-    private final ObjectProperty<ReplayBin> displayed = new SimpleObjectProperty<>(BinRegistry.GLOBAL_BIN);
+    private final ObjectProperty<ReplayBin> displayed;
 
     private final App app;
     private final AppController controller;
@@ -56,6 +57,7 @@ public class BinEditor {
 
         BinRegistry binRegistry = app.getBinRegistry();
         binRegistry.getBins().forEach(bin -> listed.add(bin.getDisplay()));
+        this.displayed = new SimpleObjectProperty<>(binRegistry.getGlobalBin());
 
         // Listeners
         binRegistry.getBins().addListener((ListChangeListener<ReplayBin>) c -> {
@@ -94,10 +96,10 @@ public class BinEditor {
         this.hiddenLabel.setMaxWidth(100);
         this.hiddenLabel.setFont(Font.font(hiddenLabel.getFont().getFamily(), FontWeight.LIGHT, FontPosture.ITALIC, 10));
 
-        this.hidden.addListener((SetChangeListener<ReplayBin>) c -> {
+        this.hidden.addListener((SetChangeListener<ReplayBin>) change -> {
             ObservableList<Node> children = node.getChildren();
 
-            int newSize = c.getSet().size();
+            int newSize = change.getSet().size();
             if (newSize == 0) {
                 children.remove(1);
                 return;
@@ -107,7 +109,7 @@ public class BinEditor {
                 children.add(1, hiddenLabel);
             }
 
-            this.hiddenLabel.setText("(" + newSize + ") bins hidden");
+            this.hiddenLabel.setText(app.getResources().getString("ui.bin_editor.hidden_bins").formatted(newSize));
         });
     }
 
@@ -149,7 +151,7 @@ public class BinEditor {
     }
 
     public void clearDisplay() {
-        this.display(BinRegistry.GLOBAL_BIN);
+        this.display(app.getBinRegistry().getGlobalBin());
     }
 
     public ReplayBin getDisplayed() {
@@ -165,7 +167,7 @@ public class BinEditor {
             return false;
         }
 
-        if (bin == BinRegistry.GLOBAL_BIN) {
+        if (bin.isGlobalBin()) {
             if (shouldAlert) {
                 Toolkit.getDefaultToolkit().beep();
             }
@@ -174,13 +176,15 @@ public class BinEditor {
         }
 
         if (!bin.isEmpty() && shouldAlert) {
-            Alert alert = new Alert(AlertType.WARNING);
-            alert.setTitle("Confirm Bin Deletion");
-            alert.setHeaderText("The bin selected for deletion contain at least one replay!");
-            alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: " + bin.getName() + "?");
+            ResourceBundle resources = app.getResources();
 
-            ButtonType buttonDelete = new ButtonType("Delete");
-            ButtonType buttonCancel = new ButtonType("Cancel");
+            Alert alert = new Alert(AlertType.WARNING);
+            alert.setTitle(resources.getString("ui.bin_editor.delete.confirm.single.title"));
+            alert.setHeaderText(resources.getString("ui.bin_editor.delete.confirm.single.header"));
+            alert.setContentText(resources.getString("ui.bin_editor.delete.confirm.single.content").formatted(bin.getName()));
+
+            ButtonType buttonDelete = new ButtonType(resources.getString("ui.bin_editor.delete.confirm.single.delete"));
+            ButtonType buttonCancel = new ButtonType(resources.getString("ui.bin_editor.delete.confirm.single.cancel"));
             alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
 
             if (alert.showAndWait().orElse(buttonCancel) == buttonCancel) {
@@ -193,7 +197,7 @@ public class BinEditor {
         this.app.getBinRegistry().deleteBin(bin);
 
         if (displayed.get() == bin) {
-            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().getFirst());
+            this.display(selectionModel.isEmpty() ? app.getBinRegistry().getGlobalBin() : selectionModel.getSelectedItems().getFirst());
         }
 
         return true;
@@ -208,18 +212,19 @@ public class BinEditor {
             return deleteBin(getAtIndex(bins, 0), shouldAlert);
         }
 
-        bins.removeIf(b -> b == BinRegistry.GLOBAL_BIN);
+        bins.removeIf(ReplayBin::isGlobalBin);
         boolean allEmpty = bins.stream().allMatch(ReplayBin::isEmpty);
         if (!allEmpty && shouldAlert) {
-            String binNames = bins.stream().map(b -> '"' + b.getName() + '"').collect(Collectors.joining(","));
+            ResourceBundle resources = app.getResources();
+            String binNames = bins.stream().map(b -> '"' + b.getName() + '"').collect(Collectors.joining(", "));
 
             Alert alert = new Alert(AlertType.WARNING);
-            alert.setTitle("Confirm Bin Deletion");
-            alert.setHeaderText("One or more of the bins selected for deletion contain at least one replay!");
-            alert.setContentText("Deleting a bin is irreversible! Are you sure you want to delete: " + binNames + "?");
+            alert.setTitle(resources.getString("ui.bin_editor.delete.confirm.multiple.title"));
+            alert.setHeaderText(resources.getString("ui.bin_editor.delete.confirm.multiple.header"));
+            alert.setContentText(resources.getString("ui.bin_editor.delete.confirm.multiple.content").formatted(binNames));
 
-            ButtonType buttonDelete = new ButtonType("Delete");
-            ButtonType buttonCancel = new ButtonType("Cancel");
+            ButtonType buttonDelete = new ButtonType(resources.getString("ui.bin_editor.delete.confirm.multiple.delete"));
+            ButtonType buttonCancel = new ButtonType(resources.getString("ui.bin_editor.delete.confirm.multiple.cancel"));
             alert.getButtonTypes().setAll(buttonDelete, buttonCancel);
 
             if (alert.showAndWait().orElse(buttonCancel) == buttonCancel) {
@@ -252,7 +257,7 @@ public class BinEditor {
 
         this.selectionModel.clearSelection(bin);
         if (displayed.get() == bin) {
-            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().getFirst());
+            this.display(selectionModel.isEmpty() ? app.getBinRegistry().getGlobalBin() : selectionModel.getSelectedItems().getFirst());
         }
 
         bin.setHidden(true);

@@ -51,8 +51,8 @@ public final class App extends Application {
     private ProgressiveTaskExecutor taskExecutor;
     private CachingHandler cacheHandler;
 
-    private final BinRegistry binRegistry = new BinRegistry();
-    private final TagRegistry tagRegistry = new TagRegistry();
+    private BinRegistry binRegistry;
+    private TagRegistry tagRegistry;
 
     private File installDirectory;
     private File binsFile;
@@ -92,6 +92,9 @@ public final class App extends Application {
         this.stage = stage;
         this.resources = ResourceBundle.getBundle("lang.", getLocale(ApplicationSettings.LOCALE.get()));
 
+        this.binRegistry = new BinRegistry();
+        this.tagRegistry = new TagRegistry();
+
         var appFXML = FXUtils.<Parent, AppController>loadFXML("/layout/Root", resources);
         Scene scene = new Scene(appFXML.root());
         this.controller = appFXML.controller();
@@ -119,7 +122,7 @@ public final class App extends Application {
         stage.setScene(scene);
         stage.show();
 
-        this.controller.getBinEditor().display(BinRegistry.GLOBAL_BIN);
+        this.controller.getBinEditor().display(binRegistry.getGlobalBin());
 
         // Replay setup
         this.reloadReplays().thenRunAsync(() -> binRegistry.loadBinsFromFile(binsFile, false), Platform::runLater);
@@ -193,7 +196,7 @@ public final class App extends Application {
 
             Scene scene = new Scene(root);
             Stage stage = new Stage();
-            stage.setTitle("Aftershock Replay Manager - Application Settings");
+            stage.setTitle(resources.getString("ui.settings.title"));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setResizable(false);
             stage.setScene(scene);

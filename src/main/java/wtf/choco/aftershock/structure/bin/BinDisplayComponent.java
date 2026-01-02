@@ -20,9 +20,10 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
+
+import java.util.ResourceBundle;
 
 public class BinDisplayComponent extends VBox {
 
@@ -48,28 +49,30 @@ public class BinDisplayComponent extends VBox {
         this.label = new Label(bin.getName());
         this.nameEditor = new TextField();
 
+        ResourceBundle resources = App.getInstance().getResources();
+
         // Context menu
         this.contextMenu = new ContextMenu();
-        MenuItem loadAllReplays = new MenuItem("Load all replays");
-        loadAllReplays.setOnAction(_ -> BinRegistry.GLOBAL_BIN.forEach(replay -> replay.setLoaded(bin.hasReplay(replay))));
-        MenuItem unloadAllReplays = new MenuItem("Unload all replays");
+        MenuItem loadAllReplays = new MenuItem(resources.getString("ui.bin_editor.bin.context_menu.load_all"));
+        loadAllReplays.setOnAction(_ -> App.getInstance().getBinRegistry().getGlobalBin().forEach(replay -> replay.setLoaded(bin.hasReplay(replay))));
+        MenuItem unloadAllReplays = new MenuItem(resources.getString("ui.bin_editor.bin.context_menu.unload_all"));
         unloadAllReplays.setOnAction(_ -> bin.forEach(replay -> replay.setLoaded(false)));
 
-        MenuItem cloneBin = new MenuItem("Clone");
+        MenuItem cloneBin = new MenuItem(resources.getString("ui.bin_editor.bin.context_menu.clone"));
         cloneBin.setOnAction(_ -> App.getInstance().getBinRegistry().addBin(new ReplayBin(bin)));
 
         this.contextMenu.getItems().addAll(loadAllReplays, unloadAllReplays, new SeparatorMenuItem(), cloneBin);
 
         // Menu items that should not be accessible to the global bin
         if (!bin.isGlobalBin()) {
-            MenuItem renameBin = new MenuItem("Rename");
+            MenuItem renameBin = new MenuItem(resources.getString("ui.bin_editor.bin.context_menu.rename"));
             renameBin.setOnAction(_ -> openNameEditor());
-            MenuItem clearBin = new MenuItem("Clear");
+            MenuItem clearBin = new MenuItem(resources.getString("ui.bin_editor.bin.context_menu.clear"));
             clearBin.setOnAction(_ -> bin.clear());
-            MenuItem deleteBin = new MenuItem("Delete");
+            MenuItem deleteBin = new MenuItem(resources.getString("ui.bin_editor.bin.context_menu.delete"));
             deleteBin.setOnAction(_ -> App.getInstance().getController().getBinEditor().deleteBin(bin, !App.getInstance().getKeybindRegistry().isDown(KeyCode.CONTROL)));
 
-            MenuItem hideBin = new MenuItem("Hide");
+            MenuItem hideBin = new MenuItem(resources.getString("ui.bin_editor.bin.context_menu.hide"));
             hideBin.setOnAction(_ -> App.getInstance().getController().getBinEditor().hideBin(bin));
 
             this.contextMenu.getItems().addAll(renameBin, clearBin, deleteBin, new SeparatorMenuItem(), hideBin);
@@ -146,7 +149,7 @@ public class BinDisplayComponent extends VBox {
             if (dragboard.hasString()) {
                 String[] replayIds = dragboard.getString().split(";");
                 for (String replayId : replayIds) {
-                    ReplayEntry replay = BinRegistry.GLOBAL_BIN.getReplayById(replayId);
+                    ReplayEntry replay = App.getInstance().getBinRegistry().getGlobalBin().getReplayById(replayId);
                     if (replay == null || bin.hasReplay(replay)) {
                         continue;
                     }

@@ -16,12 +16,17 @@ import java.util.UUID;
 
 public class BinRegistry  {
 
-    public static final ReplayBin GLOBAL_BIN = new ReplayBin(UUID.randomUUID(), "Global", true);
-
     private final ObservableList<ReplayBin> bins = FXCollections.observableArrayList();
 
+    private final ReplayBin globalBin;
+
     public BinRegistry() {
-        this.addBin(GLOBAL_BIN);
+        this.globalBin = new ReplayBin(UUID.randomUUID(), "Global", true);
+        this.addBin(globalBin);
+    }
+
+    public ReplayBin getGlobalBin() {
+        return globalBin;
     }
 
     public ReplayBin createBin(String name) {
@@ -64,7 +69,7 @@ public class BinRegistry  {
 
     public void clearBins(boolean clearGlobal) {
         for (ReplayBin bin : bins) {
-            if (!clearGlobal && bin == GLOBAL_BIN) {
+            if (!clearGlobal && bin.isGlobalBin()) {
                 continue;
             }
 
@@ -74,11 +79,7 @@ public class BinRegistry  {
 
     public void deleteBins(boolean deleteGlobal) {
         this.clearBins(deleteGlobal);
-        this.bins.clear();
-
-        if (!deleteGlobal) {
-            this.addBin(GLOBAL_BIN);
-        }
+        this.bins.removeIf(bin -> deleteGlobal || !bin.isGlobalBin());
     }
 
     public ObservableList<ReplayBin> getBins() {
@@ -114,7 +115,7 @@ public class BinRegistry  {
 
             JsonArray replays = binRoot.getAsJsonArray("replays");
             for (JsonElement replayIdElement : replays) {
-                ReplayEntry replay = GLOBAL_BIN.getReplayById(replayIdElement.getAsString());
+                ReplayEntry replay = globalBin.getReplayById(replayIdElement.getAsString());
                 if (replay == null) {
                     continue;
                 }
@@ -131,7 +132,7 @@ public class BinRegistry  {
         JsonArray root = new JsonArray();
 
         for (ReplayBin bin : bins) {
-            if (bin == GLOBAL_BIN) { // Don't write global bin to file
+            if (bin.isGlobalBin()) { // Don't write global bin to file
                 continue;
             }
 

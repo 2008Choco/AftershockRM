@@ -160,7 +160,6 @@ public class CachingHandler {
     public void loadReplaysFromCache(PublicTask<?> task, boolean clearBins) throws IOException, JsonParseException {
         if (clearBins) {
             this.app.getBinRegistry().clearBins(true);
-            BinRegistry.GLOBAL_BIN.clear();
         }
 
         Logger logger = app.getLogger();
@@ -206,7 +205,7 @@ public class CachingHandler {
                 this.app.getController().updateLoadedLabel();
             });
 
-            BinRegistry.GLOBAL_BIN.addReplay(replayEntry);
+            this.app.getBinRegistry().getGlobalBin().addReplay(replayEntry);
             loaded++;
         }
 
@@ -250,7 +249,7 @@ public class CachingHandler {
                 this.app.getController().updateLoadedLabel();
             });
 
-            BinRegistry.GLOBAL_BIN.addReplay(replayEntry);
+            this.app.getBinRegistry().getGlobalBin().addReplay(replayEntry);
             loaded++;
         }
 

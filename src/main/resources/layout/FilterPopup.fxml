@@ -12,6 +12,6 @@
   </padding>
 
   <VBox>
-    <Label text="Filter options:" />
+    <Label text="%ui.table.filter.options" />
   </VBox>
 </StackPane>

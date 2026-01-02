@@ -4,7 +4,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 import wtf.choco.aftershock.util.Preconditions;
 
@@ -21,6 +20,8 @@ public class ReplayBin implements Iterable<ReplayEntry> {
     public static final Image BIN_GRAPHIC_EMPTY = new Image(App.class.getResourceAsStream("/icons/folder.png"));
     public static final Image BIN_GRAPHIC_FULL = new Image(App.class.getResourceAsStream("/icons/folder-full.png"));
 
+    private static boolean globalBinCreated = false;
+
     private final UUID uuid;
     private final ObservableList<ReplayEntry> replays;
     private final Map<String, ReplayEntry> byId;
@@ -31,7 +32,7 @@ public class ReplayBin implements Iterable<ReplayEntry> {
     private boolean hidden;
 
     public ReplayBin(UUID uuid, String name, Collection<ReplayEntry> replays, boolean isGlobalBin) {
-        Preconditions.checkState(!isGlobalBin || (isGlobalBin && BinRegistry.GLOBAL_BIN == null), "Cannot create more than one global bin. Refer to BinRegistry.GLOBAL_BIN");
+        Preconditions.checkState(!isGlobalBin || !globalBinCreated, "Cannot create more than one global bin. Refer to BinRegistry#getGlobalBin()");
 
         this.uuid = uuid;
         this.name = name;
@@ -43,10 +44,12 @@ public class ReplayBin implements Iterable<ReplayEntry> {
         for (ReplayEntry replay : replays) {
             this.byId.put(replay.id(), replay);
         }
+
+        globalBinCreated = true;
     }
 
     public ReplayBin(UUID uuid, String name, boolean isGlobalBin) {
-        Preconditions.checkState(!isGlobalBin || (isGlobalBin && BinRegistry.GLOBAL_BIN == null), "Cannot create more than one global bin. Refer to BinRegistry.GLOBAL_BIN");
+        Preconditions.checkState(!isGlobalBin || !globalBinCreated, "Cannot create more than one global bin. Refer to BinRegistry#getGlobalBin()");
 
         this.uuid = uuid;
         this.name = name;
@@ -54,6 +57,8 @@ public class ReplayBin implements Iterable<ReplayEntry> {
         this.byId = new HashMap<>(0);
         this.globalBin = isGlobalBin;
         this.display = new BinDisplayComponent(this, BIN_GRAPHIC_EMPTY);
+
+        globalBinCreated = true;
     }
 
     public ReplayBin(UUID uuid, String name) {

@@ -33,7 +33,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
@@ -82,8 +81,6 @@ import java.util.concurrent.CompletionException;
 import java.util.logging.Logger;
 
 public final class AppController {
-
-    public static final DataFormat DATA_FORMAT_REPLAY_ENTRY = new DataFormat();
 
     private static final Image DRAG_IMAGE = new Image(App.class.getResourceAsStream("/icons/file.png"));
 
@@ -159,7 +156,7 @@ public final class AppController {
         this.replayTable.itemsProperty().addListener((_, _, newValue) -> setLabel(labelListed, "ui.footer.listed", newValue.size()));
         selectionModel.getSelectedItems().addListener(this::onSelectedItemsChange);
 
-        BinRegistry.GLOBAL_BIN.getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) c -> updateLoadedLabel());
+        app.getBinRegistry().getGlobalBin().getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) c -> updateLoadedLabel());
 
         this.replayTable.setOnMouseClicked(_ -> replayTable.requestFocus());
         this.replayTable.setOnDragDetected(_ -> onReplayTableDragStart());
@@ -245,7 +242,8 @@ public final class AppController {
 
         if (dragboard.hasFiles()) {
             List<File> files = dragboard.getFiles();
-            files.removeIf(file -> BinRegistry.GLOBAL_BIN.hasReplay(file.getName().substring(0, file.getName().lastIndexOf('.'))));
+            ReplayBin globalBin = app.getBinRegistry().getGlobalBin();
+            files.removeIf(file -> globalBin.hasReplay(file.getName().substring(0, file.getName().lastIndexOf('.'))));
 
             if (!files.isEmpty()) {
                 CachingHandler cacheHandler = App.getInstance().getCacheHandler();
@@ -279,7 +277,7 @@ public final class AppController {
 
             app.getTaskExecutor().execute(task -> {
                 String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
-                task.updateMessage("Fetching file...");
+                task.updateMessage(resources.getString("ui.progress.fetching_file"));
 
                 try (ReadableByteChannel readableByteChannel = Channels.newChannel(uri.toURL().openStream())) {
                     File file = new File(ApplicationSettings.REPLAY_DIRECTORY.get(), replayName);
@@ -287,25 +285,25 @@ public final class AppController {
                         return;
                     }
 
-                    task.updateMessage("Downloading " + replayName.substring(0, replayName.lastIndexOf('.')) + "...");
+                    task.updateMessage(resources.getString("ui.progress.downloading_file").formatted(replayName.substring(0, replayName.lastIndexOf('.'))));
                     task.updateProgress(1, 4);
 
                     Logger logger = app.getLogger();
                     logger.info("Downloading file \"" + replayName + "\" (from " + uri + ")");
 
                     FileOutputStream fileOutputStream = new FileOutputStream(file);
-                    fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+                    fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, fileOutputStream.getChannel().size());
                     fileOutputStream.close();
                     logger.info("Done");
 
-                    task.updateMessage("Caching replay headers...");
+                    task.updateMessage(resources.getString("ui.progress.caching_replay_headers"));
                     task.updateProgress(2, 4);
 
                     List<File> toCache = List.of(file);
                     CachingHandler cacheHandler = App.getInstance().getCacheHandler();
                     cacheHandler.cacheReplays(null, toCache);
 
-                    task.updateMessage("Loading replay...");
+                    task.updateMessage(resources.getString("ui.progress.loading_replay"));
                     task.updateProgress(3, 4);
                     cacheHandler.loadReplays(null, toCache);
 
@@ -322,29 +320,30 @@ public final class AppController {
     }
 
     private ContextMenu createBinEditorContextMenu() {
-        MenuItem showHiddenBins = new MenuItem("Unhide bins");
+        MenuItem showHiddenBins = new MenuItem(resources.getString("ui.bin_editor.context_menu.unhide_bins"));
         showHiddenBins.setOnAction(e -> new ArrayList<>(binEditor.getHidden()).forEach(binEditor::unhide));
 
         return new ContextMenu(showHiddenBins);
     }
 
     private ContextMenu createReplayTableContextMenu() {
-        MenuItem openFileLocation = new MenuItem("Open file location...");
+        MenuItem openFileLocation = new MenuItem(resources.getString("ui.table.context_menu.open_file_location"));
         openFileLocation.setOnAction(_ -> onOpenFileLocation());
 
-        MenuItem openWithReplayEditor = new MenuItem("Open with Replay Editor...");
+        MenuItem openWithReplayEditor = new MenuItem(resources.getString("ui.table.context_menu.open_with_replay_editor"));
         openWithReplayEditor.setOnAction(_ -> onOpenWithReplayEditor());
         openWithReplayEditor.disableProperty().bind(ApplicationSettings.REPLAY_EDITOR_PATH.property().isEmpty());
 
         // "Send to..." bins menu item (conditional!)
         // We only want to add the "Send to..." context menu if there is at least one bin
+        ReplayBin globalBin = App.getInstance().getBinRegistry().getGlobalBin();
         ObservableList<ReplayBin> bins = App.getInstance().getBinRegistry().getBins();
         IntegerBinding binCountBinding = Bindings.size(bins);
-        BooleanBinding propertyHasSufficientBins = binEditor.displayedProperty().isEqualTo(BinRegistry.GLOBAL_BIN).and(binCountBinding.greaterThan(1))
-            .or(binEditor.displayedProperty().isNotEqualTo(BinRegistry.GLOBAL_BIN).and(binCountBinding.greaterThan(2)));
+        BooleanBinding propertyHasSufficientBins = binEditor.displayedProperty().isEqualTo(globalBin).and(binCountBinding.greaterThan(1))
+            .or(binEditor.displayedProperty().isNotEqualTo(globalBin).and(binCountBinding.greaterThan(2)));
 
         MenuItem separator = new SeparatorMenuItem();
-        Menu sendTo = new Menu("Send to...");
+        Menu sendTo = new Menu(resources.getString("ui.table.context_menu.send_to"));
         separator.visibleProperty().bindBidirectional(sendTo.visibleProperty());
         sendTo.visibleProperty().bind(propertyHasSufficientBins);
 
@@ -565,7 +564,7 @@ public final class AppController {
 
     public void updateLoadedLabel() {
         int loaded = 0;
-        for (ReplayEntry replay : BinRegistry.GLOBAL_BIN.getReplays()) {
+        for (ReplayEntry replay : App.getInstance().getBinRegistry().getGlobalBin().getReplays()) {
             if (replay.isLoaded()) {
                 loaded++;
             }

@@ -65,7 +65,7 @@
     <SplitPane fx:id="splitPane" HBox.hgrow="ALWAYS">
       <TableView fx:id="replayTable" editable="true" focusTraversable="false" onKeyPressed="#tableKeyboardControl" style="-fx-focus-color: transparent;">
         <placeholder>
-          <Label text="Select a bin to display" />
+          <Label text="%ui.table.empty" />
         </placeholder>
         <columns>
           <TableColumn fx:id="columnLoaded" editable="true" prefWidth="60" sortable="false" text="%ui.table.column.loaded" />
@@ -85,7 +85,7 @@
 
   <HBox prefHeight="25.0">
     <HBox alignment="CENTER_LEFT" spacing="15.0">
-      <Button focusTraversable="false" graphicTextGap="10.0" onAction="#toggleBinEditor" prefWidth="75.0" text="Bins">
+      <Button focusTraversable="false" graphicTextGap="10.0" onAction="#toggleBinEditor" prefWidth="75.0" text="%ui.footer.toggle_bin_editor">
         <graphic>
           <ImageView>
             <image>
@@ -109,7 +109,7 @@
       <ProgressBar fx:id="progressBar" focusTraversable="false" prefWidth="200.0" progress="0.0" visible="false" />
 
       <StackPane alignment="CENTER_RIGHT">
-        <TextField fx:id="filterBar" focusTraversable="false" onKeyPressed="#exitFilter" onKeyTyped="#updateFilter" prefHeight="25.0" prefWidth="200.0" promptText="Filter... (Ctrl + F)" />
+        <TextField fx:id="filterBar" focusTraversable="false" onKeyPressed="#exitFilter" onKeyTyped="#updateFilter" prefHeight="25.0" prefWidth="200.0" promptText="%ui.table.filter.name" />
         <ImageView fx:id="filterOptionsImage" onMouseClicked="#toggleFilterMenu" opacity="0.25" pickOnBounds="true">
           <StackPane.margin>
             <Insets right="10.0" />
@@ -123,7 +123,7 @@
 
       <Hyperlink id="donation" contentDisplay="RIGHT" onAction="#openLink" text="%ui.footer.support">
         <tooltip>
-          <Tooltip text="Support this project" />
+          <Tooltip text="%ui.footer.support.tooltip" />
         </tooltip>
 
         <graphic>
@@ -137,7 +137,7 @@
 
       <Hyperlink id="source" contentDisplay="RIGHT" onAction="#openLink" text="%ui.footer.source">
         <tooltip>
-          <Tooltip text="View the source code" />
+          <Tooltip text="%ui.footer.source.tooltip" />
         </tooltip>
 
         <graphic>
