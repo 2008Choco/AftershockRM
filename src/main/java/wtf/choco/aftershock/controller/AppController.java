@@ -363,7 +363,11 @@ public final class AppController {
                 }
 
                 MenuItem item = new MenuItem(bin.getName());
-                item.setOnAction(_ -> replayTable.getSelectionModel().getSelectedItems().forEach(bin::addReplay));
+                item.setOnAction(_ -> replayTable.getSelectionModel().getSelectedItems().forEach(replay -> {
+                    if (!bin.hasReplay(replay)) {
+                        bin.addReplay(replay);
+                    }
+                }));
                 item.visibleProperty().bind(binEditor.displayedProperty().isNotEqualTo(bin));
                 sendTo.getItems().add(item);
             }
