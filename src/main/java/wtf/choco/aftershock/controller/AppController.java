@@ -169,6 +169,7 @@ public final class AppController {
 
         // Zero the labels on init (no placeholder %s should be visible)
         this.setLabel(labelListed, "ui.footer.listed", 0);
+        this.setLabel(labelLoaded, "ui.footer.loaded", 0);
         this.setLabel(labelSelected, "ui.footer.selected", 0);
     }
 
