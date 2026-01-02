@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.IntegerBinding;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -344,7 +345,9 @@ public final class AppController {
         // "Send to..." bins menu item (conditional!)
         // We only want to add the "Send to..." context menu if there is at least one bin
         ObservableList<ReplayBin> bins = App.getInstance().getBinRegistry().getBins();
-        BooleanBinding propertyHasSufficientBins = Bindings.size(bins).greaterThan(1); // TODO: Don't show if bin size is 1 and we're displaying a non-global bin
+        IntegerBinding binCountBinding = Bindings.size(bins);
+        BooleanBinding propertyHasSufficientBins = binEditor.displayedProperty().isEqualTo(BinRegistry.GLOBAL_BIN).and(binCountBinding.greaterThan(1))
+            .or(binEditor.displayedProperty().isNotEqualTo(BinRegistry.GLOBAL_BIN).and(binCountBinding.greaterThan(2)));
 
         MenuItem separator = new SeparatorMenuItem();
         Menu sendTo = new Menu("Send to...");
