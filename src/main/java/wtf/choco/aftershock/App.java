@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.concurrent.Worker;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
@@ -26,9 +25,9 @@ import wtf.choco.aftershock.util.FXUtils;
 import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Logger;
 
@@ -123,9 +122,7 @@ public final class App extends Application {
         this.controller.getBinEditor().display(BinRegistry.GLOBAL_BIN);
 
         // Replay setup
-        this.reloadReplays((_, _) -> {
-            Platform.runLater(() -> binRegistry.loadBinsFromFile(binsFile, false));
-        });
+        this.reloadReplays().thenRunAsync(() -> binRegistry.loadBinsFromFile(binsFile, false), Platform::runLater);
     }
 
     @Override
@@ -212,17 +209,12 @@ public final class App extends Application {
         this.settingsStage = null;
     }
 
-    public void reloadReplays(BiConsumer<?, Worker.State> whenCompleted) {
-        this.taskExecutor.execute(task -> {
+    public CompletableFuture<ProgressiveTaskExecutor.TaskResult<Void>> reloadReplays() {
+        return taskExecutor.execute(task -> {
             this.cacheHandler.cacheReplays(task);
-            try {
-                this.cacheHandler.loadReplayData(replayDataFile);
-                this.cacheHandler.loadReplaysFromCache(task);
-            } catch (Exception e) {
-                // TODO: This really sucks. I need better exception handling!
-                e.printStackTrace();
-            }
-        }, whenCompleted, primaryExecutor);
+            this.cacheHandler.loadReplayData(replayDataFile);
+            this.cacheHandler.loadReplaysFromCache(task);
+        }, primaryExecutor);
     }
 
     private Locale getLocale(String tag) {

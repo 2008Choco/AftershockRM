@@ -105,11 +105,11 @@ public final class SettingsPanelController {
             try {
                 ApplicationSettings.save(app);
             } catch (IOException e) {
-                e.printStackTrace();;
+                e.printStackTrace();
             }
         });
         if (replayDirectoryChanged) {
-            app.reloadReplays(null);
+            app.reloadReplays();
         }
 
         Logger logger = app.getLogger();

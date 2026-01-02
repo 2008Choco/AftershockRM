@@ -75,6 +75,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.StringJoiner;
+import java.util.concurrent.CompletionException;
 import java.util.logging.Logger;
 
 public final class AppController {
@@ -247,23 +248,16 @@ public final class AppController {
                 CachingHandler cacheHandler = App.getInstance().getCacheHandler();
                 app.getTaskExecutor().execute(task -> {
                     String replayDirectory = ApplicationSettings.REPLAY_DIRECTORY.get();
-                    files.forEach(file -> {
+                    for (File file : files) {
                         File demoFile = new File(replayDirectory, file.getName());
-
-                        try {
-                            Files.copy(file.toPath(), demoFile.toPath());
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                        }
-                    });
+                        Files.copy(file.toPath(), demoFile.toPath());
+                    }
 
                     cacheHandler.cacheReplays(task, files);
-                    try {
-                        cacheHandler.loadReplays(task, files);
-                    } catch (Exception e1) {
-                        // TODO: This really sucks, I need better exception handling!
-                        e1.printStackTrace();
-                    }
+                    cacheHandler.loadReplays(task, files);
+                }).exceptionally(e -> {
+                    e.printStackTrace();
+                    return null;
                 });
             }
 
@@ -274,9 +268,9 @@ public final class AppController {
             URL url = null;
             try {
                 url = new URL(urlRaw);
-            } catch (MalformedURLException ex) {
+            } catch (MalformedURLException e) {
                 app.getLogger().warning("Malformed URL. Could not download replay");
-                ex.printStackTrace();
+                e.printStackTrace();
             }
 
             if (url == null) {
@@ -284,9 +278,9 @@ public final class AppController {
             }
 
             final URL urlFinal = url; // Stupid lambdas...
-            app.getTaskExecutor().execute(t -> {
+            app.getTaskExecutor().execute(task -> {
                 String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
-                t.updateMessage("Fetching file...");
+                task.updateMessage("Fetching file...");
 
                 try (ReadableByteChannel readableByteChannel = Channels.newChannel(urlFinal.openStream())) {
                     File file = new File(ApplicationSettings.REPLAY_DIRECTORY.get(), replayName);
@@ -294,8 +288,8 @@ public final class AppController {
                         return;
                     }
 
-                    t.updateMessage("Downloading " + replayName.substring(0, replayName.lastIndexOf('.')) + "...");
-                    t.updateProgress(1, 4);
+                    task.updateMessage("Downloading " + replayName.substring(0, replayName.lastIndexOf('.')) + "...");
+                    task.updateProgress(1, 4);
 
                     Logger logger = app.getLogger();
                     logger.info("Downloading file \"" + replayName + "\" (from " + urlFinal + ")");
@@ -305,22 +299,23 @@ public final class AppController {
                     fileOutputStream.close();
                     logger.info("Done");
 
-                    t.updateMessage("Caching replay headers...");
-                    t.updateProgress(2, 4);
+                    task.updateMessage("Caching replay headers...");
+                    task.updateProgress(2, 4);
 
                     List<File> toCache = Arrays.asList(file);
                     CachingHandler cacheHandler = App.getInstance().getCacheHandler();
                     cacheHandler.cacheReplays(null, toCache);
 
-                    t.updateMessage("Loading replay...");
-                    t.updateProgress(3, 4);
+                    task.updateMessage("Loading replay...");
+                    task.updateProgress(3, 4);
                     cacheHandler.loadReplays(null, toCache);
 
-                    t.updateProgress(4, 4);
-                } catch (IOException ex) {
-                    app.getLogger().warning("Could not complete the download due to an IO exception:");
-                    ex.printStackTrace();
+                    task.updateProgress(4, 4);
                 }
+            }).exceptionally(e -> {
+                app.getLogger().warning("Could not complete the download due to an IO exception:");
+                e.printStackTrace();
+                return null;
             });
 
             event.setDropCompleted(true);
@@ -385,8 +380,8 @@ public final class AppController {
         try {
             new ProcessBuilder().command(replayEditorPath, "-open", replayTable.getSelectionModel().getSelectedItems().getFirst().getReplayFile().getAbsolutePath())
                     .redirectError(Redirect.DISCARD).redirectOutput(Redirect.DISCARD).start();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
