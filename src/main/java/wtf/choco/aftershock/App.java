@@ -20,7 +20,6 @@ import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.manager.ProgressiveTaskExecutor;
 import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.replay.schema.ReplayTypeAdapterFactory;
-import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
@@ -51,7 +50,6 @@ public final class App extends Application {
     private Stage settingsStage = null;
 
     private KeybindRegistry keybindRegistry;
-    private ApplicationSettings settings;
     private ProgressiveTaskExecutor taskExecutor;
     private CachingHandler cacheHandler;
 
@@ -86,7 +84,7 @@ public final class App extends Application {
         this.replayDataFile = new File(installDirectory, "replay_data.json");
         this.replayDataFile.createNewFile();
 
-        this.settings = new ApplicationSettings(this);
+        ApplicationSettings.init(this);
         this.cacheHandler = new CachingHandler(this);
     }
 
@@ -94,7 +92,7 @@ public final class App extends Application {
     public void start(Stage stage) {
         // Stage loading
         this.stage = stage;
-        this.resources = ResourceBundle.getBundle("lang.", getLocale(settings.get(ApplicationSettings.LOCALE)));
+        this.resources = ResourceBundle.getBundle("lang.", getLocale(ApplicationSettings.LOCALE.get()));
 
         Pair<Parent, AppController> root = FXUtils.loadFXML("/layout/Root", resources);
         if (root == null) {
@@ -148,7 +146,7 @@ public final class App extends Application {
         this.binRegistry.deleteBins(true);
         this.cacheHandler.writeReplayData(replayDataFile);
         this.tagRegistry.clearTags();
-        this.settings.writeToFile();
+        ApplicationSettings.save(this);
 
         ColouredLogFormatter.get().setLogFile(null);
     }
@@ -191,10 +189,6 @@ public final class App extends Application {
 
     public KeybindRegistry getKeybindRegistry() {
         return keybindRegistry;
-    }
-
-    public ApplicationSettings getSettings() {
-        return settings;
     }
 
     public File getInstallDirectory() {

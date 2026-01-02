@@ -1,6 +1,9 @@
 package wtf.choco.aftershock.controller;
 
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -28,7 +31,9 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.DataFormat;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -68,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.StringJoiner;
 import java.util.logging.Logger;
 
 public final class AppController {
@@ -108,7 +114,7 @@ public final class AppController {
 
     private double lastDividerPositionInfo = 0.70;
 
-    private Popup popup = new Popup();
+    private final Popup popup = new Popup();
 
     private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((replay, term) -> replay.name().toLowerCase().contains(term.toLowerCase()));
 
@@ -137,252 +143,262 @@ public final class AppController {
         StackPane root = FXUtils.loadFXMLRoot("/layout/FilterPopup", resources);
         this.popup.setAutoHide(true);
         this.popup.getContent().add(root);
-        this.popup.setOnHidden(e -> filterOptionsImage.setOpacity(0.5));
+        this.popup.setOnHidden(_ -> filterOptionsImage.setOpacity(0.5));
         this.popup.setWidth(root.getPrefWidth());
         this.popup.setHeight(root.getPrefHeight());
 
         this.filterOptionsImage.setCursor(Cursor.HAND);
 
         // Label update listeners
-        this.replayTable.itemsProperty().addListener((c, oldValue, newValue) -> setLabel(labelListed, "ui.footer.listed", newValue.size()));
-
-        selectionModel.getSelectedItems().addListener((ListChangeListener<ReplayEntry>) c -> {
-            if (!c.next()) {
-                return;
-            }
-
-            this.setLabel(labelSelected, "ui.footer.selected", c.getList().size());
-            if (c.getAddedSize() > 0) {
-                this.openInfoPanel(c.getAddedSubList().get(0));
-                this.splitPane.setDividerPosition(splitPane.getDividers().size() - 1, lastDividerPositionInfo);
-            }
-        });
+        this.replayTable.itemsProperty().addListener((_, _, newValue) -> setLabel(labelListed, "ui.footer.listed", newValue.size()));
+        selectionModel.getSelectedItems().addListener(this::onSelectedItemsChange);
 
         BinRegistry.GLOBAL_BIN.getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) c -> updateLoadedLabel());
 
-        this.replayTable.setOnMouseClicked(e -> replayTable.requestFocus());
-        this.replayTable.setOnDragDetected(e -> {
-            var selection = replayTable.getSelectionModel();
-            if (selection.isEmpty()) {
-                return;
-            }
-
-            Dragboard dragboard = replayTable.startDragAndDrop(TransferMode.COPY_OR_MOVE);
-            dragboard.setDragView(DRAG_IMAGE);
-
-            ClipboardContent clipboard = new ClipboardContent();
-            StringBuilder replays = new StringBuilder();
-            List<File> files = new ArrayList<>(selection.getSelectedItems().size());
-            for (ReplayEntry replay : selection.getSelectedItems()) {
-                replays.append(replay.id());
-                replays.append(";");
-
-                files.add(replay.getReplayFile());
-            }
-
-            clipboard.putFiles(files);
-            clipboard.putString(replays.toString().substring(0, replays.length() - 1));
-            dragboard.setContent(clipboard);
-        });
-
-        this.replayTable.setOnDragOver(e -> {
-            Dragboard dragboard = e.getDragboard();
-            if (e.getGestureSource() == replayTable) {
-                return;
-            }
-
-            if (dragboard.hasFiles()) {
-                for (File file : dragboard.getFiles()) {
-                    if (!file.getName().endsWith(".replay")) {
-                        return;
-                    }
-                }
-
-                e.acceptTransferModes(TransferMode.COPY);
-            }
-
-            else if (dragboard.hasUrl()) {
-                String url = dragboard.getUrl();
-                if (!url.endsWith(".replay")) {
-                    return;
-                }
-
-                e.acceptTransferModes(TransferMode.COPY);
-            }
-        });
-
-        this.replayTable.setOnDragDropped(e -> {
-            Dragboard dragboard = e.getDragboard();
-            if (dragboard.hasFiles()) {
-                List<File> files = dragboard.getFiles();
-                files.removeIf(f -> BinRegistry.GLOBAL_BIN.hasReplay(f.getName().substring(0, f.getName().lastIndexOf('.'))));
-
-                if (!files.isEmpty()) {
-                    CachingHandler cacheHandler = App.getInstance().getCacheHandler();
-                    app.getTaskExecutor().execute(t -> {
-                        String replayDirectory = app.getSettings().get(ApplicationSettings.REPLAY_DIRECTORY);
-                        files.forEach(f -> {
-                            File demoFile = new File(replayDirectory, f.getName());
-
-                            try {
-                                Files.copy(f.toPath(), demoFile.toPath());
-                            } catch (IOException e1) {
-                                e1.printStackTrace();
-                            }
-                        });
-
-                        cacheHandler.cacheReplays(t, files);
-                        try {
-                            cacheHandler.loadReplays(t, files);
-                        } catch (Exception e1) {
-                            // TODO: This really sucks, I need better exception handling!
-                            e1.printStackTrace();
-                        }
-                    });
-                }
-
-                e.setDropCompleted(true);
-            }
-
-            else if (dragboard.hasUrl()) {
-                String urlRaw = dragboard.getUrl();
-
-                URL url = null;
-                try {
-                    url = new URL(urlRaw);
-                } catch (MalformedURLException ex) {
-                    app.getLogger().warning("Malformed URL. Could not download replay");
-                    ex.printStackTrace();
-                }
-
-                if (url == null) {
-                    return;
-                }
-
-                final URL urlFinal = url; // Stupid lambdas...
-                app.getTaskExecutor().execute(t -> {
-                    String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
-                    t.updateMessage("Fetching file...");
-
-                    try (ReadableByteChannel readableByteChannel = Channels.newChannel(urlFinal.openStream())) {
-                        File file = new File(app.getSettings().get(ApplicationSettings.REPLAY_DIRECTORY), replayName);
-                        if (!file.createNewFile()) {
-                            return;
-                        }
-
-                        t.updateMessage("Downloading " + replayName.substring(0, replayName.lastIndexOf('.')) + "...");
-                        t.updateProgress(1, 4);
-
-                        Logger logger = app.getLogger();
-                        logger.info("Downloading file \"" + replayName + "\" (from " + urlFinal + ")");
-
-                        FileOutputStream fileOutputStream = new FileOutputStream(file);
-                        fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-                        fileOutputStream.close();
-                        logger.info("Done");
-
-                        t.updateMessage("Caching replay headers...");
-                        t.updateProgress(2, 4);
-
-                        List<File> toCache = Arrays.asList(file);
-                        CachingHandler cacheHandler = App.getInstance().getCacheHandler();
-                        cacheHandler.cacheReplays(null, toCache);
-
-                        t.updateMessage("Loading replay...");
-                        t.updateProgress(3, 4);
-                        cacheHandler.loadReplays(null, toCache);
-
-                        t.updateProgress(4, 4);
-                    } catch (IOException ex) {
-                        app.getLogger().warning("Could not complete the download due to an IO exception:");
-                        ex.printStackTrace();
-                    }
-                });
-
-                e.setDropCompleted(true);
-            }
-        });
+        this.replayTable.setOnMouseClicked(_ -> replayTable.requestFocus());
+        this.replayTable.setOnDragDetected(_ -> onReplayTableDragStart());
+        this.replayTable.setOnDragOver(this::onReplayTableDragEnter);
+        this.replayTable.setOnDragDropped(this::onReplayTableDragDropped);
 
         this.binEditor = new BinEditor(app, this, binEditorPane, binEditorList);
 
-        ContextMenu binEditorContextMenu = new ContextMenu();
-        MenuItem showHiddenBins = new MenuItem("Unhide bins");
-        showHiddenBins.setOnAction(e -> new ArrayList<>(binEditor.getHidden()).forEach(binEditor::unhide));
-        binEditorContextMenu.getItems().add(showHiddenBins);
-        this.binEditorScrollPane.setContextMenu(binEditorContextMenu);
+        this.binEditorScrollPane.setContextMenu(createBinEditorContextMenu());
 
-        MenuItem openFileLocation = new MenuItem("Open file location...");
-        openFileLocation.setOnAction(event -> {
-            try {
-                String selectedReplayFilePath = replayTable.getSelectionModel().getSelectedItems().getFirst().getReplayFile().getAbsolutePath();
-                new ProcessBuilder("explorer.exe", "/select,", selectedReplayFilePath)
-                    .redirectOutput(Redirect.DISCARD)
-                    .redirectError(Redirect.DISCARD)
-                    .start();
-            } catch (IOException e) {
-                e.printStackTrace();
+        this.replayTable.setContextMenu(createReplayTableContextMenu());
+        this.replayTable.setOnContextMenuRequested(this::onReplayTableContextMenuRequested);
+
+        // Zero the labels on init (no placeholder %s should be visible)
+        this.setLabel(labelListed, "ui.footer.listed", 0);
+        this.setLabel(labelSelected, "ui.footer.selected", 0);
+    }
+
+    private void onSelectedItemsChange(ListChangeListener.Change<? extends ReplayEntry> change) {
+        if (!change.next()) {
+            return;
+        }
+
+        this.setLabel(labelSelected, "ui.footer.selected", change.getList().size());
+        if (change.getAddedSize() > 0) {
+            this.openInfoPanel(change.getAddedSubList().get(0));
+            this.splitPane.setDividerPosition(splitPane.getDividers().size() - 1, lastDividerPositionInfo);
+        }
+    }
+
+    private void onReplayTableDragStart() {
+        var selection = replayTable.getSelectionModel();
+        if (selection.isEmpty()) {
+            return;
+        }
+
+        Dragboard dragboard = replayTable.startDragAndDrop(TransferMode.COPY_OR_MOVE);
+        dragboard.setDragView(DRAG_IMAGE);
+
+        ClipboardContent clipboard = new ClipboardContent();
+        StringJoiner replays = new StringJoiner(";");
+        List<File> files = new ArrayList<>(selection.getSelectedItems().size());
+        for (ReplayEntry replay : selection.getSelectedItems()) {
+            replays.add(replay.id());
+            files.add(replay.getReplayFile());
+        }
+
+        clipboard.putFiles(files);
+        clipboard.putString(replays.toString());
+        dragboard.setContent(clipboard);
+    }
+
+    private void onReplayTableDragEnter(DragEvent e) {
+        Dragboard dragboard = e.getDragboard();
+        if (e.getGestureSource() == replayTable) {
+            return;
+        }
+
+        if (dragboard.hasFiles()) {
+            for (File file : dragboard.getFiles()) {
+                if (!file.getName().endsWith(".replay")) {
+                    return;
+                }
             }
-        });
 
-        ContextMenu tableContextMenu = new ContextMenu();
-        MenuItem openWithReplayEditor = new MenuItem("Open with Replay Editor...");
-        openWithReplayEditor.setOnAction(event -> {
-            String replayEditorPath = app.getSettings().get(ApplicationSettings.REPLAY_EDITOR_PATH);
-            if (replayEditorPath == null || replayEditorPath.isBlank()) {
+            e.acceptTransferModes(TransferMode.COPY);
+        }
+
+        else if (dragboard.hasUrl()) {
+            String url = dragboard.getUrl();
+            if (!url.endsWith(".replay")) {
                 return;
             }
 
+            e.acceptTransferModes(TransferMode.COPY);
+        }
+    }
+
+    private void onReplayTableDragDropped(DragEvent event) {
+        App app = App.getInstance();
+        Dragboard dragboard = event.getDragboard();
+
+        if (dragboard.hasFiles()) {
+            List<File> files = dragboard.getFiles();
+            files.removeIf(file -> BinRegistry.GLOBAL_BIN.hasReplay(file.getName().substring(0, file.getName().lastIndexOf('.'))));
+
+            if (!files.isEmpty()) {
+                CachingHandler cacheHandler = App.getInstance().getCacheHandler();
+                app.getTaskExecutor().execute(task -> {
+                    String replayDirectory = ApplicationSettings.REPLAY_DIRECTORY.get();
+                    files.forEach(file -> {
+                        File demoFile = new File(replayDirectory, file.getName());
+
+                        try {
+                            Files.copy(file.toPath(), demoFile.toPath());
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                    });
+
+                    cacheHandler.cacheReplays(task, files);
+                    try {
+                        cacheHandler.loadReplays(task, files);
+                    } catch (Exception e1) {
+                        // TODO: This really sucks, I need better exception handling!
+                        e1.printStackTrace();
+                    }
+                });
+            }
+
+            event.setDropCompleted(true);
+        } else if (dragboard.hasUrl()) {
+            String urlRaw = dragboard.getUrl();
+
+            URL url = null;
             try {
-                new ProcessBuilder().command(replayEditorPath, "-open", replayTable.getSelectionModel().getSelectedItems().getFirst().getReplayFile().getAbsolutePath())
-                    .redirectError(Redirect.DISCARD).redirectOutput(Redirect.DISCARD).start(); // Do something with the output instead. Write to file?
-            } catch (IOException ex) {
+                url = new URL(urlRaw);
+            } catch (MalformedURLException ex) {
+                app.getLogger().warning("Malformed URL. Could not download replay");
                 ex.printStackTrace();
             }
-        });
 
-        tableContextMenu.getItems().addAll(openFileLocation, openWithReplayEditor);
-
-        Menu sendTo = new Menu("Send to...");
-        MenuItem separator = new SeparatorMenuItem();
-
-        this.replayTable.setContextMenu(tableContextMenu);
-
-        this.replayTable.setOnContextMenuRequested(e -> {
-            if (replayTable.getSelectionModel().isEmpty()) {
-                tableContextMenu.hide();
-                e.consume();
+            if (url == null) {
                 return;
             }
 
-            String replayEditorPath = app.getSettings().get(ApplicationSettings.REPLAY_EDITOR_PATH);
-            openWithReplayEditor.setDisable(replayEditorPath == null || replayEditorPath.isBlank());
+            final URL urlFinal = url; // Stupid lambdas...
+            app.getTaskExecutor().execute(t -> {
+                String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
+                t.updateMessage("Fetching file...");
 
-            BinRegistry binRegistry = app.getBinRegistry();
+                try (ReadableByteChannel readableByteChannel = Channels.newChannel(urlFinal.openStream())) {
+                    File file = new File(ApplicationSettings.REPLAY_DIRECTORY.get(), replayName);
+                    if (!file.createNewFile()) {
+                        return;
+                    }
 
-            tableContextMenu.getItems().add(2, separator);
-            tableContextMenu.getItems().add(3, sendTo);
+                    t.updateMessage("Downloading " + replayName.substring(0, replayName.lastIndexOf('.')) + "...");
+                    t.updateProgress(1, 4);
 
+                    Logger logger = app.getLogger();
+                    logger.info("Downloading file \"" + replayName + "\" (from " + urlFinal + ")");
+
+                    FileOutputStream fileOutputStream = new FileOutputStream(file);
+                    fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+                    fileOutputStream.close();
+                    logger.info("Done");
+
+                    t.updateMessage("Caching replay headers...");
+                    t.updateProgress(2, 4);
+
+                    List<File> toCache = Arrays.asList(file);
+                    CachingHandler cacheHandler = App.getInstance().getCacheHandler();
+                    cacheHandler.cacheReplays(null, toCache);
+
+                    t.updateMessage("Loading replay...");
+                    t.updateProgress(3, 4);
+                    cacheHandler.loadReplays(null, toCache);
+
+                    t.updateProgress(4, 4);
+                } catch (IOException ex) {
+                    app.getLogger().warning("Could not complete the download due to an IO exception:");
+                    ex.printStackTrace();
+                }
+            });
+
+            event.setDropCompleted(true);
+        }
+    }
+
+    private ContextMenu createBinEditorContextMenu() {
+        MenuItem showHiddenBins = new MenuItem("Unhide bins");
+        showHiddenBins.setOnAction(e -> new ArrayList<>(binEditor.getHidden()).forEach(binEditor::unhide));
+
+        return new ContextMenu(showHiddenBins);
+    }
+
+    private ContextMenu createReplayTableContextMenu() {
+        MenuItem openFileLocation = new MenuItem("Open file location...");
+        openFileLocation.setOnAction(_ -> onOpenFileLocation());
+
+        MenuItem openWithReplayEditor = new MenuItem("Open with Replay Editor...");
+        openWithReplayEditor.setOnAction(_ -> onOpenWithReplayEditor());
+        openWithReplayEditor.disableProperty().bind(ApplicationSettings.REPLAY_EDITOR_PATH.property().isEmpty());
+
+        // "Send to..." bins menu item (conditional!)
+        // We only want to add the "Send to..." context menu if there is at least one bin
+        ObservableList<ReplayBin> bins = App.getInstance().getBinRegistry().getBins();
+        BooleanBinding propertyHasSufficientBins = Bindings.size(bins).greaterThan(1); // TODO: Don't show if bin size is 1 and we're displaying a non-global bin
+
+        MenuItem separator = new SeparatorMenuItem();
+        Menu sendTo = new Menu("Send to...");
+        separator.visibleProperty().bind(propertyHasSufficientBins);
+        sendTo.visibleProperty().bind(propertyHasSufficientBins);
+
+        bins.addListener((InvalidationListener) _ -> {
             sendTo.getItems().clear();
-
-            for (ReplayBin bin : binRegistry.getBins()) {
-                if (bin.isGlobalBin() || bin == binEditor.getDisplayed()) {
+            for (ReplayBin bin : bins) {
+                // We don't want to have a "Send to global bin" option, this doesn't make any sense. All replays are in the global bin
+                if (bin.isGlobalBin()) {
                     continue;
                 }
 
                 MenuItem item = new MenuItem(bin.getName());
                 item.setOnAction(_ -> replayTable.getSelectionModel().getSelectedItems().forEach(bin::addReplay));
+                item.visibleProperty().bind(binEditor.displayedProperty().isNotEqualTo(bin));
                 sendTo.getItems().add(item);
-            }
-
-            if (sendTo.getItems().isEmpty()) {
-                tableContextMenu.getItems().remove(3);
-                tableContextMenu.getItems().remove(2);
             }
         });
 
-        // Zero the labels on init (no placeholder %s should be visible)
-        this.setLabel(labelListed, "ui.footer.listed", 0);
-        this.setLabel(labelSelected, "ui.footer.selected", 0);
+        return new ContextMenu(openFileLocation, openWithReplayEditor, separator, sendTo);
+    }
+
+    private void onOpenWithReplayEditor() {
+        String replayEditorPath = ApplicationSettings.REPLAY_EDITOR_PATH.get();
+        if (replayEditorPath == null || replayEditorPath.isBlank()) {
+            return;
+        }
+
+        try {
+            new ProcessBuilder().command(replayEditorPath, "-open", replayTable.getSelectionModel().getSelectedItems().getFirst().getReplayFile().getAbsolutePath())
+                    .redirectError(Redirect.DISCARD).redirectOutput(Redirect.DISCARD).start();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void onOpenFileLocation() {
+        try {
+            String selectedReplayFilePath = replayTable.getSelectionModel().getSelectedItems().getFirst().getReplayFile().getAbsolutePath();
+            new ProcessBuilder("explorer.exe", "/select,", selectedReplayFilePath)
+                    .redirectOutput(Redirect.DISCARD)
+                    .redirectError(Redirect.DISCARD)
+                    .start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void onReplayTableContextMenuRequested(ContextMenuEvent event) {
+        // If there are no selected items, we don't need to show the context menu
+        if (replayTable.getSelectionModel().isEmpty()) {
+            this.replayTable.getContextMenu().hide();
+            event.consume();
+        }
     }
 
     @FXML
@@ -391,18 +407,14 @@ public final class AppController {
 
         if (key == KeyCode.A && event.isControlDown()) {
             replayTable.getSelectionModel().selectAll();
-        }
-
-        else if (key == KeyCode.SPACE) {
+        } else if (key == KeyCode.SPACE) {
             var selectionModel = replayTable.getSelectionModel();
             if (selectionModel.isEmpty()) {
                 return;
             }
 
             selectionModel.getSelectedItems().forEach(replay -> replay.setLoaded(!replay.isLoaded()));
-        }
-
-        else if (key == KeyCode.DELETE) {
+        } else if (key == KeyCode.DELETE) {
             var selection = replayTable.getSelectionModel();
             if (selection.isEmpty()) {
                 return;

@@ -13,6 +13,7 @@ import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.ApplicationSettings.Setting;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
@@ -24,12 +25,10 @@ public final class SettingsPanelController {
 
     @FXML
     public void initialize() {
-        ApplicationSettings settings = App.getInstance().getSettings();
-
-        this.fieldReplayFolder.setText(settings.get(ApplicationSettings.REPLAY_DIRECTORY));
-        this.fieldRocketRPPath.setText(settings.get(ApplicationSettings.ROCKETRP_PATH));
-        this.fieldReplayEditorPath.setText(settings.get(ApplicationSettings.REPLAY_EDITOR_PATH));
-        this.languageSelector.setValue(settings.get(ApplicationSettings.LOCALE));
+        this.fieldReplayFolder.setText(ApplicationSettings.REPLAY_DIRECTORY.get());
+        this.fieldRocketRPPath.setText(ApplicationSettings.ROCKETRP_PATH.get());
+        this.fieldReplayEditorPath.setText(ApplicationSettings.REPLAY_EDITOR_PATH.get());
+        this.languageSelector.setValue(ApplicationSettings.LOCALE.get());
     }
 
     @FXML
@@ -96,37 +95,45 @@ public final class SettingsPanelController {
 
     @FXML
     public void applyAndClose(ActionEvent event) {
-        ApplicationSettings settings = App.getInstance().getSettings();
-
-        boolean replayDirectoryChanged = setIfValid(settings, ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
-        this.setIfValid(settings, ApplicationSettings.ROCKETRP_PATH, fieldRocketRPPath.getText());
-        this.setIfValid(settings, ApplicationSettings.REPLAY_EDITOR_PATH, fieldReplayEditorPath.getText());
-        this.setIfValid(settings, ApplicationSettings.LOCALE, languageSelector.getValue());
+        boolean replayDirectoryChanged = setIfValid(ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
+        this.setIfValid(ApplicationSettings.ROCKETRP_PATH, fieldRocketRPPath.getText());
+        this.setIfValid(ApplicationSettings.REPLAY_EDITOR_PATH, fieldReplayEditorPath.getText());
+        this.setIfValid(ApplicationSettings.LOCALE, languageSelector.getValue());
 
         App app = App.getInstance();
-        app.getExecutor().execute(settings::writeToFile);
+        app.getExecutor().execute(() -> {
+            try {
+                ApplicationSettings.save(app);
+            } catch (IOException e) {
+                e.printStackTrace();;
+            }
+        });
         if (replayDirectoryChanged) {
             app.reloadReplays(null);
         }
 
-        Logger logger = App.getInstance().getLogger();
+        Logger logger = app.getLogger();
         logger.info("Settings updated to: ");
-        logger.info("Replay Directory: " + settings.get(ApplicationSettings.REPLAY_DIRECTORY));
-        logger.info("RocketRP Path: " + settings.get(ApplicationSettings.ROCKETRP_PATH));
-        logger.info("Replay Editor Path: " + settings.get(ApplicationSettings.REPLAY_EDITOR_PATH));
-        logger.info("Language: " + settings.get(ApplicationSettings.LOCALE));
+        logger.info("Replay Directory: " + ApplicationSettings.REPLAY_DIRECTORY.get());
+        logger.info("RocketRP Path: " + ApplicationSettings.ROCKETRP_PATH.get());
+        logger.info("Replay Editor Path: " + ApplicationSettings.REPLAY_EDITOR_PATH.get());
+        logger.info("Language: " + ApplicationSettings.LOCALE.get());
 
         this.close(event);
     }
 
-    private boolean setIfValid(ApplicationSettings settings, Setting key, String value) {
+    private boolean setIfValid(Setting setting, String value) {
         if (value == null) {
             return false;
         }
 
-        String before = settings.get(key);
-        settings.set(key, value);
-        return !before.equals(value);
+        String before = setting.get();
+        if (before.equals(value)) {
+            return false;
+        }
+
+        setting.set(value);
+        return true;
     }
 
     // Doesn't work on Linux... for some reason... always true

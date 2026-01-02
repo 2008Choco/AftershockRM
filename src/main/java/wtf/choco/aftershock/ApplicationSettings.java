@@ -1,104 +1,96 @@
 package wtf.choco.aftershock;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public final class ApplicationSettings {
 
-    private static final List<Setting> SETTINGS = new ArrayList<>();
+    private static final Properties PROPERTIES = new Properties();
+
+    private static final Map<String, Setting> SETTING_BY_KEY = new HashMap<>();
 
     public static final Setting REPLAY_DIRECTORY = createSetting("replay_directory");
     public static final Setting ROCKETRP_PATH = createSetting("rocketrp_path", getCanonicalPath(App.getInstance().getInstallDirectory()) + "\\RocketRP\\RocketRP.CLI.exe");
     public static final Setting REPLAY_EDITOR_PATH = createSetting("replay_editor_path");
     public static final Setting LOCALE = createSetting("locale_code", "en_US");
 
-    private final Path localFilePath;
-    private final Properties properties;
+    public static void init(App app) throws IOException {
+        Path path = getPropertiesFilePath(app);
 
-    ApplicationSettings(App app) {
-        this.properties = new Properties();
-        SETTINGS.forEach(setting -> setting.saveTo(properties));
-
-        this.localFilePath = app.getInstallDirectory().toPath().resolve("app.properties");
-
-        try {
-            Files.createFile(localFilePath);
-            this.writeToFile();
-        } catch (FileAlreadyExistsException e) {
-            app.getLogger().info("Found app.properties file. Loading...");
-            this.readFromFile();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (Files.exists(path)) {
+            app.getLogger().info("Reading properties from app.properties file...");
+            PROPERTIES.load(Files.newBufferedReader(path, StandardCharsets.UTF_8));
+            PROPERTIES.forEach((key, value) -> {
+                Setting setting = SETTING_BY_KEY.get(key.toString());
+                if (setting != null) {
+                    setting.set(value.toString());
+                }
+            });
+        } else {
+            app.getLogger().info("No app.properties file exists. Creating a new one with default settings...");
+            save(app);
         }
+
+        app.getLogger().info("Done!");
     }
 
-    public String get(Setting setting) {
-        return properties.computeIfAbsent(setting.key(), _ -> setting.defaultValue()).toString();
+    public static void save(App app) throws IOException {
+        PROPERTIES.store(Files.newBufferedWriter(getPropertiesFilePath(app), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.WRITE), null);
     }
 
-    public void set(Setting setting, String value) {
-        this.properties.setProperty(setting.key(), value);
-    }
-
-    public void readFromFile() {
-        try {
-            this.properties.load(Files.newBufferedReader(localFilePath, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void writeToFile() {
-        try {
-            this.properties.store(Files.newBufferedWriter(localFilePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.WRITE), null);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private static Path getPropertiesFilePath(App app) {
+        return app.getInstallDirectory().toPath().resolve("app.properties");
     }
 
     private static String getCanonicalPath(File file) {
         try {
             return file.getCanonicalPath();
         } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            return file.getAbsolutePath();
         }
     }
 
     public static final class Setting {
 
-        private final String key, defaultValue;
+        private final StringProperty property;
 
         private Setting(String key, String defaultValue) {
-            this.key = key;
-            this.defaultValue = defaultValue;
-            SETTINGS.add(this);
+            this.property = new SimpleStringProperty(defaultValue);
+            this.property.addListener((_, _, newValue) -> PROPERTIES.setProperty(key, newValue));
         }
 
-        public String key() {
-            return key;
+        private Setting(String key) {
+            this(key, "");
         }
 
-        public String defaultValue() {
-            return defaultValue;
+        public void set(String value) {
+            this.property().set(value.strip());
         }
 
-        private void saveTo(Properties properties) {
-            properties.put(key, defaultValue);
+        public String get() {
+            return property().get();
+        }
+
+        public StringProperty property() {
+            return property;
         }
 
     }
 
     private static Setting createSetting(String key, String defaultValue) {
-        return new Setting(key, defaultValue);
+        Setting setting = new Setting(key, defaultValue);
+        SETTING_BY_KEY.put(key, setting);
+        return setting;
     }
 
     private static Setting createSetting(String key) {

@@ -1,5 +1,8 @@
 package wtf.choco.aftershock.structure.bin;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -31,7 +34,7 @@ import java.util.stream.Collectors;
 
 public class BinEditor {
 
-    private ReplayBin displayed;
+    private final ObjectProperty<ReplayBin> displayed = new SimpleObjectProperty<>(BinRegistry.GLOBAL_BIN);
 
     private final App app;
     private final AppController controller;
@@ -133,7 +136,7 @@ public class BinEditor {
     }
 
     public void display(ReplayBin bin) {
-        this.displayed = bin;
+        this.displayed.set(bin);
 
         if (bin == null) {
             this.replayTable.setItems(FXCollections.emptyObservableList());
@@ -142,14 +145,18 @@ public class BinEditor {
 
         ObservableList<ReplayEntry> entries = (controller.getTableFilter().isInvalid()) ? bin.getReplaysObservable() : new FilteredList<>(bin.getReplaysObservable(), controller.getTableFilter());
         this.replayTable.setItems(entries);
-        this.selectionModel.select(displayed);
+        this.selectionModel.select(bin);
     }
 
     public void clearDisplay() {
-        this.display(null);
+        this.display(BinRegistry.GLOBAL_BIN);
     }
 
     public ReplayBin getDisplayed() {
+        return displayed.get();
+    }
+
+    public ReadOnlyObjectProperty<ReplayBin> displayedProperty() {
         return displayed;
     }
 
@@ -185,8 +192,8 @@ public class BinEditor {
         this.hidden.remove(bin); // Just in case it's hidden
         this.app.getBinRegistry().deleteBin(bin);
 
-        if (displayed == bin) {
-            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().get(0));
+        if (displayed.get() == bin) {
+            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().getFirst());
         }
 
         return true;
@@ -226,13 +233,9 @@ public class BinEditor {
             this.hidden.remove(bin); // Just in case it's hidden
             registry.deleteBin(bin);
 
-            if (displayed == bin) {
+            if (displayed.get() == bin) {
                 this.clearDisplay();
             }
-        }
-
-        if (displayed == null) {
-            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().get(0));
         }
 
         return true;
@@ -248,8 +251,8 @@ public class BinEditor {
         }
 
         this.selectionModel.clearSelection(bin);
-        if (displayed == bin) {
-            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().get(0));
+        if (displayed.get() == bin) {
+            this.display(selectionModel.isEmpty() ? BinRegistry.GLOBAL_BIN : selectionModel.getSelectedItems().getFirst());
         }
 
         bin.setHidden(true);

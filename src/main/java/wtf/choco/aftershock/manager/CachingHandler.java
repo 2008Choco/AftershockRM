@@ -56,9 +56,8 @@ public class CachingHandler {
 
     public void cacheReplays(PublicTask<?> task) {
         Logger logger = app.getLogger();
-        ApplicationSettings settings = app.getSettings();
 
-        File replayDirectory = getReplayDirectory(logger, settings);
+        File replayDirectory = getReplayDirectory(logger);
         if (replayDirectory == null || !replayDirectory.exists() || !replayDirectory.isDirectory()) {
             logger.warning("Replay directory path does not exist or is not a directory. Could not cache");
             return;
@@ -165,9 +164,8 @@ public class CachingHandler {
         }
 
         Logger logger = app.getLogger();
-        ApplicationSettings settings = app.getSettings();
 
-        File replayDirectory = getReplayDirectory(logger, settings);
+        File replayDirectory = getReplayDirectory(logger);
         if (replayDirectory == null || !replayDirectory.exists() || !replayDirectory.isDirectory()) {
             logger.warning("Replay directory path does not exist or is not a directory. Could not load replays");
             return;
@@ -188,7 +186,7 @@ public class CachingHandler {
             this.updateProgress(task, current++, expected, "Loading " + replayFileName.substring(0, replayFileName.lastIndexOf('.')) + "...");
 
             File replayFile = new File(replayDirectory, cachedReplayFile.getName());
-            File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
+            File headerFile = this.getOrCreateHeaderFile(logger, ApplicationSettings.ROCKETRP_PATH.get(), cachedReplayFile);
 
             Replay replayData = App.GSON.fromJson(new FileReader(headerFile), Replay.class);
             ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData, replayAftershockData.computeIfAbsent(replayData.id(), _ -> new AftershockData()));
@@ -222,7 +220,6 @@ public class CachingHandler {
 
     public void loadReplays(PublicTask<?> task, Collection<File> replayFiles) throws IOException, JsonParseException {
         Logger logger = app.getLogger();
-        ApplicationSettings settings = app.getSettings();
 
         long start = System.currentTimeMillis();
 
@@ -233,7 +230,7 @@ public class CachingHandler {
             this.updateProgress(task, current++, expected, "Loading " + replayFileName.substring(0, replayFileName.lastIndexOf('.')) + "...");
 
             File cachedReplayFile = new File(cacheDirectory, replayFile.getName());
-            File headerFile = this.getOrCreateHeaderFile(logger, settings.get(ApplicationSettings.ROCKETRP_PATH), cachedReplayFile);
+            File headerFile = this.getOrCreateHeaderFile(logger, ApplicationSettings.ROCKETRP_PATH.get(), cachedReplayFile);
 
             Replay replayData = App.GSON.fromJson(new FileReader(headerFile), Replay.class);
             ReplayEntry replayEntry = new ReplayEntry(replayFile, cachedReplayFile, headerFile, replayData, replayAftershockData.computeIfAbsent(replayData.id(), _ -> new AftershockData()));
@@ -293,8 +290,8 @@ public class CachingHandler {
         return destination;
     }
 
-    private File getReplayDirectory(Logger logger, ApplicationSettings settings) {
-        String replayDirectoryPath = settings.get(ApplicationSettings.REPLAY_DIRECTORY);
+    private File getReplayDirectory(Logger logger) {
+        String replayDirectoryPath = ApplicationSettings.REPLAY_DIRECTORY.get();
         if (replayDirectoryPath == null || replayDirectoryPath.isBlank()) {
             logger.warning("Missing replay directory path");
             return null;
