@@ -206,7 +206,6 @@ public final class App extends Application {
 
     public void closeSettingsStage() {
         this.settingsStage.close();
-        this.settingsStage = null;
     }
 
     public CompletableFuture<ProgressiveTaskExecutor.TaskResult<Void>> reloadReplays() {
