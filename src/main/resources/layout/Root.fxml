@@ -110,7 +110,7 @@
 
       <StackPane alignment="CENTER_RIGHT">
         <TextField fx:id="filterBar" focusTraversable="false" onKeyPressed="#exitFilter" onKeyTyped="#updateFilter" prefHeight="25.0" prefWidth="200.0" promptText="Filter... (Ctrl + F)" />
-        <ImageView fx:id="filterOptionsImage" onMouseClicked="#toggleFilterMenu" opacity="0.5" pickOnBounds="true">
+        <ImageView fx:id="filterOptionsImage" onMouseClicked="#toggleFilterMenu" opacity="0.25" pickOnBounds="true">
           <StackPane.margin>
             <Insets right="10.0" />
           </StackPane.margin>

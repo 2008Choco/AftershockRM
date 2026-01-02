@@ -143,7 +143,8 @@ public final class AppController {
         StackPane root = FXUtils.loadFXMLRoot("/layout/FilterPopup", resources);
         this.popup.setAutoHide(true);
         this.popup.getContent().add(root);
-        this.popup.setOnHidden(_ -> filterOptionsImage.setOpacity(0.5));
+        this.popup.setOnHidden(_ -> filterOptionsImage.setOpacity(0.25));
+        this.popup.setOnShown(_ -> filterOptionsImage.setOpacity(1.0));
         this.popup.setWidth(root.getPrefWidth());
         this.popup.setHeight(root.getPrefHeight());
 
@@ -517,12 +518,9 @@ public final class AppController {
         }
 
         if (!popup.isShowing()) {
-            image.setOpacity(1.0);
-
             Bounds imageBounds = image.localToScreen(image.getBoundsInLocal());
             this.popup.show(image, imageBounds.getCenterX() - (popup.getWidth() / 2), imageBounds.getCenterY() - 15 - popup.getHeight());
         } else {
-            image.setOpacity(0.5);
             this.popup.hide();
         }
     }
