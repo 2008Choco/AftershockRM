@@ -64,9 +64,12 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
@@ -265,24 +268,20 @@ public final class AppController {
         } else if (dragboard.hasUrl()) {
             String urlRaw = dragboard.getUrl();
 
-            URL url = null;
+            URI uri;
             try {
-                url = new URL(urlRaw);
-            } catch (MalformedURLException e) {
+                uri = URI.create(urlRaw);
+            } catch (IllegalArgumentException e) {
                 app.getLogger().warning("Malformed URL. Could not download replay");
                 e.printStackTrace();
-            }
-
-            if (url == null) {
                 return;
             }
 
-            final URL urlFinal = url; // Stupid lambdas...
             app.getTaskExecutor().execute(task -> {
                 String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
                 task.updateMessage("Fetching file...");
 
-                try (ReadableByteChannel readableByteChannel = Channels.newChannel(urlFinal.openStream())) {
+                try (ReadableByteChannel readableByteChannel = Channels.newChannel(uri.toURL().openStream())) {
                     File file = new File(ApplicationSettings.REPLAY_DIRECTORY.get(), replayName);
                     if (!file.createNewFile()) {
                         return;
@@ -292,7 +291,7 @@ public final class AppController {
                     task.updateProgress(1, 4);
 
                     Logger logger = app.getLogger();
-                    logger.info("Downloading file \"" + replayName + "\" (from " + urlFinal + ")");
+                    logger.info("Downloading file \"" + replayName + "\" (from " + uri + ")");
 
                     FileOutputStream fileOutputStream = new FileOutputStream(file);
                     fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
@@ -302,7 +301,7 @@ public final class AppController {
                     task.updateMessage("Caching replay headers...");
                     task.updateProgress(2, 4);
 
-                    List<File> toCache = Arrays.asList(file);
+                    List<File> toCache = List.of(file);
                     CachingHandler cacheHandler = App.getInstance().getCacheHandler();
                     cacheHandler.cacheReplays(null, toCache);
 
