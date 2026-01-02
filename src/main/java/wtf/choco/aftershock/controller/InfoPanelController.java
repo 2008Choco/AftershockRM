@@ -12,7 +12,6 @@ import wtf.choco.aftershock.util.FXUtils;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
@@ -49,22 +48,15 @@ public final class InfoPanelController {
         this.replayName.setText(replay.name());
         this.replayId.setText(replay.id());
 
-        List<Player> bluePlayers = new ArrayList<>(teamSize), orangePlayers = new ArrayList<>(teamSize);
-        for (Player player : replay.players()) {
-            if (player.team() == Team.BLUE) {
-                bluePlayers.add(player);
-            } else {
-                orangePlayers.add(player);
-            }
-        }
-
         this.blueHeader.setText(String.format(resources.getString("ui.replay.stats.team.blue"), replay.score(Team.BLUE)));
         this.orangeHeader.setText(String.format(resources.getString("ui.replay.stats.team.orange"), replay.score(Team.ORANGE)));
 
+        List<Player> bluePlayers = replay.players(Team.BLUE);
         this.setPlayer(bluePlayers, 0, bluePlayerOne, bluePlayerOneScore, bluePlayerOneGoals, bluePlayerOneAssists, bluePlayerOneSaves, bluePlayerOneShots);
         this.setPlayer(bluePlayers, 1, bluePlayerTwo, bluePlayerTwoScore, bluePlayerTwoGoals, bluePlayerTwoAssists, bluePlayerTwoSaves, bluePlayerTwoShots);
         this.setPlayer(bluePlayers, 2, bluePlayerThree, bluePlayerThreeScore, bluePlayerThreeGoals, bluePlayerThreeAssists, bluePlayerThreeSaves, bluePlayerThreeShots);
 
+        List<Player> orangePlayers = replay.players(Team.ORANGE);
         this.setPlayer(orangePlayers, 0, orangePlayerOne, orangePlayerOneScore, orangePlayerOneGoals, orangePlayerOneAssists, orangePlayerOneSaves, orangePlayerOneShots);
         this.setPlayer(orangePlayers, 1, orangePlayerTwo, orangePlayerTwoScore, orangePlayerTwoGoals, orangePlayerTwoAssists, orangePlayerTwoSaves, orangePlayerTwoShots);
         this.setPlayer(orangePlayers, 2, orangePlayerThree, orangePlayerThreeScore, orangePlayerThreeGoals, orangePlayerThreeAssists, orangePlayerThreeSaves, orangePlayerThreeShots);

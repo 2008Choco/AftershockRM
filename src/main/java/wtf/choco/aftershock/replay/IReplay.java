@@ -120,6 +120,21 @@ public interface IReplay {
     public List<Player> players();
 
     /**
+     * Get a {@link List} of all {@link Player Players} on the provided {@link Team} who participated in this replay.
+     * <p>
+     * This is a convenience method.
+     *
+     * @param team the team whose players to get
+     *
+     * @return the players on the team
+     */
+    public default List<Player> players(Team team) {
+        return players().stream()
+            .filter(player -> player.team() == team)
+            .toList();
+    }
+
+    /**
      * Get a specific {@link Player} by name who participated in this replay.
      * <p>
      * This is a convenience method.
