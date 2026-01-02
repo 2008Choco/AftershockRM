@@ -129,7 +129,7 @@ public final class AppController {
         this.columnMode.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> String.format("%dv%1$d", replay.teamSize())));
         this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.score(Team.BLUE)));
         this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.score(Team.ORANGE)));
-        this.columnMap.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::mapId)); // TODO: Translate map name!
+        this.columnMap.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.mapName(resources)));
         this.columnOwner.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::playerName));
         this.columnComments.setCellFactory(EditableTextTableCell.getFactoryCallback("None"));
         this.columnComments.setCellValueFactory(new PropertyValueFactory<>("comments"));

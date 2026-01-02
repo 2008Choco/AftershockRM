@@ -3,6 +3,7 @@ package wtf.choco.aftershock.replay;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,6 +40,18 @@ public interface IReplay {
      * @return the map id
      */
     public String mapId();
+
+    /**
+     * Get the translated name of the map (using the provided resources) on which the replay was played.
+     *
+     * @param resources the resource bundle containing translation strings
+     *
+     * @return the translated map name, or the translation key if no translation exists
+     */
+    public default String mapName(ResourceBundle resources) {
+        String translationKey = "map.name." + mapId().toLowerCase();
+        return resources.containsKey(translationKey) ? resources.getString(translationKey) : translationKey;
+    }
 
     /**
      * Get the amount of players on each team.
