@@ -54,19 +54,15 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
 
     @Override
     protected void updateItem(String item, boolean empty) {
-        if (Objects.equals(item, getItem())) {
-            return;
-        }
-
         super.updateItem(item, empty);
 
         if (empty) {
             this.setGraphic(null);
-            this.setText(emptyText);
+            this.setText("");
             return;
         }
 
-        if (getGraphic() == null) {
+        if (!Objects.equals(item, getItem()) && getGraphic() == null) {
             this.setText(item != null && !item.isBlank() ? item : emptyText);
         }
     }
@@ -77,10 +73,6 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
 
     public static <S> Callback<TableColumn<S, String>, TableCell<S, String>> getFactoryCallback(String emptyText) {
         return ignore -> new EditableTextTableCell<>(emptyText);
-    }
-
-    public static <S> Callback<TableColumn<S, String>, TableCell<S, String>> getFactoryCallback() {
-        return getFactoryCallback(null);
     }
 
 }
