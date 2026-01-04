@@ -5,8 +5,8 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import wtf.choco.aftershock.replay.Goal;
-import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Player;
+import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
 
 import java.io.IOException;

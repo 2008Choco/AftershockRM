@@ -3,12 +3,8 @@ package wtf.choco.aftershock;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.PickResult;
-import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import wtf.choco.aftershock.controller.AppController;
@@ -18,7 +14,6 @@ import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.manager.ProgressiveTaskExecutor;
 import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.replay.schema.ReplayTypeAdapterFactory;
-import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
 
@@ -105,27 +100,18 @@ public final class App extends Application {
         this.keybindRegistry = new KeybindRegistry(this);
         KeybindRegistry.registerDefaultKeybinds(keybindRegistry);
 
-        // Listen for clicks outside of bin name editor, cancel editing
-        scene.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
-            PickResult result = event.getPickResult();
-
-            this.binRegistry.getBins().forEach(bin -> {
-                BinDisplayComponent binDisplay = bin.getDisplay();
-                if (binDisplay.isBeingEdited() && !(result.getIntersectedNode() instanceof Text)) {
-                    binDisplay.closeNameEditor(true);
-                }
-            });
-        });
-
         // Stage setup
         stage.setTitle("Aftershock Replay Manager v" + VERSION);
         stage.setScene(scene);
         stage.show();
 
-        this.controller.getBinEditor().display(binRegistry.getGlobalBin());
+        this.controller.setActiveBin(binRegistry.getGlobalBin());
 
         // Replay setup
-        this.reloadReplays().thenRunAsync(() -> binRegistry.loadBinsFromFile(binsFile, false), Platform::runLater);
+        this.reloadReplays().thenRunAsync(() -> binRegistry.loadBinsFromFile(binsFile), primaryExecutor).exceptionally(e -> {
+            e.printStackTrace();
+            return null;
+        });
     }
 
     @Override

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+<fx:root fx:id="root" type="javafx.scene.layout.VBox" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" stylesheets="/app.css" styleClass="replay-bin-display" maxWidth="75.0" maxHeight="65.0" spacing="5.0" alignment="TOP_CENTER">
+  <padding>
+    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+  </padding>
+
+  <contextMenu>
+    <ContextMenu>
+      <items>
+        <MenuItem text="%ui.bin_editor.bin.context_menu.load_all" onAction="#onLoadAllReplays" />
+        <MenuItem text="%ui.bin_editor.bin.context_menu.unload_all" onAction="#onUnloadAllReplays" />
+        <SeparatorMenuItem />
+        <MenuItem text="%ui.bin_editor.bin.context_menu.clone" onAction="#onCloneBin" />
+        <MenuItem text="%ui.bin_editor.bin.context_menu.rename" visible="${root.mutable}" onAction="#onRenameBin" />
+        <MenuItem text="%ui.bin_editor.bin.context_menu.clear" visible="${root.mutable}" onAction="#onClearBin" />
+        <MenuItem text="%ui.bin_editor.bin.context_menu.delete" visible="${root.mutable}" onAction="#onDeleteBin" />
+        <SeparatorMenuItem visible="${root.mutable}" />
+        <MenuItem text="%ui.bin_editor.bin.context_menu.hide" visible="${root.mutable}" onAction="#onHideBin" />
+      </items>
+    </ContextMenu>
+  </contextMenu>
+
+  <ImageView fx:id="icon">
+    <image>
+      <Image url="@../icons/folder.png" />
+    </image>
+  </ImageView>
+
+  <AnchorPane>
+    <Label fx:id="nameLabel" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" alignment="CENTER" textAlignment="CENTER" wrapText="true" onMouseClicked="#onNameLabelMouseClicked" />
+    <TextField fx:id="nameTextField" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" alignment="CENTER" onKeyPressed="#onNameTextFieldKeyPressed">
+      <padding>
+        <Insets top="0.0" bottom="0.0" />
+      </padding>
+    </TextField>
+  </AnchorPane>
+</fx:root>

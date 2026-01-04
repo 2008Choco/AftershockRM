@@ -5,8 +5,8 @@ import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import wtf.choco.aftershock.replay.Goal;
-import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Player;
+import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.util.FXUtils;
 

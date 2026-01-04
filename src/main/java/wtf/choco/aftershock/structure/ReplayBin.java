@@ -1,19 +1,28 @@
 package wtf.choco.aftershock.structure;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.MapProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleMapProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.structure.bin.BinDisplayComponent;
 import wtf.choco.aftershock.util.Preconditions;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ReplayBin implements Iterable<ReplayEntry> {
 
@@ -22,43 +31,44 @@ public class ReplayBin implements Iterable<ReplayEntry> {
 
     private static boolean globalBinCreated = false;
 
+    private final StringProperty name;
+    private final ReadOnlyBooleanProperty global;
+    private final BooleanProperty hidden;
+    private final BooleanProperty active = new SimpleBooleanProperty(this, "active", false);
+
+    private final ListProperty<ReplayEntry> replays;
+    private final MapProperty<String, ReplayEntry> replaysById;
+
     private final UUID uuid;
-    private final ObservableList<ReplayEntry> replays;
-    private final Map<String, ReplayEntry> byId;
-    private final boolean globalBin;
-    private final BinDisplayComponent display;
 
-    private String name;
-    private boolean hidden;
-
-    public ReplayBin(UUID uuid, String name, Collection<ReplayEntry> replays, boolean isGlobalBin) {
-        Preconditions.checkState(!isGlobalBin || !globalBinCreated, "Cannot create more than one global bin. Refer to BinRegistry#getGlobalBin()");
+    public ReplayBin(UUID uuid, String name, Collection<ReplayEntry> replays, boolean global) {
+        Preconditions.checkState(!global || !globalBinCreated, "Cannot create more than one global bin. Refer to BinRegistry#getGlobalBin()");
 
         this.uuid = uuid;
-        this.name = name;
-        this.replays = FXCollections.observableArrayList(replays);
-        this.byId = new HashMap<>(replays.size());
-        this.globalBin = isGlobalBin;
-        this.display = new BinDisplayComponent(this, replays.isEmpty() ? BIN_GRAPHIC_EMPTY : BIN_GRAPHIC_FULL);
 
-        for (ReplayEntry replay : replays) {
-            this.byId.put(replay.id(), replay);
+        this.name = new SimpleStringProperty(this, "name", name);
+        this.global = new SimpleBooleanProperty(this, "global", global);
+        this.hidden = new SimpleBooleanProperty(this, "hidden", false);
+
+        this.replays = new SimpleListProperty<>(this, "replays", FXCollections.observableArrayList(replays));
+        Map<String, ReplayEntry> byIdMap = replays.stream().collect(Collectors.toMap(ReplayEntry::id, Function.identity()));
+        this.replaysById = new SimpleMapProperty<>(this, "replaysById", FXCollections.observableMap(byIdMap));
+
+        // Keep the map values in sync with the list values
+        this.replays.addListener((ListChangeListener<? super ReplayEntry>) change -> {
+            while (change.next()) {
+                change.getAddedSubList().forEach(entry -> replaysById.put(entry.id(), entry));
+                change.getRemoved().forEach(entry -> replaysById.remove(entry.id()));
+            }
+        });
+
+        if (global) {
+            globalBinCreated = true;
         }
-
-        globalBinCreated = true;
     }
 
-    public ReplayBin(UUID uuid, String name, boolean isGlobalBin) {
-        Preconditions.checkState(!isGlobalBin || !globalBinCreated, "Cannot create more than one global bin. Refer to BinRegistry#getGlobalBin()");
-
-        this.uuid = uuid;
-        this.name = name;
-        this.replays = FXCollections.observableArrayList();
-        this.byId = new HashMap<>(0);
-        this.globalBin = isGlobalBin;
-        this.display = new BinDisplayComponent(this, BIN_GRAPHIC_EMPTY);
-
-        globalBinCreated = true;
+    public ReplayBin(UUID uuid, String name, boolean global) {
+        this(uuid, name, Collections.emptyList(), global);
     }
 
     public ReplayBin(UUID uuid, String name) {
@@ -66,65 +76,70 @@ public class ReplayBin implements Iterable<ReplayEntry> {
     }
 
     public ReplayBin(ReplayBin bin) {
-        this(UUID.randomUUID(), App.getInstance().getBinRegistry().getSafeName(bin.name), bin.replays, false);
+        this(UUID.randomUUID(), App.getInstance().getBinRegistry().getSafeName(bin.getName()), bin.getReplays(), false);
     }
 
     public UUID getUUID() {
         return uuid;
     }
 
+    public void setName(String name) {
+        this.nameProperty().set(name);
+    }
+
     public String getName() {
+        return nameProperty().get();
+    }
+
+    public StringProperty nameProperty() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-        this.display.updateName();
+    public boolean isGlobal() {
+        return globalProperty().get();
     }
 
-    public boolean isHidden() {
-        return hidden;
+    public ReadOnlyBooleanProperty globalProperty() {
+        return global;
     }
 
     public void setHidden(boolean hidden) {
-        this.hidden = hidden;
+        this.hiddenProperty().set(hidden);
     }
 
-    public boolean isGlobalBin() {
-        return globalBin;
+    public boolean isHidden() {
+        return hiddenProperty().get();
     }
 
-    public BinDisplayComponent getDisplay() {
-        return display;
+    public BooleanProperty hiddenProperty() {
+        return hidden;
     }
 
-    public void addReplay(ReplayEntry replay) {
-        this.replays.add(replay);
-        this.byId.put(replay.id(), replay);
+    public void setActive(boolean active) {
+        this.activeProperty().set(active);
     }
 
-    public boolean hasReplay(ReplayEntry replay) {
-        return byId.containsValue(replay);
+    public boolean isActive() {
+        return activeProperty().get();
     }
 
-    public boolean hasReplay(String id) {
-        return byId.containsKey(id);
+    public BooleanProperty activeProperty() {
+        return active;
     }
 
-    public void removeReplay(ReplayEntry replay) {
-        this.replays.remove(replay);
-        this.byId.remove(replay.id());
+    public ReplayEntry getReplay(String id) {
+        return replaysById.get(id);
     }
 
-    public ReplayEntry getReplayById(String id) {
-        return byId.get(id);
+    public boolean containsReplay(String id) {
+        return replaysById.containsKey(id);
     }
 
-    public List<ReplayEntry> getReplays() {
-        return Collections.unmodifiableList(replays);
+    public ObservableList<ReplayEntry> getReplays() {
+        return replaysProperty().get();
     }
 
-    public ObservableList<ReplayEntry> getReplaysObservable() {
+    public ListProperty<ReplayEntry> replaysProperty() {
         return replays;
     }
 
@@ -134,7 +149,6 @@ public class ReplayBin implements Iterable<ReplayEntry> {
 
     public void clear() {
         this.replays.clear();
-        this.byId.clear();
     }
 
     public int size() {
@@ -143,7 +157,7 @@ public class ReplayBin implements Iterable<ReplayEntry> {
 
     @Override
     public Iterator<ReplayEntry> iterator() {
-        return byId.values().iterator();
+        return replaysProperty().iterator();
     }
 
     @Override

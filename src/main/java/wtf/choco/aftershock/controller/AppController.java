@@ -1,10 +1,10 @@
 package wtf.choco.aftershock.controller;
 
-import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.IntegerBinding;
+import javafx.beans.value.ObservableIntegerValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -19,7 +19,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
@@ -41,43 +40,36 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
-import wtf.choco.aftershock.manager.BinRegistry;
+import wtf.choco.aftershock.control.ReplayBinDisplayPane;
 import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.replay.IReplay;
 import wtf.choco.aftershock.replay.Team;
-import wtf.choco.aftershock.structure.DynamicFilter;
 import wtf.choco.aftershock.structure.EditableTextTableCell;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
 import wtf.choco.aftershock.structure.StringListTableCell;
 import wtf.choco.aftershock.structure.Tag;
-import wtf.choco.aftershock.structure.bin.BinEditor;
 import wtf.choco.aftershock.util.FXUtils;
+import wtf.choco.aftershock.util.ReplayTableFilter;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ProcessBuilder.Redirect;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.StringJoiner;
-import java.util.concurrent.CompletionException;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 public final class AppController {
@@ -109,21 +101,16 @@ public final class AppController {
     @FXML private ResourceBundle resources;
 
     @FXML private HBox primaryDisplay;
-    @FXML private VBox binEditorPane, binEditorList;
-    @FXML private ScrollPane binEditorScrollPane;
-
-    private BinEditor binEditor;
+    @FXML private ReplayBinDisplayPane replayBinDisplayPane;
 
     private double lastDividerPositionInfo = 0.70;
 
     private final Popup popup = new Popup();
 
-    private DynamicFilter<ReplayEntry> tableFilter = new DynamicFilter<>((replay, term) -> replay.name().toLowerCase().contains(term.toLowerCase()));
+    private ReplayTableFilter tableFilter;
 
     @FXML
     public void initialize() {
-        App app = App.getInstance();
-
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
         this.columnLoaded.setCellValueFactory(new PropertyValueFactory<>("loaded"));
         this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::name));
@@ -153,27 +140,44 @@ public final class AppController {
         this.filterOptionsImage.setCursor(Cursor.HAND);
 
         // Label update listeners
-        this.replayTable.itemsProperty().addListener((_, _, newValue) -> setLabel(labelListed, "ui.footer.listed", newValue.size()));
         selectionModel.getSelectedItems().addListener(this::onSelectedItemsChange);
 
-        app.getBinRegistry().getGlobalBin().getReplaysObservable().addListener((ListChangeListener<ReplayEntry>) c -> updateLoadedLabel());
+        ReplayBin globalBin = App.getInstance().getBinRegistry().getGlobalBin();
+        this.tableFilter = new ReplayTableFilter(globalBin);
+        this.tableFilter.replayBinProperty().bind(replayBinDisplayPane.activeBinProperty());
+        this.tableFilter.searchTermProperty().bind(filterBar.textProperty());
 
+        FilteredList<ReplayEntry> tableItems = new FilteredList<>(globalBin.replaysProperty(), tableFilter);
+        this.replayTable.setItems(tableItems);
         this.replayTable.setOnMouseClicked(_ -> replayTable.requestFocus());
         this.replayTable.setOnDragDetected(_ -> onReplayTableDragStart());
         this.replayTable.setOnDragOver(this::onReplayTableDragEnter);
         this.replayTable.setOnDragDropped(this::onReplayTableDragDropped);
 
-        this.binEditor = new BinEditor(app, this, binEditorPane, binEditorList);
-
-        this.binEditorScrollPane.setContextMenu(createBinEditorContextMenu());
-
         this.replayTable.setContextMenu(createReplayTableContextMenu());
         this.replayTable.setOnContextMenuRequested(this::onReplayTableContextMenuRequested);
 
-        // Zero the labels on init (no placeholder %s should be visible)
-        this.setLabel(labelListed, "ui.footer.listed", 0);
-        this.setLabel(labelLoaded, "ui.footer.loaded", 0);
-        this.setLabel(labelSelected, "ui.footer.selected", 0);
+        // Refresh the table when the search term changes and when we change active bins
+        this.tableFilter.searchTermProperty().addListener(_ -> forceRefilter(tableItems, tableFilter));
+        this.replayBinDisplayPane.activeBinProperty().addListener(_ -> forceRefilter(tableItems, tableFilter));
+
+        ObservableIntegerValue loadedCount = Bindings.createIntegerBinding(() -> (int) replayTable.getItems().stream().filter(ReplayEntry::isLoaded).count(), replayTable.itemsProperty());
+        this.labelListed.textProperty().bind(Bindings.size(replayTable.getItems()).map(listed -> resources.getString("ui.footer.listed").formatted(listed)));
+        this.labelLoaded.textProperty().bind(loadedCount.map(loaded -> resources.getString("ui.footer.loaded").formatted(loaded)));
+        this.labelSelected.textProperty().bind(Bindings.size(replayTable.getSelectionModel().getSelectedItems()).map(selected -> resources.getString("ui.footer.selected").formatted(selected)));
+    }
+
+    /*
+     * Unfortunately, FilteredList#refilter() is private, so to get around this we force a call to it by invalidating
+     * the property by setting it to null then re-setting it to our filter. It sucks, but it's the only way unless I
+     * want to invoke refilter() via reflection...
+     * ...
+     * ...
+     * which isn't the worst idea? :)
+     */
+    private <T> void forceRefilter(FilteredList<T> list, Predicate<T> filter) {
+        list.setPredicate(null);
+        list.setPredicate(filter);
     }
 
     private void onSelectedItemsChange(ListChangeListener.Change<? extends ReplayEntry> change) {
@@ -181,9 +185,8 @@ public final class AppController {
             return;
         }
 
-        this.setLabel(labelSelected, "ui.footer.selected", change.getList().size());
         if (change.getAddedSize() > 0) {
-            this.openInfoPanel(change.getAddedSubList().get(0));
+            this.openInfoPanel(change.getAddedSubList().getFirst());
             this.splitPane.setDividerPosition(splitPane.getDividers().size() - 1, lastDividerPositionInfo);
         }
     }
@@ -243,7 +246,7 @@ public final class AppController {
         if (dragboard.hasFiles()) {
             List<File> files = dragboard.getFiles();
             ReplayBin globalBin = app.getBinRegistry().getGlobalBin();
-            files.removeIf(file -> globalBin.hasReplay(file.getName().substring(0, file.getName().lastIndexOf('.'))));
+            files.removeIf(file -> globalBin.getReplays().stream().anyMatch(replay -> replay.id().equals(file.getName().substring(0, file.getName().lastIndexOf('.')))));
 
             if (!files.isEmpty()) {
                 CachingHandler cacheHandler = App.getInstance().getCacheHandler();
@@ -319,13 +322,6 @@ public final class AppController {
         }
     }
 
-    private ContextMenu createBinEditorContextMenu() {
-        MenuItem showHiddenBins = new MenuItem(resources.getString("ui.bin_editor.context_menu.unhide_bins"));
-        showHiddenBins.setOnAction(e -> new ArrayList<>(binEditor.getHidden()).forEach(binEditor::unhide));
-
-        return new ContextMenu(showHiddenBins);
-    }
-
     private ContextMenu createReplayTableContextMenu() {
         MenuItem openFileLocation = new MenuItem(resources.getString("ui.table.context_menu.open_file_location"));
         openFileLocation.setOnAction(_ -> onOpenFileLocation());
@@ -339,8 +335,8 @@ public final class AppController {
         ReplayBin globalBin = App.getInstance().getBinRegistry().getGlobalBin();
         ObservableList<ReplayBin> bins = App.getInstance().getBinRegistry().getBins();
         IntegerBinding binCountBinding = Bindings.size(bins);
-        BooleanBinding propertyHasSufficientBins = binEditor.displayedProperty().isEqualTo(globalBin).and(binCountBinding.greaterThan(1))
-            .or(binEditor.displayedProperty().isNotEqualTo(globalBin).and(binCountBinding.greaterThan(2)));
+        BooleanBinding propertyHasSufficientBins = replayBinDisplayPane.activeBinProperty().isEqualTo(globalBin).and(binCountBinding.greaterThan(1))
+            .or(replayBinDisplayPane.activeBinProperty().isNotEqualTo(globalBin).and(binCountBinding.greaterThan(2)));
 
         MenuItem separator = new SeparatorMenuItem();
         Menu sendTo = new Menu(resources.getString("ui.table.context_menu.send_to"));
@@ -351,17 +347,18 @@ public final class AppController {
             sendTo.getItems().clear();
             for (ReplayBin bin : bins) {
                 // We don't want to have a "Send to global bin" option, this doesn't make any sense. All replays are in the global bin
-                if (bin.isGlobalBin()) {
+                if (bin.isGlobal()) {
                     continue;
                 }
 
                 MenuItem item = new MenuItem(bin.getName());
                 item.setOnAction(_ -> replayTable.getSelectionModel().getSelectedItems().forEach(replay -> {
-                    if (!bin.hasReplay(replay)) {
-                        bin.addReplay(replay);
+                    ObservableList<ReplayEntry> replays = bin.getReplays();
+                    if (!replays.contains(replay)) {
+                        replays.add(replay);
                     }
                 }));
-                item.visibleProperty().bind(binEditor.displayedProperty().isNotEqualTo(bin));
+                item.visibleProperty().bind(replayBinDisplayPane.activeBinProperty().isNotEqualTo(bin));
                 sendTo.getItems().add(item);
             }
         });
@@ -422,15 +419,15 @@ public final class AppController {
                 return;
             }
 
-            ReplayBin displayed = binEditor.getDisplayed();
-            if (displayed == null || displayed.isGlobalBin()) {
+            ReplayBin activeBin = replayBinDisplayPane.getActiveBin();
+            if (activeBin == null || activeBin.isGlobal()) {
                 Toolkit.getDefaultToolkit().beep();
                 return;
             }
 
             List<ReplayEntry> selected = new ArrayList<>(selection.getSelectedItems());
             selection.clearSelection();
-            selected.forEach(displayed::removeReplay);
+            selected.forEach(activeBin.getReplays()::remove);
             this.closeInfoPanel();
         }
     }
@@ -455,51 +452,13 @@ public final class AppController {
 
     @FXML
     public void toggleBinEditor(@SuppressWarnings("unused") ActionEvent event) {
+        // TODO: Toggle the visible property instead
         ObservableList<Node> primaryDisplayChildren = primaryDisplay.getChildren();
         if (primaryDisplayChildren.size() == 1) {
-            primaryDisplayChildren.addFirst(binEditor.getNode());
+            primaryDisplayChildren.addFirst(replayBinDisplayPane);
         } else {
-            primaryDisplayChildren.remove(binEditor.getNode());
+            primaryDisplayChildren.remove(replayBinDisplayPane);
         }
-    }
-
-    @FXML
-    public void createBin(@SuppressWarnings("unused") ActionEvent event) {
-        int duplicateCount = 0;
-        String name = "New Bin";
-
-        BinRegistry binRegistry = App.getInstance().getBinRegistry();
-        ReplayBin bin = null;
-        while ((bin = binRegistry.createBin(name + (duplicateCount++ >= 1 ? " (" + duplicateCount + ")" : ""))) == null);
-
-        this.binEditor.getSelectionModel().clearSelection();
-        this.binEditor.display(bin);
-        bin.getDisplay().openNameEditor();
-    }
-
-    @FXML
-    public void deleteBin(@SuppressWarnings("unused") ActionEvent event) {
-        this.binEditor.deleteBins(binEditor.getSelectionModel().getSelectedItems(), true);
-    }
-
-    @FXML
-    public void updateFilter(@SuppressWarnings("unused") KeyEvent event) {
-        DynamicFilter<ReplayEntry> filter = getTableFilter();
-        filter.setTerm(filterBar.getText());
-
-        if (filter.isInvalid()) {
-            this.replayTable.setItems(binEditor.getDisplayed().getReplaysObservable());
-            return;
-        }
-
-        ObservableList<ReplayEntry> items = replayTable.getItems();
-        if (!(items instanceof FilteredList)) {
-            this.replayTable.setItems(items = new FilteredList<>(binEditor.getDisplayed().getReplaysObservable(), filter));
-        }
-
-        FilteredList<ReplayEntry> filteredItems = (FilteredList<ReplayEntry>) items;
-        filteredItems.setPredicate(null); // Must set to null first to invalidate the predicate... stupid
-        filteredItems.setPredicate(getTableFilter());
     }
 
     @FXML
@@ -541,12 +500,9 @@ public final class AppController {
         return filterBar;
     }
 
-    public BinEditor getBinEditor() {
-        return binEditor;
-    }
-
-    public DynamicFilter<ReplayEntry> getTableFilter() {
-        return tableFilter;
+    public void openInfoPanel(ReplayEntry replay) {
+        this.closeInfoPanel();
+        this.splitPane.getItems().add(replay.getInfoPanel(resources));
     }
 
     public void closeInfoPanel() {
@@ -557,29 +513,9 @@ public final class AppController {
         }
     }
 
-    public void openInfoPanel(ReplayEntry replay) {
-        this.closeInfoPanel();
-        this.splitPane.getItems().add(replay.getInfoPanel(resources));
-    }
-
-    public void updateLoadedLabel() {
-        int loaded = 0;
-        for (ReplayEntry replay : App.getInstance().getBinRegistry().getGlobalBin().getReplays()) {
-            if (replay.isLoaded()) {
-                loaded++;
-            }
-        }
-
-        this.setLabel(labelLoaded, "ui.footer.loaded", loaded);
-    }
-
-    private void setLabel(Label label, String resourceKey, int amount) {
-        if (!Platform.isFxApplicationThread()) {
-            Platform.runLater(() -> setLabel(label, resourceKey, amount));
-            return;
-        }
-
-        label.setText(String.format(resources.getString(resourceKey), amount));
+    public void setActiveBin(ReplayBin bin) {
+        this.replayBinDisplayPane.setActiveBin(bin);
+        this.replayBinDisplayPane.getSelectionModel().clearAndSelect(bin);
     }
 
 }

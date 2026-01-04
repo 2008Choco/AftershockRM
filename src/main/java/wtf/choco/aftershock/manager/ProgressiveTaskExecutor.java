@@ -1,5 +1,6 @@
 package wtf.choco.aftershock.manager;
 
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
@@ -41,13 +42,12 @@ public class ProgressiveTaskExecutor {
         messageProperty.unbind();
         messageProperty.bind(task.messageProperty());
 
-        return CompletableFuture.supplyAsync(() -> {
-            task.run();
-            return new TaskResult<>(task.getValue(), task.getState());
-        }, executor).whenComplete((_, _) -> {
-            this.progressBar.setVisible(false);
-            this.statusLabel.setVisible(false);
-        });
+        return CompletableFuture.runAsync(task, executor)
+            .thenApplyAsync(ignore -> new TaskResult<>(task.getValue(), task.getState()), Platform::runLater)
+            .whenComplete((_, _) -> {
+                this.progressBar.setVisible(false);
+                this.statusLabel.setVisible(false);
+            });
     }
 
     public <T> CompletableFuture<TaskResult<T>> execute(ThrowingConsumer<PublicTask<T>> task, Executor executor) {

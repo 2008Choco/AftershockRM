@@ -2,6 +2,7 @@ package wtf.choco.aftershock.manager;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import javafx.application.Platform;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.replay.AftershockData;
@@ -201,11 +202,10 @@ public class CachingHandler {
                 } else {
                     replayFile.delete();
                 }
-
-                this.app.getController().updateLoadedLabel();
             });
 
-            this.app.getBinRegistry().getGlobalBin().addReplay(replayEntry);
+            // TODO: This needs to be done better by properly running things in bulk on the application thread
+            Platform.runLater(() -> app.getBinRegistry().getGlobalBin().getReplays().add(replayEntry));
             loaded++;
         }
 
@@ -245,11 +245,10 @@ public class CachingHandler {
                 } else {
                     replayFile.delete();
                 }
-
-                this.app.getController().updateLoadedLabel();
             });
 
-            this.app.getBinRegistry().getGlobalBin().addReplay(replayEntry);
+            // TODO: This needs to be done better by properly running things in bulk on the application thread
+            Platform.runLater(() -> app.getBinRegistry().getGlobalBin().getReplays().add(replayEntry));
             loaded++;
         }
 

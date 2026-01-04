@@ -3,6 +3,9 @@ package wtf.choco.aftershock.manager;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import javafx.application.Platform;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import wtf.choco.aftershock.App;
@@ -16,8 +19,7 @@ import java.util.UUID;
 
 public class BinRegistry  {
 
-    private final ObservableList<ReplayBin> bins = FXCollections.observableArrayList();
-
+    private final ListProperty<ReplayBin> bins = new SimpleListProperty<>(this, "bins", FXCollections.observableArrayList());
     private final ReplayBin globalBin;
 
     public BinRegistry() {
@@ -34,7 +36,7 @@ public class BinRegistry  {
             throw new IllegalStateException("'Global' is a reserved bin identifier");
         }
 
-        for (ReplayBin bin : bins) {
+        for (ReplayBin bin : getBins()) {
             if (bin.getName().equalsIgnoreCase(name)) {
                 return null;
             }
@@ -46,11 +48,11 @@ public class BinRegistry  {
     }
 
     public void addBin(ReplayBin bin) {
-        this.bins.add(bin);
+        this.getBins().add(bin);
     }
 
     public ReplayBin getBin(int index) {
-        return bins.get(index);
+        return getBins().get(index);
     }
 
     public ReplayBin getBin(String name) {
@@ -64,12 +66,12 @@ public class BinRegistry  {
     }
 
     public void deleteBin(ReplayBin bin) {
-        this.bins.remove(bin);
+        this.getBins().remove(bin);
     }
 
-    public void clearBins(boolean clearGlobal) {
-        for (ReplayBin bin : bins) {
-            if (!clearGlobal && bin.isGlobalBin()) {
+    public void clearBins(boolean includeGlobal) {
+        for (ReplayBin bin : getBins()) {
+            if (!includeGlobal && bin.isGlobal()) {
                 continue;
             }
 
@@ -77,24 +79,20 @@ public class BinRegistry  {
         }
     }
 
-    public void deleteBins(boolean deleteGlobal) {
-        this.clearBins(deleteGlobal);
-        this.bins.removeIf(bin -> deleteGlobal || !bin.isGlobalBin());
+    public void deleteBins(boolean includeGlobal) {
+        this.getBins().removeIf(bin -> includeGlobal || !bin.isGlobal());
     }
 
     public ObservableList<ReplayBin> getBins() {
+        return bins.get();
+    }
+
+    public ListProperty<ReplayBin> binsProperty() {
         return bins;
     }
 
-    public int getBinCount() {
-        return bins.size();
-    }
-
-    public void loadBinsFromFile(File file, boolean deleteBins) {
-        if (deleteBins) {
-            this.deleteBins(false);
-        }
-
+    public void loadBinsFromFile(File file) {
+        // TODO: Write a TypeAdapter for this instead of parsing JSON on the fly
         JsonArray root = JsonUtil.loadFromFile(file, JsonArray.class);
         if (root == null) {
             return;
@@ -115,24 +113,26 @@ public class BinRegistry  {
 
             JsonArray replays = binRoot.getAsJsonArray("replays");
             for (JsonElement replayIdElement : replays) {
-                ReplayEntry replay = globalBin.getReplayById(replayIdElement.getAsString());
+                ReplayEntry replay = globalBin.getReplay(replayIdElement.getAsString());
                 if (replay == null) {
                     continue;
                 }
 
-                bin.addReplay(replay);
+                bin.getReplays().add(replay);
             }
 
             App.getInstance().getLogger().info("Loaded bin: \"" + name + "\"" + (hidden ? " (hidden)" : ""));
-            this.addBin(bin);
+
+            // TODO: This needs to be done better by properly running things in bulk on the application thread
+            Platform.runLater(() -> addBin(bin));
         }
     }
 
     public void saveBinsToFile(File file) {
         JsonArray root = new JsonArray();
 
-        for (ReplayBin bin : bins) {
-            if (bin.isGlobalBin()) { // Don't write global bin to file
+        for (ReplayBin bin : getBins()) {
+            if (bin.isGlobal()) { // Don't write global bin to file
                 continue;
             }
 

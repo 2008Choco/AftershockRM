@@ -6,8 +6,8 @@ import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import wtf.choco.aftershock.replay.AftershockData;
 import wtf.choco.aftershock.replay.Goal;
-import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Player;
+import wtf.choco.aftershock.replay.Replay;
 
 public class ReplayTypeAdapterFactory implements TypeAdapterFactory {
 

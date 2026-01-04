@@ -36,6 +36,18 @@ public final class FXUtils {
         }
     }
 
+    public static void loadFXMLComponent(String path, Object componentObject, ResourceBundle resources) {
+        FXMLLoader loader = new FXMLLoader(getURL(path), resources);
+        loader.setRoot(componentObject);
+        loader.setController(componentObject);
+
+        try {
+            loader.load();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static <T> PublicTask<T> createTask(Consumer<PublicTask<T>> task) {
         return new PublicTask<>() {
             @Override

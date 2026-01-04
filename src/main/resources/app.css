@@ -28,7 +28,7 @@
     -fx-font-weight: bold;
 }
 
-.bin-display-selected {
+.replay-bin-display-selected {
     -fx-background-color: rgb(230, 230, 230);
 }
 
