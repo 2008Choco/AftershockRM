@@ -53,6 +53,7 @@ import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
 import wtf.choco.aftershock.structure.StringListTableCell;
 import wtf.choco.aftershock.structure.Tag;
+import wtf.choco.aftershock.util.ComplexBindings;
 import wtf.choco.aftershock.util.FXUtils;
 import wtf.choco.aftershock.util.ReplayTableFilter;
 
@@ -161,7 +162,7 @@ public final class AppController {
         this.tableFilter.searchTermProperty().addListener(_ -> forceRefilter(tableItems, tableFilter));
         this.replayBinDisplayPane.activeBinProperty().addListener(_ -> forceRefilter(tableItems, tableFilter));
 
-        ObservableIntegerValue loadedCount = Bindings.createIntegerBinding(() -> (int) replayTable.getItems().stream().filter(ReplayEntry::isLoaded).count(), replayTable.itemsProperty());
+        ObservableIntegerValue loadedCount = ComplexBindings.createIntegerBindingCountingBooleanProperties(replayTable.getItems(), ReplayEntry::loadedProperty);
         this.labelListed.textProperty().bind(Bindings.size(replayTable.getItems()).map(listed -> resources.getString("ui.footer.listed").formatted(listed)));
         this.labelLoaded.textProperty().bind(loadedCount.map(loaded -> resources.getString("ui.footer.loaded").formatted(loaded)));
         this.labelSelected.textProperty().bind(Bindings.size(replayTable.getSelectionModel().getSelectedItems()).map(selected -> resources.getString("ui.footer.selected").formatted(selected)));

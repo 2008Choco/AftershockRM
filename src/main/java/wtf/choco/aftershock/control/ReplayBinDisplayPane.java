@@ -1,11 +1,11 @@
 package wtf.choco.aftershock.control;
 
-import javafx.beans.property.IntegerProperty;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableIntegerValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -23,6 +23,7 @@ import javafx.scene.layout.VBox;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.structure.ReplayBin;
+import wtf.choco.aftershock.util.ComplexBindings;
 import wtf.choco.aftershock.util.FXUtils;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public final class ReplayBinDisplayPane extends VBox {
 
     private final ListProperty<ReplayBin> replayBins  = new SimpleListProperty<>(this, "replayBins", FXCollections.observableArrayList());
     private final ObjectProperty<ReplayBin> activeBin = new SimpleObjectProperty<>(this, "activeBin");
-    private final IntegerProperty  hiddenBinCount = new SimpleIntegerProperty(this, "hiddenBinCount", 0);
+    private final ObservableIntegerValue hiddenBinCount = ComplexBindings.createIntegerBindingCountingBooleanProperties(replayBins, ReplayBin::hiddenProperty);
 
     public ReplayBinDisplayPane() {
         FXUtils.loadFXMLComponent("/component/ReplayBinDisplayPane", this, App.getInstance().getResources());
@@ -83,9 +84,7 @@ public final class ReplayBinDisplayPane extends VBox {
                     ReplayBinDisplay binDisplay = createReplayBinDisplay(bin);
                     this.replayBinDisplayNodes.put(bin, binDisplay);
 
-                    if (bin.isHidden()) {
-                        this.hiddenBinCount.set(hiddenBinCount.get() + 1);
-                    } else {
+                    if (!bin.isHidden()) {
                         this.binEditorList.getChildren().add(binDisplay);
                     }
                 }
@@ -122,10 +121,10 @@ public final class ReplayBinDisplayPane extends VBox {
             }
         });
 
-        this.labelHiddenBins.visibleProperty().bind(hiddenBinCount.greaterThan(0));
+        this.labelHiddenBins.visibleProperty().bind(Bindings.greaterThan(hiddenBinCount, 0));
         this.labelHiddenBins.textProperty().bind(hiddenBinCount.map(value -> resources.getString("ui.bin_editor.hidden_bins").formatted(value)));
 
-        this.menuItemUnhideBins.disableProperty().bind(hiddenBinCount.isEqualTo(0));
+        this.menuItemUnhideBins.disableProperty().bind(Bindings.equal(hiddenBinCount, 0));
     }
 
     private ReplayBinDisplay createReplayBinDisplay(ReplayBin bin) {
@@ -152,17 +151,12 @@ public final class ReplayBinDisplayPane extends VBox {
                     this.setActiveBin(App.getInstance().getBinRegistry().getGlobalBin());
                 }
 
-                this.hiddenBinCount.set(hiddenBinCount.get() + 1);
-
                 if (node != null) {
                     this.binEditorList.getChildren().remove(node);
                 }
-            } else {
-                this.hiddenBinCount.set(hiddenBinCount.get() - 1);
-                if (node != null) {
-                    int index = replayBins.indexOf(bin);
-                    this.binEditorList.getChildren().add(index, node);
-                }
+            } else if (node != null) {
+                int index = replayBins.indexOf(bin);
+                this.binEditorList.getChildren().add(index, node);
             }
         });
 
