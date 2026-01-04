@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
 
-<fx:root fx:id="root" type="javafx.scene.layout.VBox" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" stylesheets="/app.css" styleClass="replay-bin-display" maxWidth="75.0" maxHeight="65.0" spacing="5.0" alignment="TOP_CENTER">
+<fx:root fx:id="root" type="javafx.scene.layout.VBox" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" stylesheets="@../style/component/ReplayBinDisplay.css" styleClass="replay-bin-display" maxWidth="75.0" maxHeight="65.0" spacing="5.0" alignment="TOP_CENTER">
   <padding>
     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
   </padding>
@@ -38,7 +38,7 @@
     </image>
   </ImageView>
 
-  <AnchorPane>
+  <AnchorPane prefHeight="${nameLabel.height}">
     <Label fx:id="nameLabel" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" alignment="CENTER" textAlignment="CENTER" wrapText="true" onMouseClicked="#onNameLabelMouseClicked" />
     <TextField fx:id="nameTextField" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" alignment="CENTER" onKeyPressed="#onNameTextFieldKeyPressed">
       <padding>

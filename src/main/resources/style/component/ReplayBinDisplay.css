@@ -1,0 +1,5 @@
+@import "../common.css"
+
+.replay-bin-display:selected {
+    -fx-background-color: rgb(230, 230, 230);
+}

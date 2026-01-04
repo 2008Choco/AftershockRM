@@ -1,0 +1,27 @@
+@import "common.css"
+
+#columnScoreBlue {
+    -fx-alignment: center-right;
+    -fx-padding: 0 8 0 0;
+}
+
+#columnScoreOrange {
+    -fx-padding: 0 0 0 8;
+}
+
+.split-pane *.split-pane-divider {
+    -fx-padding: 1;
+    -fx-background-color: lightgray;
+}
+
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.button {
+    -fx-background-radius: 0px;
+}
+
+#infoHeader {
+    -fx-font-weight: bold;
+}

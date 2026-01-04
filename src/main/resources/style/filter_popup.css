@@ -1,0 +1,7 @@
+@import "common.css"
+
+.filter-popup {
+    -fx-border-color: lightgray;
+    -fx-border-width: 1px;
+    -fx-background-color: whitesmoke;
+}

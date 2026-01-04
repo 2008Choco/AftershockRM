@@ -1,0 +1,9 @@
+*:focused {
+    -fx-faint-focus-color: transparent;
+    -fx-focus-color: transparent;
+}
+
+.hyperlink:visited {
+    -fx-text-fill: rgb(0, 149, 230);
+    -fx-underline: false;
+}

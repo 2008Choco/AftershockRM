@@ -1,0 +1,11 @@
+@import "../common.css"
+
+#labelHiddenBins {
+    -fx-font-weight: lighter;
+    -fx-font-style: italic;
+    -fx-font-size: 10;
+}
+
+#replayBinDisplayContainer {
+    -fx-background-color: rgb(230,230,230);
+}

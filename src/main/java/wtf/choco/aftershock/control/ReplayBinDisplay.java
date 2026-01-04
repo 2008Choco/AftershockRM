@@ -11,6 +11,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -35,6 +36,8 @@ import wtf.choco.aftershock.util.SimpleEventProperty;
 
 public final class ReplayBinDisplay extends VBox {
 
+    private static final PseudoClass PSEUDOCLASS_SELECTED = PseudoClass.getPseudoClass("selected");
+
     @FXML private ImageView icon;
     @FXML private Label nameLabel;
     @FXML private TextField nameTextField;
@@ -44,6 +47,12 @@ public final class ReplayBinDisplay extends VBox {
     private final StringProperty name = new SimpleStringProperty(this, "name", "Unnamed Bin");
     private final BooleanProperty mutable = new SimpleBooleanProperty(this, "mutable", true);
     private final BooleanProperty editingName = new SimpleBooleanProperty(this, "editingName", false);
+    private final BooleanProperty selected = new SimpleBooleanProperty(this, "selected", false) {
+        @Override
+        protected void invalidated() {
+            pseudoClassStateChanged(PSEUDOCLASS_SELECTED, get());
+        }
+    };
     private final BooleanProperty active = new SimpleBooleanProperty(this, "active", false);
     private final ListProperty<ReplayEntry> replays = new SimpleListProperty<>(this, "replays", FXCollections.observableArrayList());
 
@@ -90,6 +99,18 @@ public final class ReplayBinDisplay extends VBox {
 
     public BooleanProperty mutableProperty() {
         return mutable;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selectedProperty().set(selected);
+    }
+
+    public boolean isSelected() {
+        return selectedProperty().get();
+    }
+
+    public BooleanProperty selectedProperty() {
+        return selected;
     }
 
     public void setEditingName(boolean editingName) {

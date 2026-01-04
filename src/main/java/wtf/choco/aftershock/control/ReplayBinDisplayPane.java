@@ -113,14 +113,6 @@ public final class ReplayBinDisplayPane extends VBox {
             }
         });
 
-        // TODO: This needs to be done better, with a Pseudoclass, probably. Figure out how to use these
-        this.selectionModel.getSelectedItems().addListener((ListChangeListener<? super ReplayBin>) change -> {
-            while (change.next()) {
-                change.getAddedSubList().forEach(bin -> replayBinDisplayNodes.get(bin).getStyleClass().add("replay-bin-display-selected"));
-                change.getRemoved().forEach(bin -> replayBinDisplayNodes.get(bin).getStyleClass().remove("replay-bin-display-selected"));
-            }
-        });
-
         this.labelHiddenBins.visibleProperty().bind(Bindings.greaterThan(hiddenBinCount, 0));
         this.labelHiddenBins.textProperty().bind(hiddenBinCount.map(value -> resources.getString("ui.bin_editor.hidden_bins").formatted(value)));
 
@@ -136,6 +128,7 @@ public final class ReplayBinDisplayPane extends VBox {
         display.mutableProperty().bind(bin.globalProperty().not());
         display.replaysProperty().bindBidirectional(bin.replaysProperty());
         display.activeProperty().bindBidirectional(bin.activeProperty());
+        display.selectedProperty().bind(Bindings.createBooleanBinding(() -> selectionModel.isSelected(bin), selectionModel.getSelectedItems()));
         display.setOnMouseClicked(event -> onReplayBinDisplayClicked(event, bin));
         display.setOnDelete(_ -> deleteBin(bin));
         display.setOnHide(_ -> bin.setHidden(true));

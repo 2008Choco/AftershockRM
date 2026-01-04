@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<fx:root type="javafx.scene.layout.VBox" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" stylesheets="/app.css" minWidth="75.0">
+<fx:root type="javafx.scene.layout.VBox" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" stylesheets="@../style/component/ReplayBinDisplayPane.css" minWidth="75.0">
   <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
     <contextMenu>
       <ContextMenu>
@@ -20,12 +20,12 @@
       </ContextMenu>
     </contextMenu>
 
-    <VBox fx:id="binEditorList" spacing="5.0" />
+    <VBox fx:id="binEditorList" />
   </ScrollPane>
 
-  <Label fx:id="labelHiddenBins" text="%ui.bin_editor.hidden_bins" alignment="CENTER" maxWidth="100" visible="false" style="-fx-font-weight: light; -fx-font-posture: italic; -fx-font-size: 10; -fx-padding: 5 0 0 0;" />
+  <Label fx:id="labelHiddenBins" text="%ui.bin_editor.hidden_bins" alignment="CENTER" maxWidth="100" visible="false" />
 
-  <HBox alignment="CENTER_LEFT" prefHeight="25.0" style="-fx-background-color: rgb(230,230,230);">
+  <HBox fx:id="replayBinDisplayContainer" alignment="CENTER_LEFT" prefHeight="25.0">
     <Button HBox.hgrow="ALWAYS" maxWidth="100" focusTraversable="false" onAction="#createBin">
       <graphic>
         <ImageView>

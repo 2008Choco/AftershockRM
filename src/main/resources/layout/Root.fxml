@@ -21,7 +21,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import wtf.choco.aftershock.control.ReplayBinDisplayPane?>
 
-<VBox prefHeight="720.0" prefWidth="1280.0" stylesheets="/app.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.AppController">
+<VBox prefHeight="720.0" prefWidth="1280.0" stylesheets="@../style/index.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.AppController">
   <MenuBar>
     <Menu text="%ui.menu.replays" />
     <Menu text="%ui.menu.options">
@@ -36,7 +36,7 @@
     <ReplayBinDisplayPane fx:id="replayBinDisplayPane"/>
 
     <SplitPane fx:id="splitPane" HBox.hgrow="ALWAYS">
-      <TableView fx:id="replayTable" editable="true" focusTraversable="false" onKeyPressed="#tableKeyboardControl" style="-fx-focus-color: transparent;">
+      <TableView fx:id="replayTable" editable="true" focusTraversable="false" onKeyPressed="#tableKeyboardControl">
         <placeholder>
           <Label text="%ui.table.empty" />
         </placeholder>
@@ -45,7 +45,7 @@
           <TableColumn fx:id="columnReplayName" prefWidth="200" text="%ui.table.column.replay_name" />
           <TableColumn fx:id="columnLastModified" prefWidth="140" text="%ui.table.column.last_modified" />
           <TableColumn fx:id="columnMode" sortable="false" text="%ui.table.column.mode" />
-          <TableColumn fx:id="columnScoreBlue" prefWidth="80" sortable="false" styleClass="columnScoreBlue" text="%ui.table.column.score_blue" />
+          <TableColumn fx:id="columnScoreBlue" prefWidth="80" sortable="false" text="%ui.table.column.score_blue" />
           <TableColumn fx:id="columnScoreOrange" prefWidth="80" sortable="false" text="%ui.table.column.score_orange" />
           <TableColumn fx:id="columnMap" prefWidth="175" text="%ui.table.column.map" />
           <TableColumn fx:id="columnOwner" prefWidth="100" sortable="false" text="%ui.table.column.owner" />
