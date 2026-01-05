@@ -18,6 +18,7 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
         this.emptyText = emptyText;
         this.commentEditor = new TextField();
         this.commentEditor.prefWidthProperty().bind(widthProperty());
+        this.commentEditor.getStyleClass().add("comment-editor");
 
         this.setOnMouseClicked(event -> {
             if (isEmpty()) {
@@ -66,9 +67,7 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
             return;
         }
 
-        if (!Objects.equals(item, getItem()) && getGraphic() == null) {
-            this.setText(item != null && !item.isBlank() ? item : emptyText);
-        }
+        this.setText(item != null && !item.isBlank() ? item : emptyText);
     }
 
     private String safe(String string) {
