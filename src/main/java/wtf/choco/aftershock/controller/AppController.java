@@ -83,7 +83,7 @@ public final class AppController {
 
     @FXML private TableColumn<ReplayEntry, Boolean> columnLoaded;
     @FXML private TableColumn<ReplayEntry, String> columnReplayName;
-    @FXML private TableColumn<ReplayEntry, String> columnLastModified;
+    @FXML private TableColumn<ReplayEntry, String> columnDate;
     @FXML private TableColumn<ReplayEntry, String> columnMode;
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreBlue;
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreOrange;
@@ -117,7 +117,7 @@ public final class AppController {
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
         this.columnLoaded.setCellValueFactory(new PropertyValueFactory<>("loaded"));
         this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::name));
-        this.columnLastModified.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.date().toString().replace('T', ' ')));
+        this.columnDate.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.date().toString().replace('T', ' ')));
         this.columnMode.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> String.format("%dv%1$d", replay.teamSize())));
         this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.score(Team.BLUE)));
         this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.score(Team.ORANGE)));

@@ -5,8 +5,31 @@
     -fx-padding: 0 8 0 0;
 }
 
+.table-row-cell #columnScoreBlue .text {
+    -fx-fill: cornflowerblue;
+    -fx-font-weight: bold;
+}
+
+.column-header#columnScoreBlue .label {
+    -fx-alignment: center-right;
+}
+
 #columnScoreOrange {
     -fx-padding: 0 0 0 8;
+}
+
+.table-row-cell #columnScoreOrange .text {
+    -fx-fill: darkorange;
+    -fx-font-weight: bold;
+}
+
+.column-header#columnScoreOrange .label {
+    -fx-alignment: center-left;
+}
+
+#replayTable {
+    -fx-selection-bar: lightblue;
+    -fx-selection-bar-non-focused: lightsteelblue;
 }
 
 .split-pane *.split-pane-divider {
@@ -19,5 +42,5 @@
 }
 
 .button {
-    -fx-background-radius: 0px;
+    -fx-background-radius: 0;
 }
