@@ -1,5 +1,6 @@
 module wtf.choco.aftershock {
     requires javafx.fxml;
+    requires fr.brouillard.oss.cssfx;
 
     requires transitive javafx.controls;
     requires transitive javafx.graphics;

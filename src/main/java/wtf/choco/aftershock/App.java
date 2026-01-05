@@ -2,6 +2,7 @@ package wtf.choco.aftershock;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import fr.brouillard.oss.cssfx.CSSFX;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -83,6 +84,8 @@ public final class App extends Application {
 
     @Override
     public void start(Stage stage) {
+        CSSFX.start();
+
         // Stage loading
         this.stage = stage;
         this.resources = ResourceBundle.getBundle("lang.", getLocale(ApplicationSettings.LOCALE.get()));

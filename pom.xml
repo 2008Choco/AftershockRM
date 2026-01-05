@@ -94,5 +94,12 @@
       <version>2.13.2</version>
       <scope>compile</scope>
     </dependency>
+
+    <dependency>
+      <groupId>fr.brouillard.oss</groupId>
+      <artifactId>cssfx</artifactId>
+      <version>11.5.1</version>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 </project>
