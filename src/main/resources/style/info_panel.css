@@ -1,0 +1,5 @@
+@import "common.css"
+
+.infoHeader {
+    -fx-font-weight: bold;
+}
