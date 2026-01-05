@@ -2,11 +2,9 @@ package wtf.choco.aftershock.structure;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ListProperty;
-import javafx.beans.property.MapProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleMapProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -18,6 +16,7 @@ import wtf.choco.aftershock.util.Preconditions;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -37,7 +36,7 @@ public class ReplayBin implements Iterable<ReplayEntry> {
     private final BooleanProperty active = new SimpleBooleanProperty(this, "active", false);
 
     private final ListProperty<ReplayEntry> replays;
-    private final MapProperty<String, ReplayEntry> replaysById;
+    private final Map<String, ReplayEntry> replaysById;
 
     private final UUID uuid;
 
@@ -51,8 +50,7 @@ public class ReplayBin implements Iterable<ReplayEntry> {
         this.hidden = new SimpleBooleanProperty(this, "hidden", false);
 
         this.replays = new SimpleListProperty<>(this, "replays", FXCollections.observableArrayList(replays));
-        Map<String, ReplayEntry> byIdMap = replays.stream().collect(Collectors.toMap(ReplayEntry::id, Function.identity()));
-        this.replaysById = new SimpleMapProperty<>(this, "replaysById", FXCollections.observableMap(byIdMap));
+        this.replaysById = new HashMap<>(replays.stream().collect(Collectors.toMap(ReplayEntry::id, Function.identity())));
 
         // Keep the map values in sync with the list values
         this.replays.addListener((ListChangeListener<? super ReplayEntry>) change -> {
