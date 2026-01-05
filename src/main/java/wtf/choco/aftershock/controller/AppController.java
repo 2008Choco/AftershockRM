@@ -4,10 +4,12 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.IntegerBinding;
+import javafx.beans.property.ListProperty;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
@@ -148,8 +150,12 @@ public final class AppController {
         this.tableFilter.replayBinProperty().bind(replayBinDisplayPane.activeBinProperty());
         this.tableFilter.searchTermProperty().bind(filterBar.textProperty());
 
-        FilteredList<ReplayEntry> tableItems = new FilteredList<>(globalBin.replaysProperty(), tableFilter);
-        this.replayTable.setItems(tableItems);
+        ListProperty<ReplayEntry> replays = globalBin.replaysProperty();
+        FilteredList<ReplayEntry> filteredReplays = new FilteredList<>(replays, tableFilter);
+        SortedList<ReplayEntry> sortedReplays = new SortedList<>(filteredReplays);
+        this.replayTable.setItems(sortedReplays);
+        sortedReplays.comparatorProperty().bind(replayTable.comparatorProperty());
+
         this.replayTable.setOnMouseClicked(_ -> replayTable.requestFocus());
         this.replayTable.setOnDragDetected(_ -> onReplayTableDragStart());
         this.replayTable.setOnDragOver(this::onReplayTableDragEnter);
@@ -159,8 +165,8 @@ public final class AppController {
         this.replayTable.setOnContextMenuRequested(this::onReplayTableContextMenuRequested);
 
         // Refresh the table when the search term changes and when we change active bins
-        this.tableFilter.searchTermProperty().addListener(_ -> forceRefilter(tableItems, tableFilter));
-        this.replayBinDisplayPane.activeBinProperty().addListener(_ -> forceRefilter(tableItems, tableFilter));
+        this.tableFilter.searchTermProperty().addListener(_ -> forceRefilter(filteredReplays, tableFilter));
+        this.replayBinDisplayPane.activeBinProperty().addListener(_ -> forceRefilter(filteredReplays, tableFilter));
 
         ObservableIntegerValue loadedCount = ComplexBindings.createIntegerBindingCountingBooleanProperties(replayTable.getItems(), ReplayEntry::loadedProperty);
         this.labelListed.textProperty().bind(Bindings.size(replayTable.getItems()).map(listed -> resources.getString("ui.footer.listed").formatted(listed)));
