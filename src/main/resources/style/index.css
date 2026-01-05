@@ -1,4 +1,5 @@
 @import "common.css"
+@import "constants.css"
 
 #columnScoreBlue {
     -fx-alignment: center-right;
@@ -6,7 +7,7 @@
 }
 
 .table-row-cell #columnScoreBlue .text {
-    -fx-fill: cornflowerblue;
+    -fx-fill: -blue-team-color;
     -fx-font-weight: bold;
 }
 
@@ -19,7 +20,7 @@
 }
 
 .table-row-cell #columnScoreOrange .text {
-    -fx-fill: darkorange;
+    -fx-fill: -orange-team-color;
     -fx-font-weight: bold;
 }
 
