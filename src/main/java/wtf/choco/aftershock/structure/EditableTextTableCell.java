@@ -20,6 +20,10 @@ public class EditableTextTableCell<S> extends TableCell<S, String> {
         this.commentEditor.prefWidthProperty().bind(widthProperty());
 
         this.setOnMouseClicked(event -> {
+            if (isEmpty()) {
+                return;
+            }
+
             Node currentGraphic = getGraphic();
             if (!isEditable() || currentGraphic == commentEditor || event.getClickCount() != 2) {
                 return;
