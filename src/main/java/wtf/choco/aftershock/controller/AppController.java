@@ -108,7 +108,6 @@ public final class AppController {
 
     private final Popup popup = new Popup();
 
-    private FilteredList<ReplayEntry> filteredReplays;
     private ReplayTableFilter tableFilter;
 
     @FXML
@@ -150,7 +149,7 @@ public final class AppController {
         this.tableFilter.searchTermProperty().bind(filterBar.textProperty());
 
         ListProperty<ReplayEntry> replays = globalBin.replaysProperty();
-        this.filteredReplays = new FilteredList<>(replays, tableFilter);
+        FilteredList<ReplayEntry> filteredReplays = new FilteredList<>(replays, tableFilter);
         SortedList<ReplayEntry> sortedReplays = new SortedList<>(filteredReplays);
         this.replayTable.setItems(sortedReplays);
         sortedReplays.comparatorProperty().bind(replayTable.comparatorProperty());
@@ -164,8 +163,19 @@ public final class AppController {
         this.replayTable.setOnContextMenuRequested(this::onReplayTableContextMenuRequested);
 
         // Refresh the table when the search term changes and when we change active bins
+        ListChangeListener<ReplayEntry> forceRefilterListener = _ -> forceRefilter(filteredReplays, tableFilter);
+        this.replayBinDisplayPane.activeBinProperty().addListener((_, oldValue, newValue) -> {
+            this.forceRefilter(filteredReplays, tableFilter);
+
+            if (oldValue != null) {
+                oldValue.replaysProperty().removeListener(forceRefilterListener);
+            }
+
+            if (newValue != null) {
+                newValue.replaysProperty().addListener(forceRefilterListener);
+            }
+        });
         this.tableFilter.searchTermProperty().addListener(_ -> forceRefilter(filteredReplays, tableFilter));
-        this.replayBinDisplayPane.activeBinProperty().addListener(_ -> forceRefilter(filteredReplays, tableFilter));
 
         ObservableIntegerValue loadedCount = ComplexBindings.createIntegerBindingCountingBooleanProperties(replayTable.getItems(), ReplayEntry::loadedProperty);
         this.labelListed.textProperty().bind(Bindings.size(replayTable.getItems()).map(listed -> resources.getString("ui.footer.listed").formatted(listed)));
@@ -435,7 +445,6 @@ public final class AppController {
             selection.clearSelection();
             selected.forEach(activeBin.getReplays()::remove);
             this.closeInfoPanel();
-            this.forceRefilter(filteredReplays, tableFilter);
         }
     }
 
