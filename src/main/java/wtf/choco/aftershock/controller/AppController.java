@@ -108,6 +108,7 @@ public final class AppController {
 
     private final Popup popup = new Popup();
 
+    private FilteredList<ReplayEntry> filteredReplays;
     private ReplayTableFilter tableFilter;
 
     @FXML
@@ -149,7 +150,7 @@ public final class AppController {
         this.tableFilter.searchTermProperty().bind(filterBar.textProperty());
 
         ListProperty<ReplayEntry> replays = globalBin.replaysProperty();
-        FilteredList<ReplayEntry> filteredReplays = new FilteredList<>(replays, tableFilter);
+        this.filteredReplays = new FilteredList<>(replays, tableFilter);
         SortedList<ReplayEntry> sortedReplays = new SortedList<>(filteredReplays);
         this.replayTable.setItems(sortedReplays);
         sortedReplays.comparatorProperty().bind(replayTable.comparatorProperty());
@@ -434,6 +435,7 @@ public final class AppController {
             selection.clearSelection();
             selected.forEach(activeBin.getReplays()::remove);
             this.closeInfoPanel();
+            this.forceRefilter(filteredReplays, tableFilter);
         }
     }
 
