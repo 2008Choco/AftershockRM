@@ -23,4 +23,5 @@ module wtf.choco.aftershock {
     exports wtf.choco.aftershock.structure;
     exports wtf.choco.aftershock.util;
     exports wtf.choco.aftershock.util.function;
+    exports wtf.choco.aftershock.util.lazy;
 }

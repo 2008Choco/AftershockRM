@@ -21,6 +21,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.AppResources;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.util.ComplexBindings;
@@ -51,7 +52,7 @@ public final class ReplayBinDisplayPane extends VBox {
     private final ObservableIntegerValue hiddenBinCount = ComplexBindings.createIntegerBindingCountingBooleanProperties(replayBins, ReplayBin::hiddenProperty);
 
     public ReplayBinDisplayPane() {
-        FXUtils.loadFXMLComponent("/component/ReplayBinDisplayPane", this, App.getInstance().getResources());
+        FXUtils.loadFXMLComponent(AppResources.FXML_COMPONENT_REPLAY_BIN_DISPLAY_PANE.get(), this, App.getInstance().getResources());
     }
 
     //<editor-fold desc="Object property methods">

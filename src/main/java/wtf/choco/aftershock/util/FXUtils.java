@@ -2,7 +2,6 @@ package wtf.choco.aftershock.util;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import wtf.choco.aftershock.App;
 
 import java.io.IOException;
 import java.net.URL;
@@ -13,11 +12,9 @@ public final class FXUtils {
 
     private FXUtils() { }
 
-    public static <T extends Node, C> LoadedFXMLObject<T, C> loadFXML(String path, ResourceBundle resources) {
-        URL fxmlLocation = getURL(path);
-
+    public static <T extends Node, C> LoadedFXMLObject<T, C> loadFXML(URL location, ResourceBundle resources) {
         try {
-            FXMLLoader loader = new FXMLLoader(fxmlLocation, resources);
+            FXMLLoader loader = new FXMLLoader(location, resources);
             return new LoadedFXMLObject<>(loader.load(), loader.getController());
         } catch (IOException e) {
             e.printStackTrace();
@@ -25,19 +22,17 @@ public final class FXUtils {
         }
     }
 
-    public static <T> T loadFXMLRoot(String path, ResourceBundle resources) {
-        URL fxmlLocation = getURL(path);
-
+    public static <T> T loadFXMLRoot(URL location, ResourceBundle resources) {
         try {
-            return FXMLLoader.load(fxmlLocation, resources);
+            return FXMLLoader.load(location, resources);
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public static void loadFXMLComponent(String path, Object componentObject, ResourceBundle resources) {
-        FXMLLoader loader = new FXMLLoader(getURL(path), resources);
+    public static void loadFXMLComponent(URL location, Object componentObject, ResourceBundle resources) {
+        FXMLLoader loader = new FXMLLoader(location, resources);
         loader.setRoot(componentObject);
         loader.setController(componentObject);
 
@@ -56,21 +51,6 @@ public final class FXUtils {
                 return null;
             }
         };
-    }
-
-    private static URL getURL(String path) {
-        Preconditions.checkNotEmpty(path, "Cannot load null or empty path");
-
-        if (!path.endsWith(".fxml")) {
-            path = path.concat(".fxml");
-        }
-
-        URL fxmlLocation = App.class.getResource(path);
-        if (fxmlLocation == null) {
-            throw new IllegalArgumentException("Could not find FXML file at path \"" + path + "\"");
-        }
-
-        return fxmlLocation;
     }
 
 }

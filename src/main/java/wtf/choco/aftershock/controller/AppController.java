@@ -30,7 +30,6 @@ import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.ContextMenuEvent;
@@ -44,6 +43,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Popup;
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.AppResources;
 import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.control.ReplayBinDisplayPane;
 import wtf.choco.aftershock.manager.CachingHandler;
@@ -76,8 +76,6 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 public final class AppController {
-
-    private static final Image DRAG_IMAGE = new Image(App.class.getResourceAsStream("/icons/file.png"));
 
     @FXML private TableView<ReplayEntry> replayTable;
 
@@ -132,7 +130,7 @@ public final class AppController {
         selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
 
         // TODO: Do this with CSS
-        StackPane root = FXUtils.loadFXMLRoot("/layout/FilterPopup", resources);
+        StackPane root = FXUtils.loadFXMLRoot(AppResources.FXML_LAYOUT_FILTER_POPUP.get(), resources);
         this.popup.setAutoHide(true);
         this.popup.getContent().add(root);
         this.popup.setOnHidden(_ -> filterOptionsImage.setOpacity(0.25));
@@ -205,7 +203,7 @@ public final class AppController {
         }
 
         Dragboard dragboard = replayTable.startDragAndDrop(TransferMode.COPY_OR_MOVE);
-        dragboard.setDragView(DRAG_IMAGE);
+        dragboard.setDragView(AppResources.IMAGE_FILE.get());
 
         ClipboardContent clipboard = new ClipboardContent();
         StringJoiner replays = new StringJoiner(";");

@@ -10,7 +10,6 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.image.Image;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.util.Preconditions;
 
@@ -24,9 +23,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ReplayBin implements Iterable<ReplayEntry> {
-
-    public static final Image BIN_GRAPHIC_EMPTY = new Image(App.class.getResourceAsStream("/icons/folder.png"));
-    public static final Image BIN_GRAPHIC_FULL = new Image(App.class.getResourceAsStream("/icons/folder-full.png"));
 
     private static boolean globalBinCreated = false;
 

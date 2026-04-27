@@ -20,6 +20,7 @@ import wtf.choco.aftershock.util.FXUtils;
 
 import java.io.File;
 import java.util.Locale;
+import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -93,7 +94,7 @@ public final class App extends Application {
         this.binRegistry = new BinRegistry();
         this.tagRegistry = new TagRegistry();
 
-        var appFXML = FXUtils.<Parent, AppController>loadFXML("/layout/Root", resources);
+        var appFXML = FXUtils.<Parent, AppController>loadFXML(AppResources.FXML_LAYOUT_ROOT.get(), resources);
         Scene scene = new Scene(appFXML.root());
         this.controller = appFXML.controller();
 
@@ -178,7 +179,7 @@ public final class App extends Application {
 
     public void openSettingsStage() {
         if (settingsStage == null) {
-            Parent root = FXUtils.loadFXMLRoot("/layout/SettingsPanel", resources);
+            Parent root = FXUtils.loadFXMLRoot(AppResources.FXML_LAYOUT_SETTINGS_PANEL.get(), resources);
             if (root == null) {
                 return;
             }

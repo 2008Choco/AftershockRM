@@ -28,6 +28,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.AppResources;
 import wtf.choco.aftershock.event.ReplayBinDisplayEvent;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
@@ -61,7 +62,7 @@ public final class ReplayBinDisplay extends VBox {
     private final SimpleEventProperty<ReplayBinDisplayEvent> onHide = new SimpleEventProperty<>(this::setEventHandler, ReplayBinDisplayEvent.HIDE, this, "onHide");
 
     public ReplayBinDisplay() {
-        FXUtils.loadFXMLComponent("/component/ReplayBinDisplay", this, App.getInstance().getResources());
+        FXUtils.loadFXMLComponent(AppResources.FXML_COMPONENT_REPLAY_BIN_DISPLAY.get(), this, App.getInstance().getResources());
     }
 
     //<editor-fold desc="Object property methods">
@@ -209,7 +210,7 @@ public final class ReplayBinDisplay extends VBox {
             }
         });
 
-        this.icon.imageProperty().bind(Bindings.when(replaysProperty().emptyProperty()).then(ReplayBin.BIN_GRAPHIC_EMPTY).otherwise(ReplayBin.BIN_GRAPHIC_FULL));
+        this.icon.imageProperty().bind(Bindings.when(replaysProperty().emptyProperty()).then(AppResources.IMAGE_FOLDER.get()).otherwise(AppResources.IMAGE_FOLDER_FULL.get()));
 
         this.setOnDragOver(this::onDragOver);
         this.setOnDragDropped(this::onDragDropped);
