@@ -8,8 +8,6 @@ module wtf.choco.aftershock {
     requires transitive java.logging;
     requires transitive java.sql;
     requires transitive com.google.gson;
-    requires java.xml.crypto;
-    requires java.compiler;
 
     opens wtf.choco.aftershock to javafx.fxml;
     opens wtf.choco.aftershock.control to javafx.fxml;
