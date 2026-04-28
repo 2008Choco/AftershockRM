@@ -1,5 +1,6 @@
 package wtf.choco.aftershock.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
@@ -14,8 +15,7 @@ import wtf.choco.aftershock.ApplicationSettings.Setting;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.logging.Logger;
 
 public final class SettingsPanelController {
@@ -39,8 +39,7 @@ public final class SettingsPanelController {
 
         String replayFolderPath = fieldReplayFolder.getText();
         if (!replayFolderPath.isBlank()) {
-            File initialDirectory = (isValidPath(replayFolderPath)) ? new File(replayFolderPath) : App.getInstance().getInstallDirectory();
-            chooser.setInitialDirectory(initialDirectory);
+            chooser.setInitialDirectory(Path.of(replayFolderPath).toFile());
         }
 
         File directory = chooser.showDialog(new Stage());
@@ -58,8 +57,7 @@ public final class SettingsPanelController {
 
         String rocketRPPath = fieldRocketRPPath.getText();
         if (!rocketRPPath.isBlank()) {
-            File initialDirectory = (isValidPath(rocketRPPath)) ? new File(rocketRPPath).getParentFile() : App.getInstance().getInstallDirectory();
-            chooser.setInitialDirectory(initialDirectory);
+            chooser.setInitialDirectory(Path.of(rocketRPPath).getParent().toFile());
         }
 
         File file = chooser.showOpenDialog(new Stage());
@@ -77,8 +75,7 @@ public final class SettingsPanelController {
 
         String replayEditorPath = fieldReplayEditorPath.getText();
         if (!replayEditorPath.isBlank()) {
-            File initialDirectory = (isValidPath(replayEditorPath)) ? new File(replayEditorPath).getParentFile() : App.getInstance().getInstallDirectory();
-            chooser.setInitialDirectory(initialDirectory);
+            chooser.setInitialDirectory(Path.of(replayEditorPath).getParent().toFile());
         }
 
         File file = chooser.showOpenDialog(new Stage());
@@ -109,7 +106,13 @@ public final class SettingsPanelController {
             }
         });
         if (replayDirectoryChanged) {
-            app.reloadReplays();
+            app.getBinRegistry().clearBins(true);
+            app.getFileOperations().performCompleteRefresh()
+                .thenAcceptAsync(app.getBinRegistry().getGlobalBin().getReplays()::addAll, Platform::runLater)
+                .exceptionally(e -> {
+                    e.printStackTrace();
+                    return null;
+                });
         }
 
         Logger logger = app.getLogger();
@@ -133,17 +136,6 @@ public final class SettingsPanelController {
         }
 
         setting.set(value);
-        return true;
-    }
-
-    // Doesn't work on Linux... for some reason... always true
-    public static boolean isValidPath(String path) {
-        try {
-            Paths.get(path);
-        } catch (InvalidPathException | NullPointerException ex) {
-            return false;
-        }
-
         return true;
     }
 

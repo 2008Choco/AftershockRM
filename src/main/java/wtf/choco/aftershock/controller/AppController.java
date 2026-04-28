@@ -1,5 +1,6 @@
 package wtf.choco.aftershock.controller;
 
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -46,7 +47,7 @@ import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.AppResources;
 import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.control.ReplayBinDisplayPane;
-import wtf.choco.aftershock.manager.CachingHandler;
+import wtf.choco.aftershock.files.AftershockFileOperations;
 import wtf.choco.aftershock.replay.IReplay;
 import wtf.choco.aftershock.replay.Team;
 import wtf.choco.aftershock.structure.EditableTextTableCell;
@@ -61,19 +62,25 @@ import wtf.choco.aftershock.util.ReplayTableFilter;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.net.URI;
 import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.StringJoiner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 
 public final class AppController {
 
@@ -221,7 +228,7 @@ public final class AppController {
         List<File> files = new ArrayList<>(selection.getSelectedItems().size());
         for (ReplayEntry replay : selection.getSelectedItems()) {
             replays.add(replay.id());
-            files.add(replay.getReplayFile());
+            files.add(replay.getLiveReplayPath().toFile());
         }
 
         clipboard.putFiles(files);
@@ -229,9 +236,9 @@ public final class AppController {
         dragboard.setContent(clipboard);
     }
 
-    private void onReplayTableDragEnter(DragEvent e) {
-        Dragboard dragboard = e.getDragboard();
-        if (e.getGestureSource() == replayTable) {
+    private void onReplayTableDragEnter(DragEvent event) {
+        Dragboard dragboard = event.getDragboard();
+        if (event.getGestureSource() == replayTable) {
             return;
         }
 
@@ -242,16 +249,18 @@ public final class AppController {
                 }
             }
 
-            e.acceptTransferModes(TransferMode.COPY);
-        }
+            event.acceptTransferModes(TransferMode.COPY);
+        } else if (dragboard.hasUrl()) {
+            try {
+                String replayName = getReplayNameFromURI(URI.create(dragboard.getUrl().trim()));
+                if (!replayName.endsWith(".replay")) {
+                    return;
+                }
 
-        else if (dragboard.hasUrl()) {
-            String url = dragboard.getUrl();
-            if (!url.endsWith(".replay")) {
-                return;
+                event.acceptTransferModes(TransferMode.COPY);
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
             }
-
-            e.acceptTransferModes(TransferMode.COPY);
         }
     }
 
@@ -259,83 +268,78 @@ public final class AppController {
         App app = App.getInstance();
         Dragboard dragboard = event.getDragboard();
 
+        CompletionStage<Collection<Path>> dragOperation;
         if (dragboard.hasFiles()) {
-            List<File> files = dragboard.getFiles();
-            ReplayBin globalBin = app.getBinRegistry().getGlobalBin();
-            files.removeIf(file -> globalBin.getReplays().stream().anyMatch(replay -> replay.id().equals(file.getName().substring(0, file.getName().lastIndexOf('.')))));
+            dragOperation = copyReplayFilesToLiveReplayDirectory(dragboard.getFiles());
+            event.setDropCompleted(true);
+        } else if (dragboard.hasUrl()) {
+            try {
+                URI uri = URI.create(dragboard.getUrl().trim());
+                dragOperation = downloadReplayFileFromURL(uri).thenApply(result -> {
+                    app.getLogger().info("Finished downloading replay from URL: " + uri);
+                    return result;
+                });
+            } catch (IllegalArgumentException e) {
+                dragOperation = CompletableFuture.failedFuture(e);
+            }
 
-            if (!files.isEmpty()) {
-                CachingHandler cacheHandler = App.getInstance().getCacheHandler();
-                app.getTaskExecutor().execute(task -> {
-                    String replayDirectory = ApplicationSettings.REPLAY_DIRECTORY.get();
-                    for (File file : files) {
-                        File demoFile = new File(replayDirectory, file.getName());
-                        Files.copy(file.toPath(), demoFile.toPath());
-                    }
+            event.setDropCompleted(true);
+        } else {
+            dragOperation = CompletableFuture.completedFuture(Collections.emptyList());
+        }
 
-                    cacheHandler.cacheReplays(task, files);
-                    cacheHandler.loadReplays(task, files);
-                }).exceptionally(e -> {
+        AftershockFileOperations fileOperations = app.getFileOperations();
+        dragOperation.thenCompose(fileOperations::createReplayBackups)
+                .thenCompose(fileOperations::generateHeaders)
+                .thenCompose(fileOperations::loadHeaders)
+                .thenAcceptAsync(app.getBinRegistry().getGlobalBin().getReplays()::addAll, Platform::runLater)
+                .exceptionally(e -> {
                     e.printStackTrace();
                     return null;
                 });
-            }
+    }
 
-            event.setDropCompleted(true);
-        } else if (dragboard.hasUrl()) {
-            String urlRaw = dragboard.getUrl();
-
-            URI uri;
-            try {
-                uri = URI.create(urlRaw);
-            } catch (IllegalArgumentException e) {
-                app.getLogger().warning("Malformed URL. Could not download replay");
-                e.printStackTrace();
-                return;
-            }
-
-            app.getTaskExecutor().execute(task -> {
-                String replayName = urlRaw.substring(urlRaw.lastIndexOf('/') + 1);
-                task.updateMessage(resources.getString("ui.progress.fetching_file"));
-
-                try (ReadableByteChannel readableByteChannel = Channels.newChannel(uri.toURL().openStream())) {
-                    File file = new File(ApplicationSettings.REPLAY_DIRECTORY.get(), replayName);
-                    if (!file.createNewFile()) {
-                        return;
-                    }
-
-                    task.updateMessage(resources.getString("ui.progress.downloading_file").formatted(replayName.substring(0, replayName.lastIndexOf('.'))));
-                    task.updateProgress(1, 4);
-
-                    Logger logger = app.getLogger();
-                    logger.info("Downloading file \"" + replayName + "\" (from " + uri + ")");
-
-                    FileOutputStream fileOutputStream = new FileOutputStream(file);
-                    fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, fileOutputStream.getChannel().size());
-                    fileOutputStream.close();
-                    logger.info("Done");
-
-                    task.updateMessage(resources.getString("ui.progress.caching_replay_headers"));
-                    task.updateProgress(2, 4);
-
-                    List<File> toCache = List.of(file);
-                    CachingHandler cacheHandler = App.getInstance().getCacheHandler();
-                    cacheHandler.cacheReplays(null, toCache);
-
-                    task.updateMessage(resources.getString("ui.progress.loading_replay"));
-                    task.updateProgress(3, 4);
-                    cacheHandler.loadReplays(null, toCache);
-
-                    task.updateProgress(4, 4);
-                }
-            }).exceptionally(e -> {
-                app.getLogger().warning("Could not complete the download due to an IO exception:");
-                e.printStackTrace();
-                return null;
-            });
-
-            event.setDropCompleted(true);
+    private CompletionStage<Collection<Path>> copyReplayFilesToLiveReplayDirectory(Collection<File> files) {
+        if (files.isEmpty()) {
+            return CompletableFuture.completedFuture(Collections.emptyList());
         }
+
+        return CompletableFuture.supplyAsync(() -> {
+            List<Path> newPaths = new ArrayList<>(files.size());
+
+            Path liveReplayDirectory = App.getInstance().getFileOperations().getLiveReplayDirectory();
+            for (File file : files) {
+                Path targetPath = liveReplayDirectory.resolve(file.getName());
+                try {
+                    Files.copy(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                    newPaths.add(targetPath);
+                } catch (IOException e) {
+                    throw new CompletionException(e);
+                }
+            }
+
+            return newPaths;
+        }, App.getInstance().getExecutor());
+    }
+
+    private CompletionStage<Collection<Path>> downloadReplayFileFromURL(URI uri) {
+        String replayName = getReplayNameFromURI(uri);
+        return CompletableFuture.supplyAsync(() -> {
+            Path targetPath = App.getInstance().getFileOperations().getLiveReplayDirectory().resolve(replayName);
+            try (ReadableByteChannel channelIn = Channels.newChannel(uri.toURL().openStream());
+                 FileChannel channelOut = FileChannel.open(targetPath)
+            ) {
+                channelOut.transferFrom(channelIn, 0, Long.MAX_VALUE);
+                return List.of(targetPath);
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            }
+        }, App.getInstance().getExecutor());
+    }
+
+    private String getReplayNameFromURI(URI uri) {
+        String path = uri.getPath();
+        return path.substring(path.lastIndexOf('/') + 1);
     }
 
     private ContextMenu createReplayTableContextMenu() {
@@ -389,8 +393,11 @@ public final class AppController {
         }
 
         try {
-            new ProcessBuilder().command(replayEditorPath, "-open", replayTable.getSelectionModel().getSelectedItems().getFirst().getReplayFile().getAbsolutePath())
-                    .redirectError(Redirect.DISCARD).redirectOutput(Redirect.DISCARD).start();
+            String replayPath = replayTable.getSelectionModel().getSelectedItems().getFirst().getLiveReplayPath().toAbsolutePath().toString();
+            new ProcessBuilder().command(replayEditorPath, "-open", replayPath)
+                    .redirectError(Redirect.DISCARD)
+                    .redirectOutput(Redirect.DISCARD)
+                    .start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -398,7 +405,7 @@ public final class AppController {
 
     private void onOpenFileLocation() {
         try {
-            String selectedReplayFilePath = replayTable.getSelectionModel().getSelectedItems().getFirst().getReplayFile().getAbsolutePath();
+            String selectedReplayFilePath = replayTable.getSelectionModel().getSelectedItems().getFirst().getLiveReplayPath().toAbsolutePath().toString();
             new ProcessBuilder("explorer.exe", "/select,", selectedReplayFilePath)
                     .redirectOutput(Redirect.DISCARD)
                     .redirectError(Redirect.DISCARD)

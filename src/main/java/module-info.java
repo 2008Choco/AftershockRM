@@ -8,6 +8,8 @@ module wtf.choco.aftershock {
     requires transitive java.logging;
     requires transitive java.sql;
     requires transitive com.google.gson;
+    requires java.xml.crypto;
+    requires java.compiler;
 
     opens wtf.choco.aftershock to javafx.fxml;
     opens wtf.choco.aftershock.control to javafx.fxml;
@@ -17,6 +19,7 @@ module wtf.choco.aftershock {
     exports wtf.choco.aftershock.control;
     exports wtf.choco.aftershock.controller;
     exports wtf.choco.aftershock.event;
+    exports wtf.choco.aftershock.files;
     exports wtf.choco.aftershock.keybind;
     exports wtf.choco.aftershock.manager;
     exports wtf.choco.aftershock.replay;

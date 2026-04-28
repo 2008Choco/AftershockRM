@@ -1,5 +1,5 @@
-@import "common.css"
-@import "constants.css"
+@import "common.css";
+@import "constants.css";
 
 #columnScoreBlue {
     -fx-alignment: center-right;

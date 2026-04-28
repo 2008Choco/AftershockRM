@@ -14,6 +14,7 @@ import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -24,30 +25,30 @@ public class ReplayEntry implements IReplay {
 
     private Parent infoPanel;
 
-    private final File replayFile;
-    private final File cachedReplayFile;
-    private final File headerJsonFile;
+    private final Path liveReplayPath;
+    private final Path backupReplayPath;
+    private final Path headerPath;
     private final Replay replayData;
     private final AftershockData aftershockData;
 
-    public ReplayEntry(File replayFile, File cachedReplayFile, File headerJsonFile, Replay replayData, AftershockData aftershockData) {
-        this.replayFile = replayFile;
-        this.cachedReplayFile = cachedReplayFile;
-        this.headerJsonFile = headerJsonFile;
+    public ReplayEntry(Path liveReplayPath, Path backupReplayPath, Path headerPath, Replay replayData, AftershockData aftershockData) {
+        this.liveReplayPath = liveReplayPath;
+        this.backupReplayPath = backupReplayPath;
+        this.headerPath = headerPath;
         this.replayData = replayData;
         this.aftershockData = aftershockData;
     }
 
-    public File getReplayFile() {
-        return replayFile;
+    public Path getLiveReplayPath() {
+        return liveReplayPath;
     }
 
-    public File getCachedReplayFile() {
-        return cachedReplayFile;
+    public Path getBackupReplayPath() {
+        return backupReplayPath;
     }
 
-    public File getHeaderJsonFile() {
-        return headerJsonFile;
+    public Path getHeaderPath() {
+        return headerPath;
     }
 
     @Override

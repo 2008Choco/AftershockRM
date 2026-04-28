@@ -3,12 +3,10 @@ package wtf.choco.aftershock;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -20,7 +18,7 @@ public final class ApplicationSettings {
     private static final Map<String, Setting> SETTING_BY_KEY = new HashMap<>();
 
     public static final Setting REPLAY_DIRECTORY = createSetting("replay_directory");
-    public static final Setting ROCKETRP_PATH = createSetting("rocketrp_path", getCanonicalPath(App.getInstance().getInstallDirectory()) + "\\RocketRP\\RocketRP.CLI.exe");
+    public static final Setting ROCKETRP_PATH = createSetting("rocketrp_path", App.getInstance().getInstallPath().resolve("RocketRP/RocketRP.CLI.exe").toAbsolutePath().toString());
     public static final Setting REPLAY_EDITOR_PATH = createSetting("replay_editor_path");
     public static final Setting LOCALE = createSetting("locale_code", "en_US");
 
@@ -45,19 +43,11 @@ public final class ApplicationSettings {
     }
 
     public static void save(App app) throws IOException {
-        PROPERTIES.store(Files.newBufferedWriter(getPropertiesFilePath(app), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.WRITE), null);
+        PROPERTIES.store(Files.newBufferedWriter(getPropertiesFilePath(app), StandardCharsets.UTF_8), null);
     }
 
     private static Path getPropertiesFilePath(App app) {
-        return app.getInstallDirectory().toPath().resolve("app.properties");
-    }
-
-    private static String getCanonicalPath(File file) {
-        try {
-            return file.getCanonicalPath();
-        } catch (IOException e) {
-            return file.getAbsolutePath();
-        }
+        return app.getInstallPath().resolve("app.properties");
     }
 
     public static final class Setting {

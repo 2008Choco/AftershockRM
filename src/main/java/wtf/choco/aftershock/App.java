@@ -4,11 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.brouillard.oss.cssfx.CSSFX;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import wtf.choco.aftershock.controller.AppController;
+import wtf.choco.aftershock.files.AftershockFileOperations;
+import wtf.choco.aftershock.util.FileUtil;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
@@ -18,11 +21,9 @@ import wtf.choco.aftershock.replay.schema.ReplayTypeAdapterFactory;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Locale;
-import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.ConsoleHandler;
@@ -46,17 +47,18 @@ public final class App extends Application {
 
     private KeybindRegistry keybindRegistry;
     private ProgressiveTaskExecutor taskExecutor;
-    private CachingHandler cacheHandler;
+    @Deprecated
+    private CachingHandler cacheHandler; // TODO: Replace with AftershockFileOperations (fileOperations)
+    private AftershockFileOperations fileOperations;
 
     private BinRegistry binRegistry;
     private TagRegistry tagRegistry;
 
-    private File installDirectory;
-    private File binsFile;
-    private File replayDataFile;
+    private Path installPath;
+    private Path binsPath;
+    private Path replayDataPath;
 
-    private final ExecutorService primaryExecutor = Executors.newSingleThreadExecutor();
-    private final ExecutorService pooledExecutor = Executors.newCachedThreadPool();
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final Logger logger = Logger.getLogger("AftershockRM");
 
     @Override
@@ -69,18 +71,19 @@ public final class App extends Application {
         handler.setFormatter(ColouredLogFormatter.get());
         this.logger.addHandler(handler);
 
-        // Install directory initialization
-        this.installDirectory = new File(System.getProperty("user.home"), "AppData/Roaming/AftershockRM/");
+        // File system initialization
+        this.installPath = Path.of(System.getProperty("user.home")).resolve("AppData/Roaming/AftershockRM/");
+        FileUtil.createDirectoryIfDoesntExist(installPath);
 
-        // Post-install directory initialization
-        this.installDirectory.mkdirs();
-        this.binsFile = new File(installDirectory, "bins.json");
-        this.binsFile.createNewFile();
-        this.replayDataFile = new File(installDirectory, "replay_data.json");
-        this.replayDataFile.createNewFile();
+        this.binsPath = installPath.resolve("bins.json");
+        this.replayDataPath = installPath.resolve("replay_data.json");
+        FileUtil.createFileIfDoesntExist(binsPath);
+        FileUtil.createFileIfDoesntExist(replayDataPath);
 
+        // Misc initialization
         ApplicationSettings.init(this);
         this.cacheHandler = new CachingHandler(this);
+        this.fileOperations = new AftershockFileOperations(this);
     }
 
     @Override
@@ -91,14 +94,14 @@ public final class App extends Application {
         this.stage = stage;
         this.resources = ResourceBundle.getBundle("lang.", getLocale(ApplicationSettings.LOCALE.get()));
 
-        this.binRegistry = new BinRegistry();
+        this.binRegistry = new BinRegistry(this);
         this.tagRegistry = new TagRegistry();
 
         var appFXML = FXUtils.<Parent, AppController>loadFXML(AppResources.FXML_LAYOUT_ROOT.get(), resources);
         Scene scene = new Scene(appFXML.root());
         this.controller = appFXML.controller();
 
-        this.taskExecutor = new ProgressiveTaskExecutor(primaryExecutor, controller.getProgressBar(), controller.getProgressStatus());
+        this.taskExecutor = new ProgressiveTaskExecutor(getExecutor(), controller.getProgressBar(), controller.getProgressStatus());
 
         // TODO: Configurable key binds
         this.keybindRegistry = new KeybindRegistry(this);
@@ -111,22 +114,27 @@ public final class App extends Application {
 
         this.controller.setActiveBin(binRegistry.getGlobalBin());
 
-        // Replay setup
-        this.reloadReplays().thenRunAsync(() -> binRegistry.loadBinsFromFile(binsFile), primaryExecutor).exceptionally(e -> {
-            e.printStackTrace();
-            return null;
-        });
+        this.cacheHandler.loadReplayData(replayDataPath)
+                .thenAccept(loaded -> getLogger().info("Loaded Aftershock replay data for " + loaded + " replays!"))
+                .thenRun(fileOperations::createDirectoriesIfNotExist)
+                .thenCompose(_ -> fileOperations.performCompleteRefresh())
+                .thenAcceptAsync(binRegistry.getGlobalBin().getReplays()::addAll, Platform::runLater)
+                .thenCompose(_ -> binRegistry.loadBinsFromFile(binsPath))
+                .thenAcceptAsync(binRegistry::addBins, Platform::runLater)
+                .exceptionally(e -> {
+                    e.printStackTrace();
+                    return null;
+                });
     }
 
     @Override
     public void stop() throws Exception {
-        this.primaryExecutor.shutdown();
-        this.pooledExecutor.shutdown();
+        this.getExecutor().shutdown();
 
         this.keybindRegistry.clearKeybinds();
-        this.binRegistry.saveBinsToFile(binsFile);
+        this.binRegistry.saveBinsToFile(binsPath);
         this.binRegistry.deleteBins(true);
-        this.cacheHandler.writeReplayData(replayDataFile);
+        this.cacheHandler.writeReplayData(replayDataPath);
         this.tagRegistry.clearTags();
         ApplicationSettings.save(this);
 
@@ -145,6 +153,10 @@ public final class App extends Application {
         return controller;
     }
 
+    public AftershockFileOperations getFileOperations() {
+        return fileOperations;
+    }
+
     public CachingHandler getCacheHandler() {
         return cacheHandler;
     }
@@ -154,7 +166,7 @@ public final class App extends Application {
     }
 
     public ExecutorService getExecutor() {
-        return primaryExecutor;
+        return executorService;
     }
 
     public ProgressiveTaskExecutor getTaskExecutor() {
@@ -173,8 +185,8 @@ public final class App extends Application {
         return keybindRegistry;
     }
 
-    public File getInstallDirectory() {
-        return installDirectory;
+    public Path getInstallPath() {
+        return installPath;
     }
 
     public void openSettingsStage() {
@@ -201,14 +213,6 @@ public final class App extends Application {
         this.settingsStage.close();
     }
 
-    public CompletableFuture<ProgressiveTaskExecutor.TaskResult<Void>> reloadReplays() {
-        return taskExecutor.execute(task -> {
-            this.cacheHandler.cacheReplays(task);
-            this.cacheHandler.loadReplayData(replayDataFile);
-            this.cacheHandler.loadReplaysFromCache(task);
-        }, primaryExecutor);
-    }
-
     private Locale getLocale(String tag) {
         // TODO: This is not safe at all and prone to exceptions. Improve this implementation
         String[] parts = tag.split("_");
@@ -217,14 +221,6 @@ public final class App extends Application {
         }
 
         return Locale.of(parts[0], parts[1]);
-    }
-
-    public static String truncateID(String id) {
-        if (id.endsWith(".replay")) {
-            id = id.substring(0, id.lastIndexOf('.'));
-        }
-
-        return id.substring(0, 4) + "..." + id.substring(id.length() - 4);
     }
 
     public static App getInstance() {
