@@ -317,13 +317,10 @@ public final class AftershockFileOperations {
      */
     public CompletionStage<Collection<ReplayEntry>> loadHeaders(Iterable<Path> headerPaths) {
         return CompletableFuture.supplyAsync(() -> {
-            System.out.println(headerPaths);
-
             List<ReplayEntry> replays = new ArrayList<>();
             for (Path path : headerPaths) {
                 // Ignore any invalid files (non-existent, non-header files, or not in the headers directory)
                 if (isInvalidPath(path, headersDirectory, FILE_EXTENSION_JSON)) {
-                    System.out.println("INVALID HEADER PATH: " + path);
                     continue;
                 }
 
@@ -333,7 +330,6 @@ public final class AftershockFileOperations {
                     throw new CompletionException(e);
                 }
             }
-            System.out.println("RETURNING (" + replays.size() + ") REPLAY(S)!!!");
             return replays;
         }, app.getExecutor());
     }
