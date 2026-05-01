@@ -9,6 +9,7 @@ import wtf.choco.aftershock.replay.Goal;
 import wtf.choco.aftershock.replay.IReplay;
 import wtf.choco.aftershock.replay.Player;
 import wtf.choco.aftershock.replay.ReplayMetadata;
+import wtf.choco.aftershock.structure.ReplayBin;
 
 import java.util.List;
 
@@ -22,7 +23,8 @@ public final class AftershockTypeAdapterFactory implements TypeAdapterFactory {
             TypeAdapterRegistration.create(Player.class, PlayerTypeAdapter::new),
             TypeAdapterRegistration.create(Goal.class, GoalTypeAdapter::new),
             TypeAdapterRegistration.create(ReplayMetadata.class, ReplayMetadataTypeAdapter::new),
-            TypeAdapterRegistration.create(ReplayMetadataAccessor.class, ReplayMetadataStoreTypeAdapter::new)
+            TypeAdapterRegistration.create(ReplayMetadataAccessor.class, ReplayMetadataStoreTypeAdapter::new),
+            TypeAdapterRegistration.create(ReplayBin.class, ReplayBinTypeAdapter::new)
     );
 
     private AftershockTypeAdapterFactory() { }

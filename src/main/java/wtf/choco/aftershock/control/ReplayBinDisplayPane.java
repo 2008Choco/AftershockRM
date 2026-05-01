@@ -97,22 +97,12 @@ public final class ReplayBinDisplayPane extends VBox {
                     }
 
                     if (bin == getActiveBin()) {
-                        this.setActiveBin(App.getInstance().getBinRegistry().getGlobalBin());
+                        this.setActiveBin(ReplayBin.GLOBAL);
                     }
                 }
             }
         });
         this.replayBinsProperty().bindBidirectional(App.getInstance().getBinRegistry().binsProperty());
-
-        this.activeBinProperty().addListener((_, oldValue, newValue) -> {
-            if (oldValue != null) {
-                oldValue.setActive(false);
-            }
-
-            if (newValue != null) {
-                newValue.setActive(true);
-            }
-        });
 
         this.labelHiddenBins.visibleProperty().bind(Bindings.greaterThan(hiddenBinCount, 0));
         this.labelHiddenBins.textProperty().bind(hiddenBinCount.map(value -> resources.getString("ui.bin_editor.hidden_bins").formatted(value)));
@@ -128,7 +118,7 @@ public final class ReplayBinDisplayPane extends VBox {
         display.nameProperty().bindBidirectional(bin.nameProperty());
         display.mutableProperty().bind(bin.globalProperty().not());
         display.replaysProperty().bindBidirectional(bin.replaysProperty());
-        display.activeProperty().bindBidirectional(bin.activeProperty());
+        display.activeProperty().bind(Bindings.createBooleanBinding(() -> getActiveBin() == bin, activeBinProperty()));
         display.selectedProperty().bind(Bindings.createBooleanBinding(() -> selectionModel.isSelected(bin), selectionModel.getSelectedItems()));
         display.setOnMouseClicked(event -> onReplayBinDisplayClicked(event, bin));
         display.setOnDelete(_ -> deleteBin(bin));
@@ -142,7 +132,7 @@ public final class ReplayBinDisplayPane extends VBox {
             if (newValue) {
                 this.selectionModel.clearSelection(bin);
                 if (getActiveBin() == bin) {
-                    this.setActiveBin(App.getInstance().getBinRegistry().getGlobalBin());
+                    this.setActiveBin(ReplayBin.GLOBAL);
                 }
 
                 if (node != null) {
@@ -264,9 +254,8 @@ public final class ReplayBinDisplayPane extends VBox {
         bin.setHidden(false);
 
         if (getActiveBin() == bin) {
-            ReplayBin globalBin = App.getInstance().getBinRegistry().getGlobalBin();
-            this.setActiveBin(globalBin);
-            this.selectionModel.clearAndSelect(globalBin);
+            this.setActiveBin(ReplayBin.GLOBAL);
+            this.selectionModel.clearAndSelect(ReplayBin.GLOBAL);
         }
 
         App.getInstance().getBinRegistry().deleteBin(bin);

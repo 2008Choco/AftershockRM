@@ -1,46 +1,17 @@
 package wtf.choco.aftershock.manager;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.structure.ReplayBin;
-import wtf.choco.aftershock.structure.ReplayEntry;
-import wtf.choco.aftershock.util.JsonUtil;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
 
 public class BinRegistry  {
 
-    private final App app;
-    private final ListProperty<ReplayBin> bins = new SimpleListProperty<>(this, "bins", FXCollections.observableArrayList());
-    private final ReplayBin globalBin;
-
-    public BinRegistry(App app) {
-        this.app = app;
-        this.globalBin = new ReplayBin(UUID.randomUUID(), "Global", true);
-        this.addBin(globalBin);
-    }
-
-    public ReplayBin getGlobalBin() {
-        return globalBin;
-    }
+    private final ListProperty<ReplayBin> bins = new SimpleListProperty<>(this, "bins", FXCollections.observableArrayList(ReplayBin.GLOBAL));
 
     public ReplayBin createBin(String name) {
         if (name == null || name.equalsIgnoreCase("global")) {
@@ -104,84 +75,6 @@ public class BinRegistry  {
 
     public ListProperty<ReplayBin> binsProperty() {
         return bins;
-    }
-
-    public CompletionStage<List<ReplayBin>> loadBinsFromFile(Path path) {
-        return CompletableFuture.supplyAsync(() -> {
-            // TODO: Write a TypeAdapter for this instead of parsing JSON on the fly
-            JsonArray root;
-            try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
-                root = App.GSON.fromJson(reader, JsonArray.class);
-            } catch (IOException e) {
-                throw new CompletionException(e);
-            }
-
-            if (root == null) {
-                return Collections.emptyList();
-            }
-
-            List<ReplayBin> bins = new ArrayList<>(root.size());
-            for (JsonElement binElement : root) {
-                if (!binElement.isJsonObject()) {
-                    continue;
-                }
-
-                JsonObject binRoot = binElement.getAsJsonObject();
-                UUID uuid = UUID.fromString(binRoot.get("id").getAsString());
-                String name = binRoot.get("name").getAsString();
-                boolean hidden = JsonUtil.getOrCreate(binRoot, "hidden", JsonElement::getAsBoolean, JsonObject::addProperty, false);
-
-                ReplayBin bin = new ReplayBin(uuid, name);
-                bin.setHidden(hidden);
-
-                JsonArray replays = binRoot.getAsJsonArray("replays");
-                for (JsonElement replayIdElement : replays) {
-                    ReplayEntry replay = globalBin.getReplay(replayIdElement.getAsString());
-                    if (replay == null) {
-                        continue;
-                    }
-
-                    bin.getReplays().add(replay);
-                }
-
-                App.getInstance().getLogger().info("Loaded bin: \"" + name + "\"" + (hidden ? " (hidden)" : ""));
-
-                bins.add(bin);
-            }
-
-            return bins;
-        }, app.getExecutor());
-    }
-
-    public void saveBinsToFile(Path path) {
-        JsonArray root = new JsonArray();
-
-        for (ReplayBin bin : getBins()) {
-            if (bin.isGlobal()) { // Don't write global bin to file
-                continue;
-            }
-
-            JsonObject binRoot = new JsonObject();
-
-            binRoot.addProperty("id", bin.getUUID().toString());
-            binRoot.addProperty("name", bin.getName());
-            binRoot.addProperty("hidden", bin.isHidden());
-
-            List<ReplayEntry> replays = bin.getReplays();
-            JsonArray replaysArray = new JsonArray(replays.size());
-            for (ReplayEntry replay : replays) {
-                replaysArray.add(replay.id());
-            }
-
-            binRoot.add("replays", replaysArray);
-            root.add(binRoot);
-        }
-
-        try {
-            Files.writeString(path, App.GSON.toJson(root), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public String getSafeName(String base) {

@@ -313,7 +313,7 @@ public final class ReplayBinDisplay extends VBox {
         if (dragboard.hasString()) {
             String[] replayIds = dragboard.getString().split(";");
             for (String replayId : replayIds) {
-                ReplayEntry replay = App.getInstance().getBinRegistry().getGlobalBin().getReplay(replayId);
+                ReplayEntry replay = ReplayBin.GLOBAL.getReplay(replayId);
                 if (replay == null || getReplays().contains(replay)) {
                     continue;
                 }

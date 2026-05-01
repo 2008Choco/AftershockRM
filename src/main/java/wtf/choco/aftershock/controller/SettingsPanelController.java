@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.ApplicationSettings.Setting;
+import wtf.choco.aftershock.structure.ReplayBin;
 
 import java.io.File;
 import java.io.IOException;
@@ -108,7 +109,7 @@ public final class SettingsPanelController {
         if (replayDirectoryChanged) {
             app.getBinRegistry().clearBins(true);
             app.getFileOperations().performCompleteRefresh()
-                .thenAcceptAsync(app.getBinRegistry().getGlobalBin().getReplays()::addAll, Platform::runLater)
+                .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
                 .exceptionally(e -> {
                     e.printStackTrace();
                     return null;

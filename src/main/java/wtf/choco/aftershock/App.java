@@ -17,6 +17,7 @@ import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.schema.AftershockTypeAdapterFactory;
+import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
 
@@ -49,8 +50,8 @@ public final class App extends Application {
     private AftershockFileOperations fileOperations;
     private ReplayMetadataAccessor replayMetadataAccessor;
 
-    private BinRegistry binRegistry;
-    private TagRegistry tagRegistry;
+    private final BinRegistry binRegistry = new BinRegistry();
+    private final TagRegistry tagRegistry = new TagRegistry();
 
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final Logger logger = Logger.getLogger("AftershockRM");
@@ -80,9 +81,6 @@ public final class App extends Application {
         this.stage = stage;
         this.resources = ResourceBundle.getBundle("lang.", getLocale(ApplicationSettings.LOCALE.get()));
 
-        this.binRegistry = new BinRegistry(this);
-        this.tagRegistry = new TagRegistry();
-
         var appFXML = FXUtils.<Parent, AppController>loadFXML(AppResources.FXML_LAYOUT_ROOT.get(), resources);
         Scene scene = new Scene(appFXML.root());
         this.controller = appFXML.controller();
@@ -97,14 +95,14 @@ public final class App extends Application {
         stage.getIcons().add(AppResources.IMAGE_APP_ICON_64X.get());
         stage.show();
 
-        this.controller.setActiveBin(binRegistry.getGlobalBin());
+        this.controller.setActiveBin(ReplayBin.GLOBAL);
 
         this.controller.pushProgressStatus("Loading replay data");
         this.fileOperations.readReplayMetadata()
                 .thenAccept(metadataStore -> this.replayMetadataAccessor = metadataStore)
                 .thenCompose(_ -> fileOperations.performCompleteRefresh())
-                .thenAcceptAsync(binRegistry.getGlobalBin().getReplays()::addAll, Platform::runLater)
-                .thenCompose(_ -> binRegistry.loadBinsFromFile(fileStructure.binsFile()))
+                .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
+                .thenCompose(_ -> fileOperations.readReplayBins())
                 .thenAcceptAsync(binRegistry::addBins, Platform::runLater)
                 .thenRun(controller::popProgressStatus)
                 .exceptionally(e -> {
@@ -118,10 +116,8 @@ public final class App extends Application {
         this.getExecutor().shutdown();
 
         this.keybindRegistry.clearKeybinds();
-        this.binRegistry.saveBinsToFile(fileStructure.binsFile());
-        this.binRegistry.deleteBins(true);
+        this.fileOperations.saveReplayBins();
         this.fileOperations.saveReplayMetadata();
-        this.tagRegistry.clearTags();
         ApplicationSettings.save(fileStructure);
 
         ColouredLogFormatter.get().setLogFile(null);

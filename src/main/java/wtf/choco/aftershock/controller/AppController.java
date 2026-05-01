@@ -153,12 +153,11 @@ public final class AppController {
         // Label update listeners
         selectionModel.getSelectedItems().addListener(this::onSelectedItemsChange);
 
-        ReplayBin globalBin = App.getInstance().getBinRegistry().getGlobalBin();
-        this.tableFilter = new ReplayTableFilter(globalBin);
+        this.tableFilter = new ReplayTableFilter(ReplayBin.GLOBAL);
         this.tableFilter.replayBinProperty().bind(replayBinDisplayPane.activeBinProperty());
         this.tableFilter.searchTermProperty().bind(filterBar.textProperty());
 
-        ListProperty<ReplayEntry> replays = globalBin.replaysProperty();
+        ListProperty<ReplayEntry> replays = ReplayBin.GLOBAL.replaysProperty();
         FilteredList<ReplayEntry> filteredReplays = new FilteredList<>(replays, tableFilter);
         SortedList<ReplayEntry> sortedReplays = new SortedList<>(filteredReplays);
         this.replayTable.setItems(sortedReplays);
@@ -295,7 +294,7 @@ public final class AppController {
         dragOperation.thenCompose(fileOperations::createReplayBackups)
                 .thenCompose(fileOperations::generateHeaders)
                 .thenCompose(fileOperations::loadHeaders)
-                .thenAcceptAsync(app.getBinRegistry().getGlobalBin().getReplays()::addAll, Platform::runLater)
+                .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
                 .exceptionally(e -> {
                     e.printStackTrace();
                     return null;
@@ -355,11 +354,10 @@ public final class AppController {
 
         // "Send to..." bins menu item (conditional!)
         // We only want to add the "Send to..." context menu if there is at least one bin
-        ReplayBin globalBin = App.getInstance().getBinRegistry().getGlobalBin();
         ObservableList<ReplayBin> bins = App.getInstance().getBinRegistry().getBins();
         IntegerBinding binCountBinding = Bindings.size(bins);
-        BooleanBinding propertyHasSufficientBins = replayBinDisplayPane.activeBinProperty().isEqualTo(globalBin).and(binCountBinding.greaterThan(1))
-            .or(replayBinDisplayPane.activeBinProperty().isNotEqualTo(globalBin).and(binCountBinding.greaterThan(2)));
+        BooleanBinding propertyHasSufficientBins = replayBinDisplayPane.activeBinProperty().isEqualTo(ReplayBin.GLOBAL).and(binCountBinding.greaterThan(1))
+            .or(replayBinDisplayPane.activeBinProperty().isNotEqualTo(ReplayBin.GLOBAL).and(binCountBinding.greaterThan(2)));
 
         MenuItem separator = new SeparatorMenuItem();
         Menu sendTo = new Menu(resources.getString("ui.table.context_menu.send_to"));

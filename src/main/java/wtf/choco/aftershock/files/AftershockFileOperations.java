@@ -1,14 +1,17 @@
 package wtf.choco.aftershock.files;
 
+import com.google.gson.reflect.TypeToken;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.ReplayMetadata;
+import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.FileUtil;
 import wtf.choco.aftershock.util.function.ThrowingFunction;
 import wtf.choco.aftershock.util.function.ThrowingPredicate;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -421,6 +424,28 @@ public final class AftershockFileOperations {
             Files.writeString(fileStructure.replayMetadataFile(), App.GSON.toJson(app.getReplayMetadataAccessor()));
         } catch (IOException e) {
             throw new CompletionException(e);
+        }
+    }
+
+    public CompletionStage<List<ReplayBin>> readReplayBins() {
+        return CompletableFuture.supplyAsync(() -> {
+            try (BufferedReader reader = Files.newBufferedReader(fileStructure.binsFile(), StandardCharsets.UTF_8)) {
+                return List.of((ReplayBin[]) App.GSON.fromJson(reader, TypeToken.getArray(ReplayBin.class)));
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            }
+        }, app.getExecutor());
+    }
+
+    // TODO: Would maybe be nice to keep this async in a CompletableFuture, but it's only ever called on shutdown where the executor has shutdown... Is it necessary?
+    public void saveReplayBins() {
+        try {
+            List<ReplayBin> bins = app.getBinRegistry().getBins().stream()
+                    .filter(Predicate.not(ReplayBin::isGlobal))
+                    .toList();
+            Files.writeString(fileStructure.binsFile(), App.GSON.toJson(bins), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
