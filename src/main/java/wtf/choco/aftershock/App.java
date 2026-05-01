@@ -12,9 +12,9 @@ import javafx.stage.Stage;
 import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.files.AftershockFileOperations;
 import wtf.choco.aftershock.files.AftershockFileStructure;
+import wtf.choco.aftershock.files.ReplayMetadataAccessor;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
-import wtf.choco.aftershock.manager.CachingHandler;
 import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.replay.schema.ReplayTypeAdapterFactory;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
@@ -45,10 +45,9 @@ public final class App extends Application {
     private Stage settingsStage = null;
 
     private KeybindRegistry keybindRegistry;
-    @Deprecated
-    private CachingHandler cacheHandler; // TODO: Replace with AftershockFileOperations (fileOperations)
     private AftershockFileStructure fileStructure;
     private AftershockFileOperations fileOperations;
+    private ReplayMetadataAccessor replayMetadataAccessor;
 
     private BinRegistry binRegistry;
     private TagRegistry tagRegistry;
@@ -71,7 +70,6 @@ public final class App extends Application {
 
         // Misc initialization
         ApplicationSettings.init(this, fileStructure);
-        this.cacheHandler = new CachingHandler(this);
     }
 
     @Override
@@ -102,8 +100,8 @@ public final class App extends Application {
         this.controller.setActiveBin(binRegistry.getGlobalBin());
 
         this.controller.pushProgressStatus("Loading replay data");
-        this.cacheHandler.loadReplayData(fileStructure.replayMetadataFile())
-                .thenAccept(loaded -> getLogger().info("Loaded Aftershock replay data for " + loaded + " replays!"))
+        this.fileOperations.readReplayMetadata()
+                .thenAccept(metadataStore -> this.replayMetadataAccessor = metadataStore)
                 .thenCompose(_ -> fileOperations.performCompleteRefresh())
                 .thenAcceptAsync(binRegistry.getGlobalBin().getReplays()::addAll, Platform::runLater)
                 .thenCompose(_ -> binRegistry.loadBinsFromFile(fileStructure.binsFile()))
@@ -122,7 +120,7 @@ public final class App extends Application {
         this.keybindRegistry.clearKeybinds();
         this.binRegistry.saveBinsToFile(fileStructure.binsFile());
         this.binRegistry.deleteBins(true);
-        this.cacheHandler.writeReplayData(fileStructure.replayMetadataFile());
+        this.fileOperations.saveReplayMetadata();
         this.tagRegistry.clearTags();
         ApplicationSettings.save(fileStructure);
 
@@ -149,8 +147,8 @@ public final class App extends Application {
         return fileOperations;
     }
 
-    public CachingHandler getCacheHandler() {
-        return cacheHandler;
+    public ReplayMetadataAccessor getReplayMetadataAccessor() {
+        return replayMetadataAccessor;
     }
 
     public ResourceBundle getResources() {

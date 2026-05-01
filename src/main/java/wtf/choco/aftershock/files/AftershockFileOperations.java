@@ -2,8 +2,8 @@ package wtf.choco.aftershock.files;
 
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
-import wtf.choco.aftershock.replay.AftershockData;
 import wtf.choco.aftershock.replay.Replay;
+import wtf.choco.aftershock.replay.ReplayMetadata;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.FileUtil;
 import wtf.choco.aftershock.util.function.ThrowingFunction;
@@ -362,10 +362,10 @@ public final class AftershockFileOperations {
 
     private ReplayEntry createReplayEntryFromHeader(Path headerPath) throws IOException {
         Replay replay = App.GSON.fromJson(Files.newBufferedReader(headerPath, StandardCharsets.UTF_8), Replay.class);
-        AftershockData aftershockData = app.getCacheHandler().getAftershockData(replay); // TODO: Get from elsewhere, or rename getCacheHandler()... or something
+        ReplayMetadata replayMetadata = app.getReplayMetadataAccessor().getReplayMetadata(replay);
         Path liveReplayPath = getLiveReplayDirectory().resolve(headerPath.getFileName().getName(0) + "." + FILE_EXTENSION_REPLAY);
         Path replayBackupPath = fileStructure.replayBackupsDirectory().resolve(headerPath.getFileName().getName(0) + "." + FILE_EXTENSION_REPLAY);
-        return new ReplayEntry(liveReplayPath, replayBackupPath, headerPath, replay, aftershockData);
+        return new ReplayEntry(liveReplayPath, replayBackupPath, headerPath, replay, replayMetadata);
     }
 
     private boolean isInvalidPath(Path path, Path expectedDirectory, String expectedFileExtension) {
@@ -391,6 +391,37 @@ public final class AftershockFileOperations {
                 .thenCompose(this::generateHeaders)
                 .thenCompose(_ -> loadHeaders()) // Be sure to load ALL headers in a complete refresh
                 .thenCompose(result -> deleteInvalidHeaders().thenApply(_ -> result)); // Passing through the result of #loadHeaders()
+    }
+
+    public CompletionStage<ReplayMetadataAccessor> readReplayMetadata() {
+        return CompletableFuture.supplyAsync(() -> {
+            ReplayMetadataStore metadataStore = new ReplayMetadataStore();
+
+            Path replayMetadataPath = fileStructure.replayMetadataFile();
+            if (Files.notExists(replayMetadataPath)) {
+                return metadataStore;
+            }
+
+            try {
+                ReplayMetadataStore store = App.GSON.fromJson(Files.newBufferedReader(replayMetadataPath, StandardCharsets.UTF_8), ReplayMetadataStore.class);
+                if (store == null) {
+                    store = new ReplayMetadataStore();
+                }
+
+                return store;
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            }
+        }, app.getExecutor());
+    }
+
+    // TODO: Would maybe be nice to keep this async in a CompletableFuture, but it's only ever called on shutdown where the executor has shutdown... Is it necessary?
+    public void saveReplayMetadata() {
+        try {
+            Files.writeString(fileStructure.replayMetadataFile(), App.GSON.toJson(app.getReplayMetadataAccessor()));
+        } catch (IOException e) {
+            throw new CompletionException(e);
+        }
     }
 
 }

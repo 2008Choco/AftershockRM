@@ -4,28 +4,28 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.replay.AftershockData;
+import wtf.choco.aftershock.replay.ReplayMetadata;
 import wtf.choco.aftershock.structure.Tag;
 
 import java.io.IOException;
 import java.util.UUID;
 
-public class AftershockDataTypeAdapter extends TypeAdapter<AftershockData> {
+public final class ReplayMetadataTypeAdapter extends TypeAdapter<ReplayMetadata> {
 
     private static final String NAME_LOADED = "Loaded";
-    private static final String NAME_COMMENTS = "Comments";
+    private static final String NAME_COMMENT = "Comment";
     private static final String NAME_TAGS = "Tags";
 
     @Override
-    public AftershockData read(JsonReader in) throws IOException {
+    public ReplayMetadata read(JsonReader in) throws IOException {
         in.beginObject();
 
-        AftershockData object = new AftershockData();
+        ReplayMetadata object = new ReplayMetadata();
 
         while (in.hasNext()) {
             switch (in.nextName()) {
                 case NAME_LOADED -> object.setLoaded(in.nextBoolean());
-                case NAME_COMMENTS -> object.setComments(in.nextString());
+                case NAME_COMMENT -> object.setComment(in.nextString());
                 case NAME_TAGS -> {
                     in.beginArray();
                     while (in.hasNext()) {
@@ -46,11 +46,11 @@ public class AftershockDataTypeAdapter extends TypeAdapter<AftershockData> {
     }
 
     @Override
-    public void write(JsonWriter out, AftershockData value) throws IOException {
+    public void write(JsonWriter out, ReplayMetadata value) throws IOException {
         out.beginObject();
 
         out.name(NAME_LOADED).value(value.isLoaded());
-        out.name(NAME_COMMENTS).value(value.getComments());
+        out.name(NAME_COMMENT).value(value.getComment());
         out.name(NAME_TAGS);
         out.beginArray();
         for (Tag tag : value.getTags()) {

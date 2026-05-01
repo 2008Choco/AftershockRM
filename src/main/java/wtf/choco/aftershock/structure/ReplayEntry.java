@@ -6,14 +6,13 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.Parent;
 import wtf.choco.aftershock.controller.InfoPanelController;
-import wtf.choco.aftershock.replay.AftershockData;
+import wtf.choco.aftershock.replay.ReplayMetadata;
 import wtf.choco.aftershock.replay.Goal;
 import wtf.choco.aftershock.replay.IReplay;
 import wtf.choco.aftershock.replay.Player;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,14 +28,14 @@ public class ReplayEntry implements IReplay {
     private final Path backupReplayPath;
     private final Path headerPath;
     private final Replay replayData;
-    private final AftershockData aftershockData;
+    private final ReplayMetadata metadata;
 
-    public ReplayEntry(Path liveReplayPath, Path backupReplayPath, Path headerPath, Replay replayData, AftershockData aftershockData) {
+    public ReplayEntry(Path liveReplayPath, Path backupReplayPath, Path headerPath, Replay replayData, ReplayMetadata metadata) {
         this.liveReplayPath = liveReplayPath;
         this.backupReplayPath = backupReplayPath;
         this.headerPath = headerPath;
         this.replayData = replayData;
-        this.aftershockData = aftershockData;
+        this.metadata = metadata;
     }
 
     public Path getLiveReplayPath() {
@@ -124,44 +123,44 @@ public class ReplayEntry implements IReplay {
         return infoPanel;
     }
 
-    public AftershockData getAftershockData() {
-        return aftershockData;
+    public ReplayMetadata getMetadata() {
+        return metadata;
     }
 
     public void setLoaded(boolean loaded) {
-        this.aftershockData.setLoaded(loaded);
+        this.getMetadata().setLoaded(loaded);
     }
 
     public boolean isLoaded() {
-        return aftershockData.isLoaded();
+        return getMetadata().isLoaded();
     }
 
     public BooleanProperty loadedProperty() {
-        return aftershockData.loadedProperty();
+        return getMetadata().loadedProperty();
     }
 
     public void setComments(String comments) {
-        this.aftershockData.setComments(comments);
+        this.getMetadata().setComment(comments);
     }
 
     public String getComments() {
-        return aftershockData.getComments();
+        return getMetadata().getComment();
     }
 
     public StringProperty commentsProperty() {
-        return aftershockData.commentsProperty();
+        return getMetadata().commentProperty();
     }
 
     public void addTag(Tag tag) {
-        this.aftershockData.addTag(tag);
+        this.getMetadata().addTag(tag);
     }
 
     public ObservableList<Tag> getTags() {
-        return aftershockData.getTags();
+        return getMetadata().getTags();
     }
 
     public ListProperty<Tag> tagsProperty() {
-        return aftershockData.tagsProperty();
+        return getMetadata().tagsProperty();
     }
 
 }

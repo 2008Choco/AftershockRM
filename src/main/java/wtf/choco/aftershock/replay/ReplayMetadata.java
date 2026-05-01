@@ -10,24 +10,23 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import wtf.choco.aftershock.structure.Tag;
 
+import java.util.Collections;
 import java.util.List;
 
-public final class AftershockData {
+public final class ReplayMetadata {
 
     private final BooleanProperty loaded;
-    private final StringProperty comments;
+    private final StringProperty comment;
     private final ListProperty<Tag> tags;
 
-    public AftershockData(boolean loaded, String comments, List<Tag> tags) {
-        this.loaded = new SimpleBooleanProperty(loaded);
-        this.comments = new SimpleStringProperty(comments);
-        this.tags = new SimpleListProperty<>(FXCollections.observableArrayList(tags));
+    public ReplayMetadata(boolean loaded, String comment, List<Tag> tags) {
+        this.loaded = new SimpleBooleanProperty(this, "loaded", loaded);
+        this.comment = new SimpleStringProperty(this, "comment", comment);
+        this.tags = new SimpleListProperty<>(this, "tags", FXCollections.observableArrayList(tags));
     }
 
-    public AftershockData() {
-        this.loaded = new SimpleBooleanProperty(true);
-        this.comments = new SimpleStringProperty("");
-        this.tags = new SimpleListProperty<>(FXCollections.observableArrayList());
+    public ReplayMetadata() {
+        this(true, "", Collections.emptyList());
     }
 
     public void setLoaded(boolean loaded) {
@@ -42,16 +41,16 @@ public final class AftershockData {
         return loaded;
     }
 
-    public void setComments(String comments) {
-        this.comments.set(comments);
+    public void setComment(String comment) {
+        this.comment.set(comment);
     }
 
-    public String getComments() {
-        return comments.get();
+    public String getComment() {
+        return comment.get();
     }
 
-    public StringProperty commentsProperty() {
-        return comments;
+    public StringProperty commentProperty() {
+        return comment;
     }
 
     public void addTag(Tag tag) {
