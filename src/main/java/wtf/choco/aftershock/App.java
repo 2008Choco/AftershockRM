@@ -95,8 +95,6 @@ public final class App extends Application {
         stage.getIcons().add(AppResources.IMAGE_APP_ICON_64X.get());
         stage.show();
 
-        this.controller.setActiveBin(ReplayBin.GLOBAL);
-
         this.controller.pushProgressStatus("Loading replay data");
         this.fileOperations.readReplayMetadata()
                 .thenAccept(metadataStore -> this.replayMetadataAccessor = metadataStore)

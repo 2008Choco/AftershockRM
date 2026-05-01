@@ -553,9 +553,4 @@ public final class AppController {
         }
     }
 
-    public void setActiveBin(ReplayBin bin) {
-        this.replayBinDisplayPane.setActiveBin(bin);
-        this.replayBinDisplayPane.getSelectionModel().clearAndSelect(bin);
-    }
-
 }

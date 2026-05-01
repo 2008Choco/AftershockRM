@@ -48,7 +48,7 @@ public final class ReplayBinDisplayPane extends VBox {
     private final Map<ReplayBin, Node> replayBinDisplayNodes = new HashMap<>();
 
     private final ListProperty<ReplayBin> replayBins  = new SimpleListProperty<>(this, "replayBins", FXCollections.observableArrayList());
-    private final ObjectProperty<ReplayBin> activeBin = new SimpleObjectProperty<>(this, "activeBin");
+    private final ObjectProperty<ReplayBin> activeBin = new SimpleObjectProperty<>(this, "activeBin", ReplayBin.GLOBAL);
     private final ObservableIntegerValue hiddenBinCount = ComplexBindings.createIntegerBindingCountingBooleanProperties(replayBins, ReplayBin::hiddenProperty);
 
     public ReplayBinDisplayPane() {
@@ -108,6 +108,7 @@ public final class ReplayBinDisplayPane extends VBox {
         this.labelHiddenBins.textProperty().bind(hiddenBinCount.map(value -> resources.getString("ui.bin_editor.hidden_bins").formatted(value)));
 
         this.menuItemUnhideBins.disableProperty().bind(Bindings.equal(hiddenBinCount, 0));
+        this.selectionModel.clearAndSelect(getActiveBin());
     }
 
     private ReplayBinDisplay createReplayBinDisplay(ReplayBin bin) {
