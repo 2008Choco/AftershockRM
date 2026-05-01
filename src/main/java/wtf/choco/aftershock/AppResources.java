@@ -16,6 +16,7 @@ public final class AppResources {
     public static final LazyValue<URL> FXML_COMPONENT_REPLAY_BIN_DISPLAY_PANE = LazyValue.urlResource("/component/ReplayBinDisplayPane.fxml");
 
     // Images
+    public static final LazyValue<Image> IMAGE_APP_ICON_64X = LazyValue.resource("/app_icon_64x.png", Image::new);
     public static final LazyValue<Image> IMAGE_ADD = LazyValue.resource("/icons/add.png", Image::new);
     public static final LazyValue<Image> IMAGE_FILE = LazyValue.resource("/icons/file.png", Image::new);
     public static final LazyValue<Image> IMAGE_FOLDER = LazyValue.resource("/icons/folder.png", Image::new);

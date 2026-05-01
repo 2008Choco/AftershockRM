@@ -96,6 +96,7 @@ public final class App extends Application {
         // Stage setup
         stage.setTitle("Aftershock Replay Manager v" + VERSION);
         stage.setScene(scene);
+        stage.getIcons().add(AppResources.IMAGE_APP_ICON_64X.get());
         stage.show();
 
         this.controller.setActiveBin(binRegistry.getGlobalBin());
@@ -189,6 +190,7 @@ public final class App extends Application {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setResizable(false);
             stage.setScene(scene);
+            stage.getIcons().add(AppResources.IMAGE_APP_ICON_64X.get());
 
             this.settingsStage = stage;
         }
