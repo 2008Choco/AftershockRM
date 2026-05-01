@@ -4,13 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import wtf.choco.aftershock.files.ReplayMetadataStore;
+import wtf.choco.aftershock.files.ReplayMetadataAccessor;
 import wtf.choco.aftershock.files.ReplayMetadataAccessor.ReplayMetadataEntry;
+import wtf.choco.aftershock.files.ReplayMetadataStore;
 import wtf.choco.aftershock.replay.ReplayMetadata;
 
 import java.io.IOException;
 
-public final class ReplayMetadataStoreTypeAdapter extends TypeAdapter<ReplayMetadataStore> {
+public final class ReplayMetadataStoreTypeAdapter extends TypeAdapter<ReplayMetadataAccessor> {
 
     private final Gson gson;
 
@@ -19,7 +20,7 @@ public final class ReplayMetadataStoreTypeAdapter extends TypeAdapter<ReplayMeta
     }
 
     @Override
-    public ReplayMetadataStore read(JsonReader in) throws IOException {
+    public ReplayMetadataAccessor read(JsonReader in) throws IOException {
         in.beginObject();
 
         ReplayMetadataStore object = new ReplayMetadataStore();
@@ -34,7 +35,7 @@ public final class ReplayMetadataStoreTypeAdapter extends TypeAdapter<ReplayMeta
     }
 
     @Override
-    public void write(JsonWriter out, ReplayMetadataStore value) throws IOException {
+    public void write(JsonWriter out, ReplayMetadataAccessor value) throws IOException {
         out.beginObject();
 
         for (ReplayMetadataEntry entry : value.getAllReplayMetadata()) {
