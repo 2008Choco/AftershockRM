@@ -1,16 +1,14 @@
-package wtf.choco.aftershock.replay.schema;
+package wtf.choco.aftershock.schema;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import wtf.choco.aftershock.files.ReplayMetadataAccessor;
-import wtf.choco.aftershock.files.ReplayMetadataStore;
 import wtf.choco.aftershock.replay.IReplay;
 import wtf.choco.aftershock.replay.ReplayMetadata;
 import wtf.choco.aftershock.replay.Goal;
 import wtf.choco.aftershock.replay.Player;
-import wtf.choco.aftershock.replay.Replay;
 
 public class ReplayTypeAdapterFactory implements TypeAdapterFactory {
 

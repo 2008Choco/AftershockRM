@@ -1,4 +1,4 @@
-package wtf.choco.aftershock.replay.schema;
+package wtf.choco.aftershock.schema;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
