@@ -366,8 +366,9 @@ public final class AftershockFileOperations {
     private ReplayEntry createReplayEntryFromHeader(Path headerPath) throws IOException {
         Replay replay = App.GSON.fromJson(Files.newBufferedReader(headerPath, StandardCharsets.UTF_8), Replay.class);
         ReplayMetadata replayMetadata = app.getReplayMetadataAccessor().getReplayMetadata(replay);
-        Path liveReplayPath = getLiveReplayDirectory().resolve(headerPath.getFileName().getName(0) + "." + FILE_EXTENSION_REPLAY);
-        Path replayBackupPath = fileStructure.replayBackupsDirectory().resolve(headerPath.getFileName().getName(0) + "." + FILE_EXTENSION_REPLAY);
+        Path replayFileName = FileUtil.changeExtension(headerPath.getFileName(), FILE_EXTENSION_REPLAY);
+        Path liveReplayPath = getLiveReplayDirectory().resolve(replayFileName);
+        Path replayBackupPath = fileStructure.replayBackupsDirectory().resolve(replayFileName);
         return new ReplayEntry(liveReplayPath, replayBackupPath, headerPath, replay, replayMetadata);
     }
 
@@ -447,6 +448,39 @@ public final class AftershockFileOperations {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public CompletionStage<Void> deleteReplays(Collection<Path> liveReplayPaths) {
+        Path liveReplayDirectory = getLiveReplayDirectory();
+        if (Files.notExists(liveReplayDirectory) || liveReplayPaths.isEmpty()) {
+            System.out.println("Live replay directory does not exist, or live replay paths are empty!");
+            return CompletableFuture.completedFuture(null);
+        }
+
+        return CompletableFuture.runAsync(() -> {
+            Path recentlyDeletedDirectory = fileStructure.recentlyDeletedDirectory();
+            FileUtil.createDirectoryIfDoesntExist(recentlyDeletedDirectory);
+
+            Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
+            Path headersDirectory = fileStructure.replayHeadersDirectory();
+
+            for (Path path : liveReplayPaths) {
+                // Ignore any invalid files (non-existent, non-replay files, or not in the live replay directory)
+                if (isInvalidPath(path, liveReplayDirectory, FILE_EXTENSION_REPLAY)) {
+                    System.out.println("Invalid path: \"" + path + "\"");
+                    continue;
+                }
+
+                try {
+                    Files.copy(path, recentlyDeletedDirectory.resolve(path.getFileName()), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                    Files.deleteIfExists(path);
+                    Files.deleteIfExists(replayBackupsDirectory.resolve(path.getFileName()));
+                    Files.deleteIfExists(headersDirectory.resolve(FileUtil.changeExtension(path.getFileName(), FILE_EXTENSION_JSON)));
+                } catch (IOException e) {
+                    throw new CompletionException(e);
+                }
+            }
+        }, app.getExecutor());
     }
 
 }

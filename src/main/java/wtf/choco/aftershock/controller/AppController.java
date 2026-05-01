@@ -16,6 +16,8 @@ import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -69,8 +71,10 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,6 +87,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public final class AppController {
 
@@ -329,7 +334,7 @@ public final class AppController {
         return CompletableFuture.supplyAsync(() -> {
             Path targetPath = App.getInstance().getFileOperations().getLiveReplayDirectory().resolve(replayName);
             try (ReadableByteChannel channelIn = Channels.newChannel(uri.toURL().openStream());
-                 FileChannel channelOut = FileChannel.open(targetPath)
+                 FileChannel channelOut = FileChannel.open(targetPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
             ) {
                 channelOut.transferFrom(channelIn, 0, Long.MAX_VALUE);
                 return List.of(targetPath);
@@ -444,16 +449,48 @@ public final class AppController {
             }
 
             ReplayBin activeBin = replayBinDisplayPane.getActiveBin();
-            if (activeBin == null || activeBin.isGlobal()) {
-                Toolkit.getDefaultToolkit().beep();
+            if (activeBin == null) {
                 return;
+            }
+
+            // Show a prompt for global bin deletions
+            boolean deleteLiveReplays = activeBin.isGlobal();
+            if (deleteLiveReplays) {
+                String singleOrMultiple = selection.getSelectedItems().size() == 1 ? "single" : "multiple";
+                String replayNames = selection.getSelectedItems().stream().map(IReplay::name).collect(Collectors.joining(", "));
+                if (!promptDeleteLiveReplayFiles(singleOrMultiple, replayNames, resources)) {
+                    return;
+                }
             }
 
             List<ReplayEntry> selected = new ArrayList<>(selection.getSelectedItems());
             selection.clearSelection();
+
+            if (deleteLiveReplays) {
+                App.getInstance().getFileOperations().deleteReplays(selected.stream().map(ReplayEntry::getLiveReplayPath).toList())
+                        .thenRun(() -> App.getInstance().getLogger().info("Deleted " + selected.size() + " live replays! They've been added to the RecentlyDeleted directory!"))
+                        .exceptionally(e -> {
+                            e.printStackTrace();
+                            return null;
+                        });
+            }
+
             selected.forEach(activeBin.getReplays()::remove);
             this.closeInfoPanel();
         }
+    }
+
+    private boolean promptDeleteLiveReplayFiles(String singleOrMultiple, String replayName, ResourceBundle resources) {
+        Alert confirmation = new Alert(Alert.AlertType.WARNING);
+        confirmation.setTitle(resources.getString("ui.table.delete_replay.confirm." + singleOrMultiple + ".title"));
+        confirmation.setHeaderText(resources.getString("ui.table.delete_replay.confirm." + singleOrMultiple + ".header"));
+        confirmation.setContentText(resources.getString("ui.table.delete_replay.confirm." + singleOrMultiple + ".content").formatted(replayName));
+
+        ButtonType buttonDelete = new ButtonType(resources.getString("ui.table.delete_replay.confirm." + singleOrMultiple + ".delete"));
+        ButtonType buttonCancel = new ButtonType(resources.getString("ui.table.delete_replay.confirm." + singleOrMultiple + ".cancel"));
+        confirmation.getButtonTypes().setAll(buttonDelete, buttonCancel);
+
+        return confirmation.showAndWait().orElse(buttonCancel) != buttonCancel;
     }
 
     @FXML

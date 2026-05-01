@@ -8,6 +8,7 @@ public final class AftershockFileStructure {
     private final Path installDirectory;
     private final Path replayBackupsDirectory;
     private final Path replayHeadersDirectory;
+    private final Path recentlyDeletedDirectory;
 
     // Files
     private final Path propertiesFile;
@@ -19,6 +20,7 @@ public final class AftershockFileStructure {
         this.installDirectory = installDirectory;
         this.replayBackupsDirectory = installDirectory.resolve("ReplayBackups/");
         this.replayHeadersDirectory = installDirectory.resolve("Headers/");
+        this.recentlyDeletedDirectory = installDirectory.resolve("RecentlyDeleted/");
 
         // Files
         this.propertiesFile = installDirectory.resolve("app.properties");
@@ -47,6 +49,13 @@ public final class AftershockFileStructure {
      */
     public Path replayHeadersDirectory() {
         return replayHeadersDirectory;
+    }
+
+    /**
+     * @return the directory where recently deleted replays are stored
+     */
+    public Path recentlyDeletedDirectory() {
+        return recentlyDeletedDirectory;
     }
 
     // Files

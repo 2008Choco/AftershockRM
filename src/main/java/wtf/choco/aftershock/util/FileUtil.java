@@ -47,6 +47,12 @@ public final class FileUtil {
         String extension = getExtension(path);
         String fileName = path.getFileName().toString();
         fileName = fileName.replace(extension, newExtension);
+
+        // Special case for small path names
+        if (path.getNameCount() == 1) {
+            return Path.of(fileName);
+        }
+
         return path.getParent().resolve(fileName);
     }
 
