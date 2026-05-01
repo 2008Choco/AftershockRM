@@ -2,6 +2,7 @@ package wtf.choco.aftershock;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import wtf.choco.aftershock.files.AftershockFileStructure;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,16 +19,15 @@ public final class ApplicationSettings {
     private static final Map<String, Setting> SETTING_BY_KEY = new HashMap<>();
 
     public static final Setting REPLAY_DIRECTORY = createSetting("replay_directory");
-    public static final Setting ROCKETRP_PATH = createSetting("rocketrp_path", App.getInstance().getInstallPath().resolve("RocketRP/RocketRP.CLI.exe").toAbsolutePath().toString());
+    public static final Setting ROCKETRP_PATH = createSetting("rocketrp_path", App.getInstance().getInstallDirectory().resolve("RocketRP/RocketRP.CLI.exe").toAbsolutePath().toString());
     public static final Setting REPLAY_EDITOR_PATH = createSetting("replay_editor_path");
     public static final Setting LOCALE = createSetting("locale_code", "en_US");
 
-    public static void init(App app) throws IOException {
-        Path path = getPropertiesFilePath(app);
-
-        if (Files.exists(path)) {
+    public static void init(App app, AftershockFileStructure fileStructure) throws IOException {
+        Path propertiesFilePath = fileStructure.propertiesFile();
+        if (Files.exists(propertiesFilePath)) {
             app.getLogger().info("Reading properties from app.properties file...");
-            PROPERTIES.load(Files.newBufferedReader(path, StandardCharsets.UTF_8));
+            PROPERTIES.load(Files.newBufferedReader(propertiesFilePath, StandardCharsets.UTF_8));
             PROPERTIES.forEach((key, value) -> {
                 Setting setting = SETTING_BY_KEY.get(key.toString());
                 if (setting != null) {
@@ -36,18 +36,14 @@ public final class ApplicationSettings {
             });
         } else {
             app.getLogger().info("No app.properties file exists. Creating a new one with default settings...");
-            save(app);
+            save(fileStructure);
         }
 
         app.getLogger().info("Done!");
     }
 
-    public static void save(App app) throws IOException {
-        PROPERTIES.store(Files.newBufferedWriter(getPropertiesFilePath(app), StandardCharsets.UTF_8), null);
-    }
-
-    private static Path getPropertiesFilePath(App app) {
-        return app.getInstallPath().resolve("app.properties");
+    public static void save(AftershockFileStructure fileStructure) throws IOException {
+        PROPERTIES.store(Files.newBufferedWriter(fileStructure.propertiesFile(), StandardCharsets.UTF_8), null);
     }
 
     public static final class Setting {

@@ -100,7 +100,7 @@ public final class SettingsPanelController {
         App app = App.getInstance();
         app.getExecutor().execute(() -> {
             try {
-                ApplicationSettings.save(app);
+                ApplicationSettings.save(app.getFileStructure());
             } catch (IOException e) {
                 e.printStackTrace();
             }

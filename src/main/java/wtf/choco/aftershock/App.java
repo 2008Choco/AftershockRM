@@ -11,7 +11,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.files.AftershockFileOperations;
-import wtf.choco.aftershock.util.FileUtil;
+import wtf.choco.aftershock.files.AftershockFileStructure;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
@@ -47,14 +47,11 @@ public final class App extends Application {
     private KeybindRegistry keybindRegistry;
     @Deprecated
     private CachingHandler cacheHandler; // TODO: Replace with AftershockFileOperations (fileOperations)
+    private AftershockFileStructure fileStructure;
     private AftershockFileOperations fileOperations;
 
     private BinRegistry binRegistry;
     private TagRegistry tagRegistry;
-
-    private Path installPath;
-    private Path binsPath;
-    private Path replayDataPath;
 
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final Logger logger = Logger.getLogger("AftershockRM");
@@ -69,19 +66,12 @@ public final class App extends Application {
         handler.setFormatter(ColouredLogFormatter.get());
         this.logger.addHandler(handler);
 
-        // File system initialization
-        this.installPath = Path.of(System.getProperty("user.home")).resolve("AppData/Roaming/AftershockRM/");
-        FileUtil.createDirectoryIfDoesntExist(installPath);
-
-        this.binsPath = installPath.resolve("bins.json");
-        this.replayDataPath = installPath.resolve("replay_data.json");
-        FileUtil.createFileIfDoesntExist(binsPath);
-        FileUtil.createFileIfDoesntExist(replayDataPath);
+        this.fileStructure = new AftershockFileStructure(Path.of(System.getProperty("user.home")).resolve("AppData/Roaming/AftershockRM/"));
+        this.fileOperations = new AftershockFileOperations(this, fileStructure);
 
         // Misc initialization
-        ApplicationSettings.init(this);
+        ApplicationSettings.init(this, fileStructure);
         this.cacheHandler = new CachingHandler(this);
-        this.fileOperations = new AftershockFileOperations(this);
     }
 
     @Override
@@ -111,12 +101,11 @@ public final class App extends Application {
         this.controller.setActiveBin(binRegistry.getGlobalBin());
 
         this.controller.pushProgressStatus("Loading replay data");
-        this.cacheHandler.loadReplayData(replayDataPath)
+        this.cacheHandler.loadReplayData(fileStructure.replayMetadataFile())
                 .thenAccept(loaded -> getLogger().info("Loaded Aftershock replay data for " + loaded + " replays!"))
-                .thenRun(fileOperations::createDirectoriesIfNotExist)
                 .thenCompose(_ -> fileOperations.performCompleteRefresh())
                 .thenAcceptAsync(binRegistry.getGlobalBin().getReplays()::addAll, Platform::runLater)
-                .thenCompose(_ -> binRegistry.loadBinsFromFile(binsPath))
+                .thenCompose(_ -> binRegistry.loadBinsFromFile(fileStructure.binsFile()))
                 .thenAcceptAsync(binRegistry::addBins, Platform::runLater)
                 .thenRun(controller::popProgressStatus)
                 .exceptionally(e -> {
@@ -130,11 +119,11 @@ public final class App extends Application {
         this.getExecutor().shutdown();
 
         this.keybindRegistry.clearKeybinds();
-        this.binRegistry.saveBinsToFile(binsPath);
+        this.binRegistry.saveBinsToFile(fileStructure.binsFile());
         this.binRegistry.deleteBins(true);
-        this.cacheHandler.writeReplayData(replayDataPath);
+        this.cacheHandler.writeReplayData(fileStructure.replayMetadataFile());
         this.tagRegistry.clearTags();
-        ApplicationSettings.save(this);
+        ApplicationSettings.save(fileStructure);
 
         ColouredLogFormatter.get().setLogFile(null);
     }
@@ -149,6 +138,10 @@ public final class App extends Application {
 
     public AppController getController() {
         return controller;
+    }
+
+    public AftershockFileStructure getFileStructure() {
+        return fileStructure;
     }
 
     public AftershockFileOperations getFileOperations() {
@@ -179,8 +172,8 @@ public final class App extends Application {
         return keybindRegistry;
     }
 
-    public Path getInstallPath() {
-        return installPath;
+    public Path getInstallDirectory() {
+        return fileStructure.installDirectory();
     }
 
     public void openSettingsStage() {
