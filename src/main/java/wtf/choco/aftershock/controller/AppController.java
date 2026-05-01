@@ -71,9 +71,11 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.StringJoiner;
@@ -112,6 +114,7 @@ public final class AppController {
     @FXML private ReplayBinDisplayPane replayBinDisplayPane;
 
     private double lastDividerPositionInfo = 0.70;
+    private final Deque<String> progressStates = new ArrayDeque<>();
 
     private final Popup popup = new Popup();
 
@@ -511,12 +514,28 @@ public final class AppController {
         return replayTable;
     }
 
-    public ProgressBar getProgressBar() {
-        return progressBar;
+    public void pushProgressStatus(String message) {
+        boolean shouldMakeVisible = progressStates.isEmpty();
+        this.progressStatus.setText(message);
+        this.progressStates.push(message);
+
+        if (shouldMakeVisible) {
+            this.progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
+            this.progressBar.setVisible(true);
+            this.progressStatus.setVisible(true);
+        }
     }
 
-    public Label getProgressStatus() {
-        return progressStatus;
+    public void popProgressStatus() {
+        this.progressStates.pollLast();
+
+        String currentStatus = progressStates.peekLast();
+        if (currentStatus == null) {
+            this.progressBar.setVisible(false);
+            this.progressStatus.setVisible(false);
+        } else {
+            this.progressStatus.setText(currentStatus);
+        }
     }
 
     public TextField getFilterBar() {

@@ -15,7 +15,6 @@ import wtf.choco.aftershock.util.FileUtil;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.CachingHandler;
-import wtf.choco.aftershock.manager.ProgressiveTaskExecutor;
 import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.replay.schema.ReplayTypeAdapterFactory;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
@@ -46,7 +45,6 @@ public final class App extends Application {
     private Stage settingsStage = null;
 
     private KeybindRegistry keybindRegistry;
-    private ProgressiveTaskExecutor taskExecutor;
     @Deprecated
     private CachingHandler cacheHandler; // TODO: Replace with AftershockFileOperations (fileOperations)
     private AftershockFileOperations fileOperations;
@@ -101,8 +99,6 @@ public final class App extends Application {
         Scene scene = new Scene(appFXML.root());
         this.controller = appFXML.controller();
 
-        this.taskExecutor = new ProgressiveTaskExecutor(getExecutor(), controller.getProgressBar(), controller.getProgressStatus());
-
         // TODO: Configurable key binds
         this.keybindRegistry = new KeybindRegistry(this);
         KeybindRegistry.registerDefaultKeybinds(keybindRegistry);
@@ -114,6 +110,7 @@ public final class App extends Application {
 
         this.controller.setActiveBin(binRegistry.getGlobalBin());
 
+        this.controller.pushProgressStatus("Loading replay data");
         this.cacheHandler.loadReplayData(replayDataPath)
                 .thenAccept(loaded -> getLogger().info("Loaded Aftershock replay data for " + loaded + " replays!"))
                 .thenRun(fileOperations::createDirectoriesIfNotExist)
@@ -121,6 +118,7 @@ public final class App extends Application {
                 .thenAcceptAsync(binRegistry.getGlobalBin().getReplays()::addAll, Platform::runLater)
                 .thenCompose(_ -> binRegistry.loadBinsFromFile(binsPath))
                 .thenAcceptAsync(binRegistry::addBins, Platform::runLater)
+                .thenRun(controller::popProgressStatus)
                 .exceptionally(e -> {
                     e.printStackTrace();
                     return null;
@@ -167,10 +165,6 @@ public final class App extends Application {
 
     public ExecutorService getExecutor() {
         return executorService;
-    }
-
-    public ProgressiveTaskExecutor getTaskExecutor() {
-        return taskExecutor;
     }
 
     public BinRegistry getBinRegistry() {
