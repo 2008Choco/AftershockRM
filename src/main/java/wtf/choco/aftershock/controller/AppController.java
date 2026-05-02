@@ -62,7 +62,6 @@ import wtf.choco.aftershock.util.ComplexBindings;
 import wtf.choco.aftershock.util.FXUtils;
 import wtf.choco.aftershock.util.ReplayTableFilter;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
@@ -439,11 +438,7 @@ public final class AppController {
                 return;
             }
 
-            List<ReplayEntry> loadedReplays = selectionModel.getSelectedItems().stream().filter(ReplayEntry::isLoaded).toList();
-            List<ReplayEntry> unloadedReplays = selectionModel.getSelectedItems().stream().filter(Predicate.not(ReplayEntry::isLoaded)).toList();
-
-            ReplayEntry.performBulkLoadOperation(loadedReplays, false); // Unload any loaded replays
-            ReplayEntry.performBulkLoadOperation(unloadedReplays, true); // Load any unloaded replays
+            selectionModel.getSelectedItems().forEach(replay -> replay.setLoaded(!replay.isLoaded()));
         } else if (key == KeyCode.DELETE) {
             var selection = replayTable.getSelectionModel();
             if (selection.isEmpty()) {

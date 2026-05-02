@@ -1,6 +1,5 @@
 package wtf.choco.aftershock.structure;
 
-import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.StringProperty;
@@ -18,15 +17,10 @@ import wtf.choco.aftershock.replay.Team;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class ReplayEntry implements IReplay {
 
@@ -44,6 +38,15 @@ public class ReplayEntry implements IReplay {
         this.headerPath = headerPath;
         this.replayData = replayData;
         this.metadata = metadata;
+
+        this.metadata.loadedProperty().addListener((_, _, newValue) -> {
+            AftershockFileOperations fileOperations = App.getInstance().getFileOperations();
+            if (newValue) {
+                fileOperations.restoreReplayBackups(List.of(backupReplayPath));
+            } else {
+                fileOperations.deleteReplays(List.of(liveReplayPath), false);
+            }
+        });
     }
 
     public Path getLiveReplayPath() {
@@ -145,22 +148,6 @@ public class ReplayEntry implements IReplay {
 
     public BooleanProperty loadedProperty() {
         return getMetadata().loadedProperty();
-    }
-
-    public static void performBulkLoadOperation(Collection<ReplayEntry> replays, boolean newLoadedState) {
-        List<ReplayEntry> replaysToUpdate = replays.stream().filter(replay -> replay.isLoaded() != newLoadedState).collect(Collectors.toCollection(ArrayList::new));
-        if (replaysToUpdate.isEmpty()) {
-            return;
-        }
-
-        AftershockFileOperations fileOperations = App.getInstance().getFileOperations();
-        CompletionStage<Void> future;
-        if (newLoadedState) {
-            future = fileOperations.restoreReplayBackups(replaysToUpdate.stream().map(ReplayEntry::getBackupReplayPath).toList());
-        } else {
-            future = fileOperations.deleteReplays(replaysToUpdate.stream().map(ReplayEntry::getLiveReplayPath).toList(), false);
-        }
-        future.thenRunAsync(() -> replaysToUpdate.forEach(replay -> replay.setLoaded(newLoadedState)), Platform::runLater);
     }
 
     public void setComments(String comments) {
