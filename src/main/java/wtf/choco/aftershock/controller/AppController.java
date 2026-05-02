@@ -142,7 +142,6 @@ public final class AppController {
         TableViewSelectionModel<ReplayEntry> selectionModel = replayTable.getSelectionModel();
         selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
 
-        // TODO: Do this with CSS
         StackPane root = FXUtils.loadFXMLRoot(AppResources.FXML_LAYOUT_FILTER_POPUP.get(), resources);
         this.popup.setAutoHide(true);
         this.popup.getContent().add(root);
@@ -150,8 +149,6 @@ public final class AppController {
         this.popup.setOnShown(_ -> filterOptionsImage.setOpacity(1.0));
         this.popup.setWidth(root.getPrefWidth());
         this.popup.setHeight(root.getPrefHeight());
-
-        this.filterOptionsImage.setCursor(Cursor.HAND);
 
         selectionModel.getSelectedItems().addListener(this::onSelectedItemsChange);
 
@@ -208,11 +205,11 @@ public final class AppController {
     }
 
     private void onSelectedItemsChange(ListChangeListener.Change<? extends ReplayEntry> change) {
-        if (!change.next()) {
-            return;
-        }
+        while (change.next()) {
+            if (!change.wasAdded()) {
+                continue;
+            }
 
-        if (change.getAddedSize() > 0) {
             this.openInfoPanel(change.getAddedSubList().getFirst());
             this.splitPane.setDividerPosition(splitPane.getDividers().size() - 1, lastDividerPositionInfo);
         }
