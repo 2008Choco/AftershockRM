@@ -71,7 +71,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -155,7 +154,6 @@ public final class AppController {
 
         this.filterOptionsImage.setCursor(Cursor.HAND);
 
-        // Label update listeners
         selectionModel.getSelectedItems().addListener(this::onSelectedItemsChange);
 
         this.tableFilter = new ReplayTableFilter(ReplayBin.GLOBAL);
@@ -441,7 +439,11 @@ public final class AppController {
                 return;
             }
 
-            selectionModel.getSelectedItems().forEach(replay -> replay.setLoaded(!replay.isLoaded()));
+            List<ReplayEntry> loadedReplays = selectionModel.getSelectedItems().stream().filter(ReplayEntry::isLoaded).toList();
+            List<ReplayEntry> unloadedReplays = selectionModel.getSelectedItems().stream().filter(Predicate.not(ReplayEntry::isLoaded)).toList();
+
+            ReplayEntry.performBulkLoadOperation(loadedReplays, false); // Unload any loaded replays
+            ReplayEntry.performBulkLoadOperation(unloadedReplays, true); // Load any unloaded replays
         } else if (key == KeyCode.DELETE) {
             var selection = replayTable.getSelectionModel();
             if (selection.isEmpty()) {
@@ -467,7 +469,7 @@ public final class AppController {
             selection.clearSelection();
 
             if (deleteLiveReplays) {
-                App.getInstance().getFileOperations().deleteReplays(selected.stream().map(ReplayEntry::getLiveReplayPath).toList())
+                App.getInstance().getFileOperations().deleteReplays(selected.stream().map(ReplayEntry::getLiveReplayPath).toList(), true)
                         .thenRun(() -> App.getInstance().getLogger().info("Deleted " + selected.size() + " live replays! They've been added to the RecentlyDeleted directory!"))
                         .exceptionally(e -> {
                             e.printStackTrace();

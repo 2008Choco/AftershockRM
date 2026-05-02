@@ -127,8 +127,13 @@ public final class AftershockFileOperations {
             return true;
         }
 
+        Path backupReplayFilePath = replayBackupsDirectory.resolve(liveReplayPath.getFileName());
+        if (Files.notExists(backupReplayFilePath)) {
+            return true;
+        }
+
         byte[] liveReplayHash = md5.digest(Files.readAllBytes(liveReplayPath));
-        byte[] backupReplayHash = md5.digest(Files.readAllBytes(replayBackupsDirectory.resolve(liveReplayPath.getFileName())));
+        byte[] backupReplayHash = md5.digest(Files.readAllBytes(backupReplayFilePath));
         return !MessageDigest.isEqual(liveReplayHash, backupReplayHash);
     }
 
@@ -202,6 +207,31 @@ public final class AftershockFileOperations {
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
+    }
+
+    public CompletionStage<Void> restoreReplayBackups(Collection<Path> replayBackupPaths) {
+        Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
+        if (Files.notExists(replayBackupsDirectory) || replayBackupPaths.isEmpty()) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        return CompletableFuture.runAsync(() -> {
+            Path liveReplayDirectory = getLiveReplayDirectory();
+            FileUtil.createDirectoryIfDoesntExist(liveReplayDirectory);
+
+            for (Path path : replayBackupPaths) {
+                if (isInvalidPath(path, replayBackupsDirectory, FILE_EXTENSION_REPLAY)) {
+                    continue;
+                }
+
+                try {
+                    Path targetPath = liveReplayDirectory.resolve(path.getFileName());
+                    Files.copy(path, targetPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                } catch (IOException e) {
+                    throw new CompletionException(e);
+                }
+            }
+        }, app.getExecutor());
     }
 
     /**
@@ -450,10 +480,9 @@ public final class AftershockFileOperations {
         }
     }
 
-    public CompletionStage<Void> deleteReplays(Collection<Path> liveReplayPaths) {
+    public CompletionStage<Void> deleteReplays(Collection<Path> liveReplayPaths, boolean fullDelete) {
         Path liveReplayDirectory = getLiveReplayDirectory();
         if (Files.notExists(liveReplayDirectory) || liveReplayPaths.isEmpty()) {
-            System.out.println("Live replay directory does not exist, or live replay paths are empty!");
             return CompletableFuture.completedFuture(null);
         }
 
@@ -467,15 +496,17 @@ public final class AftershockFileOperations {
             for (Path path : liveReplayPaths) {
                 // Ignore any invalid files (non-existent, non-replay files, or not in the live replay directory)
                 if (isInvalidPath(path, liveReplayDirectory, FILE_EXTENSION_REPLAY)) {
-                    System.out.println("Invalid path: \"" + path + "\"");
                     continue;
                 }
 
                 try {
-                    Files.copy(path, recentlyDeletedDirectory.resolve(path.getFileName()), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                    if (fullDelete) {
+                        Files.copy(path, recentlyDeletedDirectory.resolve(path.getFileName()), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                        Files.deleteIfExists(replayBackupsDirectory.resolve(path.getFileName()));
+                        Files.deleteIfExists(headersDirectory.resolve(FileUtil.changeExtension(path.getFileName(), FILE_EXTENSION_JSON)));
+                    }
+
                     Files.deleteIfExists(path);
-                    Files.deleteIfExists(replayBackupsDirectory.resolve(path.getFileName()));
-                    Files.deleteIfExists(headersDirectory.resolve(FileUtil.changeExtension(path.getFileName(), FILE_EXTENSION_JSON)));
                 } catch (IOException e) {
                     throw new CompletionException(e);
                 }

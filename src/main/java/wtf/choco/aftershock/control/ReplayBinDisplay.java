@@ -264,12 +264,12 @@ public final class ReplayBinDisplay extends VBox {
 
     @FXML
     private void onLoadAllReplays(ActionEvent event) {
-        this.getReplays().forEach(replay -> replay.setLoaded(true));
+        ReplayEntry.performBulkLoadOperation(getReplays(), true);
     }
 
     @FXML
     private void onUnloadAllReplays(ActionEvent event) {
-        this.getReplays().forEach(replay -> replay.setLoaded(false));
+        ReplayEntry.performBulkLoadOperation(getReplays(), false);
     }
 
     @FXML
