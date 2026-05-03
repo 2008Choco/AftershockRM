@@ -10,6 +10,7 @@ Included in this file are a list of features that I would like to introduce into
 - Replay comments to define arbitrary text on a replay entry
 - Add more menu bar and context menu buttons to perform common actions
 - Goal timeline chart in the replay information tab (_maybe_)
+- Integration with Ballchasing.com (direct upload from Aftershock)
 
 ## Rewrites
 - When InputMappings are out of incubation (JavaFX), use these across the app.
