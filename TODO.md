@@ -18,10 +18,6 @@ Included in this file are a list of features that I would like to introduce into
   - For example, define a "rename bin" action that can then be triggered with either the F2 key, a context menu button, or a menu bar button
 - Improve the look-and-feel of the replay information tab. It's very barren, and has to be reconstructed for each replay. This sucks. Find a way to use property bindings on just one instance of a replay information tab
 - Revisit ReplayBin. Improve the way it holds replays. Ideally it holds a weak reference to a replay by its ID, then resolves the replay from the global bin when necessary. See ReplayBinTypeAdapter for the source of this issue
-- Drop RocketRP dependency and need for JSON header files (**MASSIVE!!!**)
-  - RocketRP is what reads the .replay file format and spits out JSON. This takes time, requires additional files, and is an unnecessary middle-man with an unnecessary 3rd party dependency.
-  - Ideally the .replay files are read directly in-memory with Java objects rather than spinning up a third-party process to generate a JSON file, then reading the JSON file into memory.
-  - I have a library to parse Rocket League replay files, but it does not account for legacy replay formats.
 
 ## Bug Fixes
 - Text in deletion confirmation dialogues are cut off, meaning the list of files or bins being deleted is not clear (_low priority_)

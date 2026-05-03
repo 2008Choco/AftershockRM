@@ -28,14 +28,12 @@ public class ReplayEntry implements IReplay {
 
     private final Path liveReplayPath;
     private final Path backupReplayPath;
-    private final Path headerPath;
     private final Replay replayData;
     private final ReplayMetadata metadata;
 
-    public ReplayEntry(Path liveReplayPath, Path backupReplayPath, Path headerPath, Replay replayData, ReplayMetadata metadata) {
+    public ReplayEntry(Path liveReplayPath, Path backupReplayPath, Replay replayData, ReplayMetadata metadata) {
         this.liveReplayPath = liveReplayPath;
         this.backupReplayPath = backupReplayPath;
-        this.headerPath = headerPath;
         this.replayData = replayData;
         this.metadata = metadata;
 
@@ -55,10 +53,6 @@ public class ReplayEntry implements IReplay {
 
     public Path getBackupReplayPath() {
         return backupReplayPath;
-    }
-
-    public Path getHeaderPath() {
-        return headerPath;
     }
 
     @Override

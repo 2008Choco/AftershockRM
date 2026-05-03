@@ -21,13 +21,12 @@ import java.util.logging.Logger;
 
 public final class SettingsPanelController {
 
-    @FXML private TextField fieldReplayFolder, fieldRocketRPPath, fieldReplayEditorPath;
+    @FXML private TextField fieldReplayFolder, fieldReplayEditorPath;
     @FXML private ComboBox<String> languageSelector;
 
     @FXML
     public void initialize() {
         this.fieldReplayFolder.setText(ApplicationSettings.REPLAY_DIRECTORY.get());
-        this.fieldRocketRPPath.setText(ApplicationSettings.ROCKETRP_PATH.get());
         this.fieldReplayEditorPath.setText(ApplicationSettings.REPLAY_EDITOR_PATH.get());
         this.languageSelector.setValue(ApplicationSettings.LOCALE.get());
     }
@@ -46,24 +45,6 @@ public final class SettingsPanelController {
         File directory = chooser.showDialog(new Stage());
         if (directory != null) {
             this.fieldReplayFolder.setText(directory.getAbsolutePath());
-        }
-    }
-
-    @FXML
-    @SuppressWarnings("unused")
-    public void selectRocketRPPath(ActionEvent event) {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Select RocketRP Executable");
-        chooser.setSelectedExtensionFilter(new ExtensionFilter("Executable File", "exe"));
-
-        String rocketRPPath = fieldRocketRPPath.getText();
-        if (!rocketRPPath.isBlank()) {
-            chooser.setInitialDirectory(Path.of(rocketRPPath).getParent().toFile());
-        }
-
-        File file = chooser.showOpenDialog(new Stage());
-        if (file != null) {
-            this.fieldRocketRPPath.setText(file.getAbsolutePath());
         }
     }
 
@@ -94,7 +75,6 @@ public final class SettingsPanelController {
     @FXML
     public void applyAndClose(ActionEvent event) {
         boolean replayDirectoryChanged = setIfValid(ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
-        this.setIfValid(ApplicationSettings.ROCKETRP_PATH, fieldRocketRPPath.getText());
         this.setIfValid(ApplicationSettings.REPLAY_EDITOR_PATH, fieldReplayEditorPath.getText());
         this.setIfValid(ApplicationSettings.LOCALE, languageSelector.getValue());
 
@@ -119,7 +99,6 @@ public final class SettingsPanelController {
         Logger logger = app.getLogger();
         logger.info("Settings updated to: ");
         logger.info("Replay Directory: " + ApplicationSettings.REPLAY_DIRECTORY.get());
-        logger.info("RocketRP Path: " + ApplicationSettings.ROCKETRP_PATH.get());
         logger.info("Replay Editor Path: " + ApplicationSettings.REPLAY_EDITOR_PATH.get());
         logger.info("Language: " + ApplicationSettings.LOCALE.get());
 

@@ -7,7 +7,6 @@ public final class AftershockFileStructure {
     // Directories
     private final Path installDirectory;
     private final Path replayBackupsDirectory;
-    private final Path replayHeadersDirectory;
     private final Path recentlyDeletedDirectory;
 
     // Files
@@ -19,7 +18,6 @@ public final class AftershockFileStructure {
         // Directories
         this.installDirectory = installDirectory;
         this.replayBackupsDirectory = installDirectory.resolve("ReplayBackups/");
-        this.replayHeadersDirectory = installDirectory.resolve("Headers/");
         this.recentlyDeletedDirectory = installDirectory.resolve("RecentlyDeleted/");
 
         // Files
@@ -42,13 +40,6 @@ public final class AftershockFileStructure {
      */
     public Path replayBackupsDirectory() {
         return replayBackupsDirectory;
-    }
-
-    /**
-     * @return the directory where all JSON replay headers are stored
-     */
-    public Path replayHeadersDirectory() {
-        return replayHeadersDirectory;
     }
 
     /**

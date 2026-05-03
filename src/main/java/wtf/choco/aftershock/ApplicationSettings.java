@@ -19,7 +19,6 @@ public final class ApplicationSettings {
     private static final Map<String, Setting> SETTING_BY_KEY = new HashMap<>();
 
     public static final Setting REPLAY_DIRECTORY = createSetting("replay_directory");
-    public static final Setting ROCKETRP_PATH = createSetting("rocketrp_path", App.getInstance().getInstallDirectory().resolve("RocketRP/RocketRP.CLI.exe").toAbsolutePath().toString());
     public static final Setting REPLAY_EDITOR_PATH = createSetting("replay_editor_path");
     public static final Setting LOCALE = createSetting("locale_code", "en_US");
 
@@ -53,10 +52,6 @@ public final class ApplicationSettings {
         private Setting(String key, String defaultValue) {
             this.property = new SimpleStringProperty(defaultValue);
             this.property.addListener((_, _, newValue) -> PROPERTIES.setProperty(key, newValue));
-        }
-
-        private Setting(String key) {
-            this(key, "");
         }
 
         public void set(String value) {

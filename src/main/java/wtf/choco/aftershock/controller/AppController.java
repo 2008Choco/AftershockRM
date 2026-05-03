@@ -14,7 +14,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -291,8 +290,7 @@ public final class AppController {
 
         AftershockFileOperations fileOperations = app.getFileOperations();
         dragOperation.thenCompose(fileOperations::createReplayBackups)
-                .thenCompose(fileOperations::generateHeaders)
-                .thenCompose(fileOperations::loadHeaders)
+                .thenCompose(fileOperations::loadReplays)
                 .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
                 .exceptionally(e -> {
                     e.printStackTrace();

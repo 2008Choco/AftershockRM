@@ -10,6 +10,8 @@ import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.FileUtil;
 import wtf.choco.aftershock.util.function.ThrowingFunction;
 import wtf.choco.aftershock.util.function.ThrowingPredicate;
+import wtf.choco.rljp.ReplayStreamReader;
+import wtf.choco.rljp.structures.ReplayHeader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,7 +24,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -35,7 +36,6 @@ public final class AftershockFileOperations {
     private static final String FILE_EXTENSION_REPLAY = "replay";
     private static final String FILE_EXTENSION_JSON = "json";
     private static final Predicate<Path> REPLAY_PATH_PREDICATE = path -> FileUtil.getExtension(path).equals(FILE_EXTENSION_REPLAY);
-    private static final Predicate<Path> JSON_PATH_PREDICATE = path -> FileUtil.getExtension(path).equals(FILE_EXTENSION_JSON);
 
     private final MessageDigest md5;
 
@@ -235,136 +235,29 @@ public final class AftershockFileOperations {
     }
 
     /**
-     * Generates header files for the given replay file paths in the replay backup directory and places them in the
-     * headers directory. If a header already exists in the headers directory, it will be overwritten.
+     * Loads all replay files from the given replay file paths in the replay backups directory.
      *
-     * @param backupReplayPaths the paths for which to create replay headers. Any non-replay files or files that do not
-     * reside in the replay backup directory will be ignored
+     * @param replayBackupPaths the paths of the replay files to load. Any non-header files or files that do not reside in the
+     * replay backups directory will be ignored
      *
-     * @return a future that completes when all header files have been generated
+     * @return a future that completes when all replays have been loaded
      */
-    public CompletionStage<Collection<Path>> generateHeaders(Collection<Path> backupReplayPaths) {
+    public CompletionStage<Collection<ReplayEntry>> loadReplays(Collection<Path> replayBackupPaths) {
         Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
-        if (Files.notExists(replayBackupsDirectory) || backupReplayPaths.isEmpty()) {
-            return CompletableFuture.completedFuture(Collections.emptyList());
-        }
-
-        String rocketRPPath = ApplicationSettings.ROCKETRP_PATH.get();
-        return CompletableFuture.supplyAsync(() -> {
-            Path headersDirectory = fileStructure.replayHeadersDirectory();
-            FileUtil.createDirectoryIfDoesntExist(headersDirectory);
-
-            List<Path> updatedHeaderPaths = new ArrayList<>();
-
-            for (Path path : backupReplayPaths) {
-                // Ignore any invalid files (non-existent, non-replay files, or not in the replay backup directory)
-                if (isInvalidPath(path, replayBackupsDirectory, FILE_EXTENSION_REPLAY)) {
-                    continue;
-                }
-
-                Path targetPath = FileUtil.changeExtension(headersDirectory.resolve(path.getFileName()), FILE_EXTENSION_JSON);
-                boolean changed = Files.notExists(targetPath);
-                try {
-                    // If the target file existed before, we'll hash before and after to verify it's been changed
-                    byte[] hash = null;
-                    if (changed) {
-                        hash = md5.digest(Files.readAllBytes(path));
-                    }
-
-                    // Generate the header file using RocketRP
-                    new ProcessBuilder(
-                        rocketRPPath,
-                        "--fast",
-                        "--replay", path.toAbsolutePath().toString(),
-                        "--output", headersDirectory.toAbsolutePath().toString()
-                    ).inheritIO().start().waitFor();
-
-                    if (hash != null) {
-                        changed = MessageDigest.isEqual(hash, md5.digest(Files.readAllBytes(path)));
-                    }
-
-                    if (changed) {
-                        updatedHeaderPaths.add(targetPath);
-                    }
-                } catch (IOException | InterruptedException e) {
-                    throw new CompletionException(e);
-                }
-            }
-
-            return updatedHeaderPaths;
-        }, app.getExecutor());
-    }
-
-    /**
-     * Generates header files for all replays in the replay backup directory and places them in the header
-     * directory.
-     *
-     * @return a future that completes when all header files have been generated
-     */
-    public CompletionStage<Collection<Path>> generateHeaders() {
-        Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
-        if (Files.notExists(replayBackupsDirectory)) {
-            return CompletableFuture.completedFuture(Collections.emptyList());
-        }
-
-        try (Stream<Path> paths = Files.list(replayBackupsDirectory).filter(REPLAY_PATH_PREDICATE)) {
-            return generateHeaders(paths.toList());
-        } catch (IOException e) {
-            throw new CompletionException(e);
-        }
-    }
-
-    /**
-     * Deletes all header files from the header directory that do not have a corresponding replay in the
-     * replay backup directory.
-     *
-     * @return a future that completes when the deletion of all invalid headers has finished
-     */
-    public CompletionStage<Void> deleteInvalidHeaders() {
-        Path headersDirectory = fileStructure.replayHeadersDirectory();
-        if (Files.notExists(headersDirectory)) {
-            return CompletableFuture.completedFuture(null);
-        }
-
-        Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
-        return CompletableFuture.runAsync(() -> {
-            try (Stream<Path> paths = Files.list(headersDirectory).filter(REPLAY_PATH_PREDICATE)) {
-                for (Iterator<Path> iterator = paths.iterator(); iterator.hasNext();) {
-                    Path path = iterator.next();
-                    if (!Files.exists(replayBackupsDirectory.resolve(path.getFileName()))) {
-                        Files.delete(path);
-                    }
-                }
-            } catch (IOException e) {
-                throw new CompletionException(e);
-            }
-        }, app.getExecutor());
-    }
-
-    /**
-     * Loads all header files from the given header file paths in the headers directory.
-     *
-     * @param headerPaths the paths of the header files to load. Any non-header files or files that do not reside in the
-     * headers directory will be ignored
-     *
-     * @return a future that completes when all headers have been loaded
-     */
-    public CompletionStage<Collection<ReplayEntry>> loadHeaders(Collection<Path> headerPaths) {
-        Path headersDirectory = fileStructure.replayHeadersDirectory();
-        if (Files.notExists(headersDirectory) || headerPaths.isEmpty()) {
+        if (Files.notExists(replayBackupsDirectory) || replayBackupPaths.isEmpty()) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
         return CompletableFuture.supplyAsync(() -> {
             List<ReplayEntry> replays = new ArrayList<>();
-            for (Path path : headerPaths) {
-                // Ignore any invalid files (non-existent, non-header files, or not in the headers directory)
-                if (isInvalidPath(path, headersDirectory, FILE_EXTENSION_JSON)) {
+            for (Path path : replayBackupPaths) {
+                // Ignore any invalid files (non-existent, non-header files, or not in the replay backups directory)
+                if (isInvalidPath(path, replayBackupsDirectory, FILE_EXTENSION_JSON)) {
                     continue;
                 }
 
                 try {
-                    replays.add(createReplayEntryFromHeader(path));
+                    replays.add(loadReplay(path));
                 } catch (IOException e) {
                     throw new CompletionException(e);
                 }
@@ -374,32 +267,36 @@ public final class AftershockFileOperations {
     }
 
     /**
-     * Loads all header files in the headers directory.
+     * Loads all replay files in the replay backups directory.
      *
-     * @return a future that completes when all headers have been loaded
+     * @return a future that completes when all replays have been loaded
      */
-    public CompletionStage<Collection<ReplayEntry>> loadHeaders() {
-        Path headersDirectory = fileStructure.replayHeadersDirectory();
-        if (Files.notExists(headersDirectory)) {
+    public CompletionStage<Collection<ReplayEntry>> loadReplays() {
+        Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
+        if (Files.notExists(replayBackupsDirectory)) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
         return CompletableFuture.supplyAsync(() -> {
-            try (Stream<Path> paths = Files.list(headersDirectory).filter(JSON_PATH_PREDICATE)) {
-                return paths.map(ThrowingFunction.unwrap(this::createReplayEntryFromHeader)).toList();
+            try (Stream<Path> paths = Files.list(replayBackupsDirectory).filter(REPLAY_PATH_PREDICATE)) {
+                return paths.map(ThrowingFunction.unwrap(this::loadReplay)).toList();
             } catch (IOException e) {
                 throw new CompletionException(e);
             }
         }, app.getExecutor());
     }
 
-    private ReplayEntry createReplayEntryFromHeader(Path headerPath) throws IOException {
-        Replay replay = App.GSON.fromJson(Files.newBufferedReader(headerPath, StandardCharsets.UTF_8), Replay.class);
+    private ReplayEntry loadReplay(Path replayBackupPath) throws IOException {
+        ReplayHeader header;
+        try (ReplayStreamReader reader = new ReplayStreamReader(Files.newInputStream(replayBackupPath))) {
+            header = ReplayHeader.read(reader);
+        }
+
+        Replay replay = Replay.fromRLJPReplayHeader(header);
         ReplayMetadata replayMetadata = app.getReplayMetadataAccessor().getReplayMetadata(replay);
-        Path replayFileName = FileUtil.changeExtension(headerPath.getFileName(), FILE_EXTENSION_REPLAY);
+        Path replayFileName = FileUtil.changeExtension(replayBackupPath.getFileName(), FILE_EXTENSION_REPLAY);
         Path liveReplayPath = getLiveReplayDirectory().resolve(replayFileName);
-        Path replayBackupPath = fileStructure.replayBackupsDirectory().resolve(replayFileName);
-        return new ReplayEntry(liveReplayPath, replayBackupPath, headerPath, replay, replayMetadata);
+        return new ReplayEntry(liveReplayPath, replayBackupPath, replay, replayMetadata);
     }
 
     private boolean isInvalidPath(Path path, Path expectedDirectory, String expectedFileExtension) {
@@ -411,9 +308,8 @@ public final class AftershockFileOperations {
      * <ol>
      *     <li>Invokes {@link #getMismatchingReplayBackupPaths()}
      *     <li>Invokes {@link #createReplayBackups(Collection)} (with the result of the last step)
-     *     <li>Invokes {@link #generateHeaders(Collection)} (with the result of the last step)
-     *     <li>Invokes {@link #loadHeaders()}
-     *     <li>Invokes {@link #deleteInvalidHeaders()}
+     *     <li>Invokes {@link #loadReplays(Collection)} (with the result of the last step)
+     *     <li>Invokes {@link #loadReplays()}
      * </ol>
      * This method is useful on startup or for when the live replay directory is changed at runtime.
      *
@@ -422,9 +318,7 @@ public final class AftershockFileOperations {
     public CompletionStage<Collection<ReplayEntry>> performCompleteRefresh() {
         return getMismatchingReplayBackupPaths()
                 .thenCompose(this::createReplayBackups)
-                .thenCompose(this::generateHeaders)
-                .thenCompose(_ -> loadHeaders()) // Be sure to load ALL headers in a complete refresh
-                .thenCompose(result -> deleteInvalidHeaders().thenApply(_ -> result)); // Passing through the result of #loadHeaders()
+                .thenCompose(_ -> loadReplays()); // Be sure to load ALL replays in a complete refresh
     }
 
     public CompletionStage<ReplayMetadataAccessor> readReplayMetadata() {
@@ -491,7 +385,6 @@ public final class AftershockFileOperations {
             FileUtil.createDirectoryIfDoesntExist(recentlyDeletedDirectory);
 
             Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
-            Path headersDirectory = fileStructure.replayHeadersDirectory();
 
             for (Path path : liveReplayPaths) {
                 // Ignore any invalid files (non-existent, non-replay files, or not in the live replay directory)
@@ -503,7 +396,6 @@ public final class AftershockFileOperations {
                     if (fullDelete) {
                         Files.copy(path, recentlyDeletedDirectory.resolve(path.getFileName()), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
                         Files.deleteIfExists(replayBackupsDirectory.resolve(path.getFileName()));
-                        Files.deleteIfExists(headersDirectory.resolve(FileUtil.changeExtension(path.getFileName(), FILE_EXTENSION_JSON)));
                     }
 
                     Files.deleteIfExists(path);

@@ -19,9 +19,6 @@ public final class AftershockTypeAdapterFactory implements TypeAdapterFactory {
 
     // Register type adapters in this map :)
     private static final List<TypeAdapterRegistration<?>> TYPE_ADAPTERS = List.of(
-            TypeAdapterRegistration.create(IReplay.class, ReplayTypeAdapter::new),
-            TypeAdapterRegistration.create(Player.class, PlayerTypeAdapter::new),
-            TypeAdapterRegistration.create(Goal.class, GoalTypeAdapter::new),
             TypeAdapterRegistration.create(ReplayMetadata.class, ReplayMetadataTypeAdapter::new),
             TypeAdapterRegistration.create(ReplayMetadataAccessor.class, ReplayMetadataStoreTypeAdapter::new),
             TypeAdapterRegistration.create(ReplayBin.class, ReplayBinTypeAdapter::new)
