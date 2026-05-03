@@ -8,8 +8,6 @@ import wtf.choco.aftershock.replay.ReplayMetadata;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.FileUtil;
-import wtf.choco.aftershock.util.function.ThrowingFunction;
-import wtf.choco.aftershock.util.function.ThrowingPredicate;
 import wtf.choco.rljp.ReplayStreamReader;
 import wtf.choco.rljp.structures.ReplayHeader;
 
@@ -21,23 +19,30 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public final class AftershockFileOperations {
 
     private static final String FILE_EXTENSION_REPLAY = "replay";
-    private static final String FILE_EXTENSION_JSON = "json";
     private static final Predicate<Path> REPLAY_PATH_PREDICATE = path -> FileUtil.getExtension(path).equals(FILE_EXTENSION_REPLAY);
 
-    private final MessageDigest md5;
+    private static final ThreadLocal<MessageDigest> MD5 = ThreadLocal.withInitial(() -> {
+        try {
+            return MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Couldn't get the MD5 hashing algorithm. How old is this computer?", e);
+        }
+    });
 
     private final App app;
     private final AftershockFileStructure fileStructure;
@@ -45,12 +50,6 @@ public final class AftershockFileOperations {
     public AftershockFileOperations(App app, AftershockFileStructure fileStructure) {
         this.app = app;
         this.fileStructure = fileStructure;
-
-        try {
-            this.md5 = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Couldn't get the MD5 hashing algorithm. How old is this computer?", e);
-        }
     }
 
     /**
@@ -78,24 +77,34 @@ public final class AftershockFileOperations {
      * @return a future that completes when all replays have been checked
      */
     public CompletionStage<Collection<Path>> getMismatchingReplayBackupPaths(Collection<Path> liveReplayPaths) {
-        return CompletableFuture.supplyAsync(() -> {
-            List<Path> mismatchingPaths = new ArrayList<>();
+        // If the live replay directory doesn't exist, then we won't consider it "mismatching" because the original is gone
+        Path liveReplayDirectory = getLiveReplayDirectory();
+        if (!Files.isDirectory(liveReplayDirectory)) {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
 
-            for (Path path : liveReplayPaths) {
-                // Ignore any invalid files (non-existent, non-replay files, or not in the live replay directory)
-                if (isInvalidPath(path, getLiveReplayDirectory(), FILE_EXTENSION_REPLAY)) {
-                    continue;
-                }
+        // If the replay backups directory doesn't exist, we can assume that all replay paths are mismatching. They have no corresponding backup replay
+        Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
+        if (!Files.isDirectory(replayBackupsDirectory)) {
+            return CompletableFuture.completedFuture(liveReplayPaths.stream()
+                .filter(path -> !isInvalidPath(path, liveReplayDirectory, FILE_EXTENSION_REPLAY))
+                .toList()
+            );
+        }
 
-                try {
-                    if (hasMismatchedBackupReplay(path)) {
-                        mismatchingPaths.add(path);
-                    }
-                } catch (IOException _) { }
-            }
+        try (ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<CompletableFuture<Path>> futures = liveReplayPaths.stream()
+                .filter(path -> !isInvalidPath(path, liveReplayDirectory, FILE_EXTENSION_REPLAY))
+                .map(path -> CompletableFuture.supplyAsync(() -> hasMismatchedBackupReplay(path) ? path : null, virtualThreadExecutor))
+                .toList();
 
-            return mismatchingPaths;
-        }, app.getExecutor());
+            return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+                .thenApply(_ -> futures.stream()
+                    .map(CompletableFuture::join)
+                    .filter(Objects::nonNull)
+                    .toList()
+                );
+        }
     }
 
     /**
@@ -108,33 +117,37 @@ public final class AftershockFileOperations {
      * @return a future that completes when all replays have been checked
      */
     public CompletionStage<Collection<Path>> getMismatchingReplayBackupPaths() {
-        if (Files.notExists(getLiveReplayDirectory())) {
+        Path liveReplayDirectory = getLiveReplayDirectory();
+        if (!Files.isDirectory(liveReplayDirectory)) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
-        return CompletableFuture.supplyAsync(() -> {
-            try (Stream<Path> paths = Files.list(getLiveReplayDirectory()).filter(REPLAY_PATH_PREDICATE)) {
-                return paths.filter(ThrowingPredicate.unwrap(this::hasMismatchedBackupReplay)).toList();
-            } catch (IOException e) {
-                throw new CompletionException(e);
-            }
-        }, app.getExecutor());
+        try (Stream<Path> paths = Files.list(liveReplayDirectory).filter(REPLAY_PATH_PREDICATE)) {
+            return getMismatchingReplayBackupPaths(paths.toList());
+        } catch (IOException e) {
+            throw new CompletionException(e);
+        }
     }
 
-    private boolean hasMismatchedBackupReplay(Path liveReplayPath) throws IOException {
+    private boolean hasMismatchedBackupReplay(Path liveReplayPath) {
         Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
-        if (Files.notExists(replayBackupsDirectory)) {
+        if (!Files.isDirectory(replayBackupsDirectory)) {
             return true;
         }
 
         Path backupReplayFilePath = replayBackupsDirectory.resolve(liveReplayPath.getFileName());
-        if (Files.notExists(backupReplayFilePath)) {
+        if (!Files.isRegularFile(backupReplayFilePath)) {
             return true;
         }
 
-        byte[] liveReplayHash = md5.digest(Files.readAllBytes(liveReplayPath));
-        byte[] backupReplayHash = md5.digest(Files.readAllBytes(backupReplayFilePath));
-        return !MessageDigest.isEqual(liveReplayHash, backupReplayHash);
+        try {
+            MessageDigest md5 = MD5.get();
+            byte[] liveReplayHash = md5.digest(Files.readAllBytes(liveReplayPath));
+            byte[] backupReplayHash = md5.digest(Files.readAllBytes(backupReplayFilePath));
+            return !MessageDigest.isEqual(liveReplayHash, backupReplayHash);
+        } catch (IOException e) {
+            throw new CompletionException(e);
+        }
     }
 
     /**
@@ -149,89 +162,80 @@ public final class AftershockFileOperations {
      */
     public CompletionStage<Collection<Path>> createReplayBackups(Collection<Path> liveReplayPaths) {
         Path liveReplayDirectory = getLiveReplayDirectory();
-        if (Files.notExists(liveReplayDirectory) || liveReplayPaths.isEmpty()) {
+        if (!Files.isDirectory(liveReplayDirectory) || liveReplayPaths.isEmpty()) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
-        return CompletableFuture.supplyAsync(() -> {
-            Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
-            FileUtil.createDirectoryIfDoesntExist(replayBackupsDirectory);
-
-            List<Path> backedUpPaths = new ArrayList<>();
-
-            for (Path path : liveReplayPaths) {
-                // Ignore any invalid files (non-existent, non-replay files, or not in the live replay directory)
-                if (isInvalidPath(path, liveReplayDirectory, FILE_EXTENSION_REPLAY)) {
-                    continue;
-                }
-
-                Path targetPath = replayBackupsDirectory.resolve(path.getFileName());
-                boolean changed = Files.notExists(targetPath);
-                try {
-                    // If the target file existed before, we'll hash before and after to verify it's been changed
-                    byte[] hash = null;
-                    if (changed) {
-                        hash = md5.digest(Files.readAllBytes(path));
-                    }
-
-                    // Actually perform the backup
-                    Files.copy(path, targetPath, StandardCopyOption.REPLACE_EXISTING);
-
-                    if (hash != null) {
-                        changed = MessageDigest.isEqual(hash, md5.digest(Files.readAllBytes(path)));
-                    }
-
-                    if (changed) {
-                        backedUpPaths.add(targetPath);
-                    }
-                } catch (IOException e) {
-                    throw new CompletionException(e);
-                }
-            }
-
-            return backedUpPaths;
-        }, app.getExecutor());
+        return CompletableFuture.runAsync(() -> FileUtil.createDirectoryIfDoesntExist(fileStructure.replayBackupsDirectory()), app.getExecutor())
+            .thenCompose(_ -> createReplayBackupsInParallel(liveReplayPaths, liveReplayDirectory));
     }
 
-    /**
-     * Creates backups for all replay files in the {@link #getLiveReplayDirectory() live replay directory} into
-     * the replay backup directory. If a replay already exists in the replay backup directory, it will be
-     * overwritten with the replay from the live replay directory.
-     *
-     * @return a future that completes when the backup process has finished
-     */
-    public CompletionStage<Collection<Path>> createReplayBackups() {
-        Path liveReplayDirectory = getLiveReplayDirectory();
-        try (Stream<Path> paths = Files.list(liveReplayDirectory).filter(REPLAY_PATH_PREDICATE)) {
-            return createReplayBackups(paths.toList());
+    private CompletionStage<Collection<Path>> createReplayBackupsInParallel(Collection<Path> liveReplayPaths, Path liveReplayDirectory) {
+        try (ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<CompletableFuture<Path>> futures = liveReplayPaths.stream()
+                .filter(path -> !isInvalidPath(path, liveReplayDirectory, FILE_EXTENSION_REPLAY))
+                .map(path -> CompletableFuture.supplyAsync(() -> createReplayBackup(path), virtualThreadExecutor))
+                .toList();
+
+            return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+                .thenApply(_ -> futures.stream()
+                    .map(CompletableFuture::join)
+                    .filter(Objects::nonNull)
+                    .toList()
+                );
+        }
+    }
+
+    private Path createReplayBackup(Path path) {
+        Path targetPath = fileStructure.replayBackupsDirectory().resolve(path.getFileName());
+        boolean changed = !Files.isRegularFile(targetPath);
+        try {
+            byte[] hash = null;
+            if (!changed) {
+                hash = MD5.get().digest(Files.readAllBytes(path));
+            }
+
+            Files.copy(path, targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+            if (hash != null) {
+                changed = !MessageDigest.isEqual(hash, MD5.get().digest(Files.readAllBytes(path)));
+            }
+
+            return changed ? targetPath : null;
         } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
+            throw new CompletionException(e);
         }
     }
 
     public CompletionStage<Void> restoreReplayBackups(Collection<Path> replayBackupPaths) {
-        Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
-        if (Files.notExists(replayBackupsDirectory) || replayBackupPaths.isEmpty()) {
+        if (!Files.isDirectory(fileStructure.replayBackupsDirectory()) || replayBackupPaths.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
 
-        return CompletableFuture.runAsync(() -> {
-            Path liveReplayDirectory = getLiveReplayDirectory();
-            FileUtil.createDirectoryIfDoesntExist(liveReplayDirectory);
+        Path liveReplayDirectory = getLiveReplayDirectory();
+        return CompletableFuture.runAsync(() -> FileUtil.createDirectoryIfDoesntExist(liveReplayDirectory), app.getExecutor())
+            .thenCompose(_ -> restoreReplayBackupsInParallel(replayBackupPaths, liveReplayDirectory));
+    }
 
-            for (Path path : replayBackupPaths) {
-                if (isInvalidPath(path, replayBackupsDirectory, FILE_EXTENSION_REPLAY)) {
-                    continue;
-                }
+    private CompletionStage<Void> restoreReplayBackupsInParallel(Collection<Path> replayBackupPaths, Path liveReplayDirectory) {
+        Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
+        try (ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<CompletableFuture<Void>> futures = replayBackupPaths.stream()
+                .filter(path -> !isInvalidPath(path, replayBackupsDirectory, FILE_EXTENSION_REPLAY))
+                .map(path -> CompletableFuture.runAsync(() -> restoreReplayBackup(path, liveReplayDirectory), virtualThreadExecutor))
+                .toList();
 
-                try {
-                    Path targetPath = liveReplayDirectory.resolve(path.getFileName());
-                    Files.copy(path, targetPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
-                } catch (IOException e) {
-                    throw new CompletionException(e);
-                }
-            }
-        }, app.getExecutor());
+            return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
+        }
+    }
+
+    private void restoreReplayBackup(Path path, Path liveReplayDirectory) {
+        try {
+            Path targetPath = liveReplayDirectory.resolve(path.getFileName());
+            Files.copy(path, targetPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        } catch (IOException e) {
+            throw new CompletionException(e);
+        }
     }
 
     /**
@@ -244,26 +248,28 @@ public final class AftershockFileOperations {
      */
     public CompletionStage<Collection<ReplayEntry>> loadReplays(Collection<Path> replayBackupPaths) {
         Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
-        if (Files.notExists(replayBackupsDirectory) || replayBackupPaths.isEmpty()) {
+        if (!Files.isDirectory(replayBackupsDirectory) || replayBackupPaths.isEmpty()) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
-        return CompletableFuture.supplyAsync(() -> {
-            List<ReplayEntry> replays = new ArrayList<>();
-            for (Path path : replayBackupPaths) {
-                // Ignore any invalid files (non-existent, non-header files, or not in the replay backups directory)
-                if (isInvalidPath(path, replayBackupsDirectory, FILE_EXTENSION_JSON)) {
-                    continue;
-                }
+        return CompletableFuture.runAsync(() -> FileUtil.createDirectoryIfDoesntExist(replayBackupsDirectory), app.getExecutor())
+            .thenCompose(_ -> loadReplaysInParallel(replayBackupPaths));
+    }
 
-                try {
-                    replays.add(loadReplay(path));
-                } catch (IOException e) {
-                    throw new CompletionException(e);
-                }
-            }
-            return replays;
-        }, app.getExecutor());
+    private CompletionStage<Collection<ReplayEntry>> loadReplaysInParallel(Collection<Path> replayBackupPaths) {
+        try (ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<CompletableFuture<ReplayEntry>> futures = replayBackupPaths.stream()
+                .filter(path -> !isInvalidPath(path, fileStructure.replayBackupsDirectory(), FILE_EXTENSION_REPLAY))
+                .map(path -> CompletableFuture.supplyAsync(() -> loadReplay(path), virtualThreadExecutor))
+                .toList();
+
+            return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+                .thenApply(_ -> futures.stream()
+                    .map(CompletableFuture::join)
+                    .filter(Objects::nonNull)
+                    .toList()
+                );
+        }
     }
 
     /**
@@ -273,23 +279,23 @@ public final class AftershockFileOperations {
      */
     public CompletionStage<Collection<ReplayEntry>> loadReplays() {
         Path replayBackupsDirectory = fileStructure.replayBackupsDirectory();
-        if (Files.notExists(replayBackupsDirectory)) {
+        if (!Files.isDirectory(replayBackupsDirectory)) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
-        return CompletableFuture.supplyAsync(() -> {
-            try (Stream<Path> paths = Files.list(replayBackupsDirectory).filter(REPLAY_PATH_PREDICATE)) {
-                return paths.map(ThrowingFunction.unwrap(this::loadReplay)).toList();
-            } catch (IOException e) {
-                throw new CompletionException(e);
-            }
-        }, app.getExecutor());
+        try (Stream<Path> paths = Files.list(replayBackupsDirectory).filter(REPLAY_PATH_PREDICATE)) {
+            return loadReplays(paths.toList());
+        } catch (IOException e) {
+            throw new CompletionException(e);
+        }
     }
 
-    private ReplayEntry loadReplay(Path replayBackupPath) throws IOException {
+    private ReplayEntry loadReplay(Path replayBackupPath) {
         ReplayHeader header;
         try (ReplayStreamReader reader = new ReplayStreamReader(Files.newInputStream(replayBackupPath))) {
             header = ReplayHeader.read(reader);
+        } catch (IOException e) {
+            throw new CompletionException(e);
         }
 
         Replay replay = Replay.fromRLJPReplayHeader(header);
@@ -299,8 +305,8 @@ public final class AftershockFileOperations {
         return new ReplayEntry(liveReplayPath, replayBackupPath, replay, replayMetadata);
     }
 
-    private boolean isInvalidPath(Path path, Path expectedDirectory, String expectedFileExtension) {
-        return Files.notExists(path) || !FileUtil.getExtension(path).equals(expectedFileExtension) || !path.startsWith(expectedDirectory);
+    private boolean isInvalidPath(Path filePath, Path expectedDirectory, String expectedFileExtension) {
+        return !Files.isRegularFile(filePath) || !FileUtil.getExtension(filePath).equals(expectedFileExtension) || !filePath.startsWith(expectedDirectory);
     }
 
     /**
@@ -326,7 +332,7 @@ public final class AftershockFileOperations {
             ReplayMetadataStore metadataStore = new ReplayMetadataStore();
 
             Path replayMetadataPath = fileStructure.replayMetadataFile();
-            if (Files.notExists(replayMetadataPath)) {
+            if (!Files.isRegularFile(replayMetadataPath)) {
                 return metadataStore;
             }
 
@@ -376,7 +382,7 @@ public final class AftershockFileOperations {
 
     public CompletionStage<Void> deleteReplays(Collection<Path> liveReplayPaths, boolean fullDelete) {
         Path liveReplayDirectory = getLiveReplayDirectory();
-        if (Files.notExists(liveReplayDirectory) || liveReplayPaths.isEmpty()) {
+        if (!Files.isDirectory(liveReplayDirectory) || liveReplayPaths.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
 
