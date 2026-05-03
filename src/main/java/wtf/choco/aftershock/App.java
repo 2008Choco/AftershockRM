@@ -36,7 +36,7 @@ public final class App extends Application {
             .registerTypeAdapterFactory(AftershockTypeAdapterFactory.INSTANCE)
             .create();
 
-    public static final String VERSION = "0.1.1A";
+    public static final String VERSION = "0.2.0-alpha";
 
     private static App instance;
 
