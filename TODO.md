@@ -12,8 +12,6 @@ Included in this file are a list of features that I would like to introduce into
 - Goal timeline chart in the replay information tab (_maybe_)
 
 ## Rewrites
-- File operations will cancel half-way through the operation if an exception occurs. Try to delay (and group?) exceptions somehow
-  - In this same vein, allow these operations to perform in parallel. Right now they're sequential, but we would see significant load time improvements if file loading was done sequentially. And really, to no downside!
 - When InputMappings are out of incubation (JavaFX), use these across the app.
   - This would hopefully allow for action definitions (i.e. "delete replay", "rename bin", etc.) that different inputs could map to
   - For example, define a "rename bin" action that can then be triggered with either the F2 key, a context menu button, or a menu bar button
