@@ -1,0 +1,41 @@
+{
+    "bin": {"AftershockRM-0-1-1A": "jdeploy-bundle/jdeploy.js"},
+    "author": "Parker Hawke",
+    "description": "An application to manage and organize .replay files for Rocket League.",
+    "main": "index.js",
+    "preferGlobal": true,
+    "repository": {"url": "https://github.com/2008Choco/AftershockRM"},
+    "version": "0.2.0-alpha",
+    "jdeploy": {
+        "singleton": true,
+        "args": ["--enable-native-access=javafx.graphics"],
+        "fallbackToUniversal": false,
+        "generateLegacyBundles": false,
+        "publishTargets": [{
+            "name": "github: github",
+            "type": "GITHUB",
+            "url": "https://github.com/2008Choco/AftershockRM"
+        }],
+        "javaVersion": "25",
+        "permissions": [{
+            "name": "documents_folder",
+            "description": "Access to Rocket League replay files on the system."
+        }],
+        "jar": "target/AftershockRM.jar",
+        "javafx": true,
+        "title": "AftershockRM",
+        "platformBundlesEnabled": false,
+        "downloadPage": {"platforms": ["default"]}
+    },
+    "dependencies": {
+        "command-exists-promise": "^2.0.2",
+        "node-fetch": "2.6.7",
+        "tar": "^4.4.8",
+        "yauzl": "^2.10.0",
+        "shelljs": "^0.8.4"
+    },
+    "license": "MIT",
+    "name": "AftershockRM",
+    "files": ["jdeploy-bundle"],
+    "scripts": {"test": "echo \"Error: no test specified\" && exit 1"}
+}

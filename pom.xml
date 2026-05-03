@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>wtf.choco</groupId>
   <artifactId>AftershockRM</artifactId>
-  <version>0.1.1A</version>
+  <version>0.2.0-alpha</version>
   
   <properties>
     <javafx.version>25</javafx.version>
@@ -38,6 +38,7 @@
                   <mainClass>${mainClass}</mainClass>
                 </transformer>
               </transformers>
+              <finalName>AftershockRM</finalName>
             </configuration>
           </execution>
         </executions>
