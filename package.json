@@ -1,5 +1,5 @@
 {
-    "bin": {"AftershockRM-0-1-1A": "jdeploy-bundle/jdeploy.js"},
+    "bin": {"aftershockrm": "jdeploy-bundle/jdeploy.js"},
     "author": "Parker Hawke",
     "description": "An application to manage and organize .replay files for Rocket League.",
     "main": "index.js",
@@ -25,7 +25,9 @@
         "javafx": true,
         "title": "AftershockRM",
         "platformBundlesEnabled": false,
-        "downloadPage": {"platforms": ["default"]}
+        "downloadPage": {"platforms": ["default"]},
+        "bundles": [ "mac-x64", "mac-arm64", "win", "linux" ],
+        "installers" : ["mac-x64", "mac-arm64", "win", "linux"]
     },
     "dependencies": {
         "command-exists-promise": "^2.0.2",

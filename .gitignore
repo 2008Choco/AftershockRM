@@ -247,4 +247,8 @@ dist/
 nbdist/
 .nb-gradle/
 
+### jDeploy ###
+jdeploy/
+jdeploy-bundle/
+
 # End of https://www.toptal.com/developers/gitignore/api/java,eclipse,netbeans,intellij,maven
