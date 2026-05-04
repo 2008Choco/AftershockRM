@@ -2,6 +2,7 @@ package wtf.choco.aftershock.controller;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -124,6 +125,11 @@ public final class InfoPanelController {
             this.goalGrid.add(timeLabel, 0, i + 1);
             this.goalGrid.add(playerLabel, 1, i + 1);
         }
+    }
+
+    @FXML
+    private void closePanel(ActionEvent event) {
+        App.getInstance().setDetailedReplay(null);
     }
 
 }

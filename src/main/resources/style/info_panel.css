@@ -33,3 +33,8 @@
 .orangeTeamDark {
     -fx-text-fill: -orange-team-color-dark;
 }
+
+.closeButton {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
