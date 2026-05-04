@@ -510,10 +510,8 @@ public final class AppController {
     @FXML
     public void toggleBinEditor(@SuppressWarnings("unused") ActionEvent event) {
         ObservableList<Node> primaryDisplayChildren = primaryDisplay.getChildren();
-        if (primaryDisplayChildren.size() == 1) {
+        if (!primaryDisplayChildren.remove(replayBinDisplayPane)) {
             primaryDisplayChildren.addFirst(replayBinDisplayPane);
-        } else {
-            primaryDisplayChildren.remove(replayBinDisplayPane);
         }
     }
 
