@@ -34,40 +34,40 @@
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>
+                ${project.build.directory}/libs
+              </outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.5.0</version>
         <configuration>
           <archive>
             <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>libs/</classpathPrefix>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <mainClass>${mainClass}</mainClass>
             </manifest>
             <manifestEntries>
               <Build-Date>${maven.build.timestamp}</Build-Date>
             </manifestEntries>
           </archive>
         </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.6.2</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <minimizeJar>true</minimizeJar>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>${mainClass}</mainClass>
-                </transformer>
-              </transformers>
-              <finalName>AftershockRM</finalName>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
 
       <plugin>
@@ -125,20 +125,17 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.13.2</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>wtf.choco</groupId>
       <artifactId>RLJP</artifactId>
       <version>1.0-SNAPSHOT</version>
-      <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>fr.brouillard.oss</groupId>
       <artifactId>cssfx</artifactId>
       <version>11.5.1</version>
-      <scope>compile</scope>
     </dependency>
   </dependencies>
 </project>
