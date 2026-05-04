@@ -1,5 +1,6 @@
 package wtf.choco.aftershock.util;
 
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import wtf.choco.aftershock.App;
@@ -19,7 +20,8 @@ public final class FXUtils {
             return new LoadedFXMLObject<>(loader.load(), loader.getController());
         } catch (IOException e) {
             App.LOGGER.log(Level.SEVERE, "Failed to load FXML file: " + location, e);
-            return null;
+            Platform.exit();
+            throw new RuntimeException(e); // Just throwing an exception so we don't get any "potential NPE" warnings from our IDE
         }
     }
 
@@ -28,7 +30,8 @@ public final class FXUtils {
             return FXMLLoader.load(location, resources);
         } catch (IOException e) {
             App.LOGGER.log(Level.SEVERE, "Failed to load FXML file: " + location, e);
-            return null;
+            Platform.exit();
+            throw new RuntimeException(e); // Just throwing an exception so we don't get any "potential NPE" warnings from our IDE
         }
     }
 
@@ -40,6 +43,7 @@ public final class FXUtils {
         try {
             loader.load();
         } catch (IOException e) {
+            Platform.exit();
             throw new RuntimeException(e);
         }
     }
