@@ -4,7 +4,11 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.skin.ScrollPaneSkin;
 import javafx.scene.layout.GridPane;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.replay.Goal;
@@ -42,6 +46,9 @@ public final class InfoPanelController {
 
     @FXML private GridPane goalGrid;
 
+    @FXML private ScrollPane scrollPane;
+    @FXML private Button closeButton;
+
     @FXML private ResourceBundle resources;
 
     @FXML
@@ -64,6 +71,20 @@ public final class InfoPanelController {
 
         // Listen for replay changes and update the goal timeline
         replayProperty.addListener((_, _, newValue) -> updateGoalTimeline(newValue));
+
+        this.scrollPane.skinProperty().addListener((_, _, newValue) -> {
+            if (newValue == null || !(scrollPane.getSkin() instanceof ScrollPaneSkin scrollPaneSkin)) {
+                return;
+            }
+
+            ScrollBar verticalScrollBar = scrollPaneSkin.getVerticalScrollBar();
+            verticalScrollBar.visibleProperty().addListener((_, _, _) -> updateCloseButtonXTranslation(verticalScrollBar));
+            verticalScrollBar.widthProperty().addListener((_, _, _) -> updateCloseButtonXTranslation(verticalScrollBar));
+        });
+    }
+
+    private void updateCloseButtonXTranslation(ScrollBar scrollBar) {
+        this.closeButton.setTranslateX(scrollBar.isVisible() ? -scrollBar.getWidth() : 0);
     }
 
     private void bindPlayerLabels(ObjectProperty<ReplayEntry> replayProperty, Team team, int playerIndex, Label name, Label score, Label goals, Label assists, Label saves, Label shots) {

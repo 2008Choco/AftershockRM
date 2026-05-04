@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" stylesheets="@../style/info_panel.css" fx:controller="wtf.choco.aftershock.controller.InfoPanelController">
-  <ScrollPane hbarPolicy="NEVER">
+  <ScrollPane fx:id="scrollPane" hbarPolicy="NEVER">
     <VBox>
       <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
@@ -168,5 +168,5 @@
     </VBox>
   </ScrollPane>
 
-  <Button StackPane.alignment="TOP_RIGHT" text="X" prefWidth="30" prefHeight="30" onAction="#closePanel" styleClass="closeButton" />
+  <Button fx:id="closeButton" StackPane.alignment="TOP_RIGHT" text="X" prefWidth="30" prefHeight="30" onAction="#closePanel" styleClass="closeButton" />
 </StackPane>
