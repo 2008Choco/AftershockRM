@@ -102,7 +102,7 @@ public final class App extends Application {
         this.controller.pushProgressStatus("Loading replay data");
         this.fileOperations.readReplayMetadata()
                 .thenAccept(metadataStore -> this.replayMetadataAccessor = metadataStore)
-                .thenCompose(_ -> fileOperations.performCompleteRefresh())
+                .thenCompose(_ -> fileOperations.loadReplays())
                 .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
                 .thenCompose(_ -> fileOperations.readReplayBins())
                 .thenAcceptAsync(binRegistry::addBins, Platform::runLater)

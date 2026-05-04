@@ -88,7 +88,7 @@ public final class SettingsPanelController {
         });
         if (replayDirectoryChanged) {
             app.getBinRegistry().clearBins(true);
-            app.getFileOperations().performCompleteRefresh()
+            app.getFileOperations().loadReplays()
                 .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
                 .exceptionally(e -> {
                     e.printStackTrace();

@@ -293,8 +293,7 @@ public final class AppController {
         }
 
         AftershockFileOperations fileOperations = app.getFileOperations();
-        dragOperation.thenCompose(fileOperations::createReplayBackups)
-                .thenCompose(fileOperations::loadReplays)
+        dragOperation.thenCompose(fileOperations::loadReplays)
                 .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
                 .exceptionally(e -> {
                     e.printStackTrace();
@@ -463,7 +462,7 @@ public final class AppController {
             selection.clearSelection();
 
             if (deleteLiveReplays) {
-                App.getInstance().getFileOperations().deleteReplays(selected.stream().map(ReplayEntry::getLiveReplayPath).toList(), true)
+                App.getInstance().getFileOperations().deleteReplays(selected.stream().map(ReplayEntry::getLiveReplayPath).toList())
                         .thenRun(() -> App.getInstance().getLogger().info("Deleted " + selected.size() + " live replays! They've been added to the RecentlyDeleted directory!"))
                         .exceptionally(e -> {
                             e.printStackTrace();

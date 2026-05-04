@@ -26,18 +26,24 @@ public class ReplayEntry implements IReplay {
     private final Replay replayData;
     private final ReplayMetadata metadata;
 
-    public ReplayEntry(Path liveReplayPath, Path backupReplayPath, Replay replayData, ReplayMetadata metadata) {
+    public ReplayEntry(Path liveReplayPath, Path unloadedReplayPath, Replay replayData, ReplayMetadata metadata) {
         this.liveReplayPath = liveReplayPath;
-        this.backupReplayPath = backupReplayPath;
+        this.backupReplayPath = unloadedReplayPath;
         this.replayData = replayData;
         this.metadata = metadata;
 
         this.metadata.loadedProperty().addListener((_, _, newValue) -> {
             AftershockFileOperations fileOperations = App.getInstance().getFileOperations();
             if (newValue) {
-                fileOperations.restoreReplayBackups(List.of(backupReplayPath));
+                fileOperations.restoreUnloadedBackups(List.of(unloadedReplayPath)).exceptionally(e -> {
+                    e.printStackTrace();
+                    return null;
+                });
             } else {
-                fileOperations.deleteReplays(List.of(liveReplayPath), false);
+                fileOperations.unloadReplays(List.of(liveReplayPath)).exceptionally(e -> {
+                    e.printStackTrace();
+                    return null;
+                });
             }
         });
     }
