@@ -250,34 +250,44 @@ public final class AftershockFileOperations {
         }
     }
 
-    public CompletionStage<Void> deleteReplays(Collection<Path> replayPaths) {
+    public CompletionStage<Void> deleteReplays(Collection<ReplayEntry> replays) {
         Path liveReplayDirectory = getLiveReplayDirectory();
         Path unloadedReplayDirectory = fileStructure.unloadedReplayDirectory();
-        if ((!Files.isDirectory(liveReplayDirectory) && !Files.isDirectory(unloadedReplayDirectory)) || replayPaths.isEmpty()) {
+        if ((!Files.isDirectory(liveReplayDirectory) && !Files.isDirectory(unloadedReplayDirectory)) || replays.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
 
         return CompletableFuture.runAsync(() -> FileUtil.createDirectoryIfDoesntExist(fileStructure.recentlyDeletedDirectory()), app.getExecutor())
-            .thenCompose(_ -> deleteReplaysInParallel(replayPaths, liveReplayDirectory));
+            .thenCompose(_ -> deleteReplaysInParallel(replays, liveReplayDirectory));
     }
 
-    private CompletionStage<Void> deleteReplaysInParallel(Collection<Path> replayPaths, Path liveReplayDirectory) {
+    private CompletionStage<Void> deleteReplaysInParallel(Collection<ReplayEntry> replays, Path liveReplayDirectory) {
         Path unloadedReplayDirectory = fileStructure.unloadedReplayDirectory();
         try (ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
-            List<CompletableFuture<Void>> futures = replayPaths.stream()
-                    .filter(path -> isValidReplay(path, liveReplayDirectory, unloadedReplayDirectory))
-                    .map(path -> CompletableFuture.runAsync(() -> deleteReplay(path), virtualThreadExecutor))
+            List<CompletableFuture<Void>> futures = replays.stream()
+                    .filter(replay -> isValidReplay(replay.getLiveReplayPath(), liveReplayDirectory) || isValidReplay(replay.getUnloadedReplayPath(), unloadedReplayDirectory))
+                    .map(replay -> CompletableFuture.runAsync(() -> deleteReplay(replay), virtualThreadExecutor))
                     .toList();
 
             return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
         }
     }
 
-    private void deleteReplay(Path path) {
+    private void deleteReplay(ReplayEntry replay) {
         try {
+            Path liveReplayPath = replay.getLiveReplayPath();
+            Path unloadedReplayPath = replay.getUnloadedReplayPath();
+
             Path recentlyDeletedDirectory = fileStructure.recentlyDeletedDirectory();
-            Path recentlyDeletedFileTargetPath = recentlyDeletedDirectory.resolve(path.getFileName());
-            Files.move(path, recentlyDeletedFileTargetPath, StandardCopyOption.REPLACE_EXISTING); // Move to "recently deleted"
+            Path recentlyDeletedFileTargetPath = recentlyDeletedDirectory.resolve(liveReplayPath.getFileName());
+
+            if (Files.isRegularFile(liveReplayPath)) {
+                Files.move(liveReplayPath, recentlyDeletedFileTargetPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            if (Files.isRegularFile(unloadedReplayPath)) {
+                Files.move(unloadedReplayPath, recentlyDeletedFileTargetPath, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException e) {
             throw new CompletionException(e);
         }

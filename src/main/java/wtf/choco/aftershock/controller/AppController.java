@@ -466,7 +466,7 @@ public final class AppController {
             selection.clearSelection();
 
             if (deleteLiveReplays) {
-                App.getInstance().getFileOperations().deleteReplays(selected.stream().map(ReplayEntry::getLiveReplayPath).toList())
+                App.getInstance().getFileOperations().deleteReplays(selected)
                     .thenRun(() -> App.LOGGER.info("Deleted " + selected.size() + " live replays! They've been added to the RecentlyDeleted directory!"))
                     .exceptionally(e -> {
                         App.LOGGER.log(Level.SEVERE, "Error deleting live replay files!", e);
