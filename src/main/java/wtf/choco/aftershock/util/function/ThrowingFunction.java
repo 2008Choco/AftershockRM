@@ -8,9 +8,9 @@ public interface ThrowingFunction<T, R> {
     public R apply(T t) throws Exception;
 
     public static <T, R> Function<T, R> unwrap(ThrowingFunction<T, R> function) {
-        return input -> {
+        return t -> {
             try {
-                return function.apply(input);
+                return function.apply(t);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

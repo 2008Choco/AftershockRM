@@ -8,9 +8,9 @@ public interface ThrowingPredicate<T> {
     public boolean test(T t) throws Exception;
 
     public static <T> Predicate<T> unwrap(ThrowingPredicate<T> predicate) {
-        return input -> {
+        return t -> {
             try {
-                return predicate.test(input);
+                return predicate.test(t);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
