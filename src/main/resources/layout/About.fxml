@@ -28,6 +28,12 @@
           <Insets top="20.0"/>
         </padding>
       </Label>
+      <Label fx:id="javafxRuntimeLabel" />
+      <Label text="%ui.about.contact">
+        <padding>
+          <Insets top="20.0"/>
+        </padding>
+      </Label>
       <Label fx:id="licenseLabel" />
     </VBox>
   </HBox>

@@ -63,6 +63,7 @@ import wtf.choco.aftershock.util.ComplexBindings;
 import wtf.choco.aftershock.util.FXUtils;
 import wtf.choco.aftershock.util.ReplayTableFilter;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
@@ -90,6 +91,9 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public final class AppController {
+
+    private static final String URL_BUG_REPORT = "https://github.com/2008Choco/AftershockRM/issues/new?template=bug_report.md";
+    private static final String URL_FEATURE_REQUEST = "https://github.com/2008Choco/AftershockRM/issues/new?template=feature_request.md";
 
     @FXML private ScrollPane infoPanel;
 
@@ -515,6 +519,24 @@ public final class AppController {
     @FXML
     public void openSettings(ActionEvent event) {
         App.getInstance().openSettingsStage();
+    }
+
+    @FXML
+    public void submitBugReport(ActionEvent event) {
+        try {
+            Desktop.getDesktop().browse(URI.create(URL_BUG_REPORT));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    public void submitFeedback(ActionEvent event) {
+        try {
+            Desktop.getDesktop().browse(URI.create(URL_FEATURE_REQUEST));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @FXML

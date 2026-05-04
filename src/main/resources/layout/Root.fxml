@@ -39,6 +39,9 @@
     </Menu>
     <Menu text="%ui.menu.help">
       <items>
+        <MenuItem onAction="#submitBugReport" text="%ui.menu.help.submit_bug_report" />
+        <MenuItem onAction="#submitFeedback" text="%ui.menu.help.submit_feedback" />
+        <SeparatorMenuItem />
         <MenuItem onAction="#openAbout" text="%ui.menu.help.about" />
       </items>
     </Menu>
