@@ -1,24 +1,15 @@
 package wtf.choco.aftershock.util;
 
+import wtf.choco.aftershock.App;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.logging.Level;
 
 public final class FileUtil {
 
     private FileUtil() { }
-
-    public static void createFileIfDoesntExist(Path path) {
-        if (Files.exists(path)) {
-            return;
-        }
-
-        try {
-            Files.createFile(path);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static void createDirectoryIfDoesntExist(Path path) {
         if (Files.isDirectory(path)) {
@@ -28,7 +19,7 @@ public final class FileUtil {
         try {
             Files.createDirectories(path);
         } catch (IOException e) {
-            e.printStackTrace();
+            App.LOGGER.log(Level.SEVERE, "Unable to create directory: " + path, e);
         }
     }
 
@@ -41,19 +32,6 @@ public final class FileUtil {
         }
 
         return fileName.substring(dotIndex + 1);
-    }
-
-    public static Path changeExtension(Path path, String newExtension) {
-        String extension = getExtension(path);
-        String fileName = path.getFileName().toString();
-        fileName = fileName.replace(extension, newExtension);
-
-        // Special case for small path names
-        if (path.getNameCount() == 1) {
-            return Path.of(fileName);
-        }
-
-        return path.getParent().resolve(fileName);
     }
 
 }

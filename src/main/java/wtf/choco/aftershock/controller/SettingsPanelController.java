@@ -17,6 +17,7 @@ import wtf.choco.aftershock.structure.ReplayBin;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class SettingsPanelController {
@@ -83,7 +84,7 @@ public final class SettingsPanelController {
             try {
                 ApplicationSettings.save(app.getFileStructure());
             } catch (IOException e) {
-                e.printStackTrace();
+                App.LOGGER.log(Level.SEVERE, "Failed to save application settings!", e);
             }
         });
         if (replayDirectoryChanged) {
@@ -91,16 +92,15 @@ public final class SettingsPanelController {
             app.getFileOperations().loadReplays()
                 .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
                 .exceptionally(e -> {
-                    e.printStackTrace();
+                    App.LOGGER.log(Level.SEVERE, "Failed to reload live replay directory after settings change! (new path: \"" + ApplicationSettings.REPLAY_DIRECTORY.get() + "\")", e);
                     return null;
                 });
         }
 
-        Logger logger = app.getLogger();
-        logger.info("Settings updated to: ");
-        logger.info("Replay Directory: " + ApplicationSettings.REPLAY_DIRECTORY.get());
-        logger.info("Replay Editor Path: " + ApplicationSettings.REPLAY_EDITOR_PATH.get());
-        logger.info("Language: " + ApplicationSettings.LOCALE.get());
+        App.LOGGER.info("Settings updated to: ");
+        App.LOGGER.info("Replay Directory: " + ApplicationSettings.REPLAY_DIRECTORY.get());
+        App.LOGGER.info("Replay Editor Path: " + ApplicationSettings.REPLAY_EDITOR_PATH.get());
+        App.LOGGER.info("Language: " + ApplicationSettings.LOCALE.get());
 
         this.close(event);
     }

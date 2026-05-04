@@ -2,11 +2,13 @@ package wtf.choco.aftershock.util;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import wtf.choco.aftershock.App;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 public final class FXUtils {
 
@@ -17,7 +19,7 @@ public final class FXUtils {
             FXMLLoader loader = new FXMLLoader(location, resources);
             return new LoadedFXMLObject<>(loader.load(), loader.getController());
         } catch (IOException e) {
-            e.printStackTrace();
+            App.LOGGER.log(Level.SEVERE, "Failed to load FXML file: " + location, e);
             return null;
         }
     }
@@ -26,7 +28,7 @@ public final class FXUtils {
         try {
             return FXMLLoader.load(location, resources);
         } catch (IOException e) {
-            e.printStackTrace();
+            App.LOGGER.log(Level.SEVERE, "Failed to load FXML file: " + location, e);
             return null;
         }
     }

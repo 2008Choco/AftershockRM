@@ -28,6 +28,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.stream.Stream;
 
 public final class AftershockFileOperations {
@@ -214,7 +215,7 @@ public final class AftershockFileOperations {
                     .toList();
             Files.writeString(fileStructure.binsFile(), App.GSON.toJson(bins), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            e.printStackTrace();
+            App.LOGGER.log(Level.SEVERE, "Failed to save replay bins to file!", e);
         }
     }
 

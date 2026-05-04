@@ -22,10 +22,10 @@ public final class ApplicationSettings {
     public static final Setting REPLAY_EDITOR_PATH = createSetting("replay_editor_path");
     public static final Setting LOCALE = createSetting("locale_code", "en_US");
 
-    public static void init(App app, AftershockFileStructure fileStructure) throws IOException {
+    public static void init(AftershockFileStructure fileStructure) throws IOException {
         Path propertiesFilePath = fileStructure.propertiesFile();
         if (Files.exists(propertiesFilePath)) {
-            app.getLogger().info("Reading properties from app.properties file...");
+            App.LOGGER.info("Reading properties from app.properties file...");
             PROPERTIES.load(Files.newBufferedReader(propertiesFilePath, StandardCharsets.UTF_8));
             PROPERTIES.forEach((key, value) -> {
                 Setting setting = SETTING_BY_KEY.get(key.toString());
@@ -34,11 +34,11 @@ public final class ApplicationSettings {
                 }
             });
         } else {
-            app.getLogger().info("No app.properties file exists. Creating a new one with default settings...");
+            App.LOGGER.info("No app.properties file exists. Creating a new one with default settings...");
             save(fileStructure);
         }
 
-        app.getLogger().info("Done!");
+        App.LOGGER.info("Done!");
     }
 
     public static void save(AftershockFileStructure fileStructure) throws IOException {

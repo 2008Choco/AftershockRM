@@ -1,5 +1,7 @@
 package wtf.choco.aftershock.util;
 
+import wtf.choco.aftershock.App;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -109,11 +111,9 @@ public final class ColouredLogFormatter extends Formatter {
         }
 
         try {
-            file.delete();
-            file.createNewFile();
-            this.logWriter = new PrintWriter(new FileWriter(file, true));
+            this.logWriter = new PrintWriter(new FileWriter(file));
         } catch (IOException e) {
-            e.printStackTrace();
+            App.LOGGER.log(Level.SEVERE, "Could not open log file at path \"" + file.getPath() + "\"!", e);
         }
     }
 

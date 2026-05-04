@@ -17,7 +17,9 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public class ReplayEntry implements IReplay {
 
@@ -34,17 +36,18 @@ public class ReplayEntry implements IReplay {
 
         this.metadata.loadedProperty().addListener((_, _, newValue) -> {
             AftershockFileOperations fileOperations = App.getInstance().getFileOperations();
+
+            CompletionStage<Void> future;
             if (newValue) {
-                fileOperations.restoreUnloadedReplays(List.of(unloadedReplayPath)).exceptionally(e -> {
-                    e.printStackTrace();
-                    return null;
-                });
+                future = fileOperations.restoreUnloadedReplays(List.of(unloadedReplayPath));
             } else {
-                fileOperations.unloadReplays(List.of(liveReplayPath)).exceptionally(e -> {
-                    e.printStackTrace();
-                    return null;
-                });
+                future = fileOperations.unloadReplays(List.of(liveReplayPath));
             }
+
+            future.exceptionally(e -> {
+                App.LOGGER.log(Level.SEVERE, "Failed to " + (newValue ? "restore" : "unload") + " replay: " + replayData.id() + " (\"" + replayData.name() + "\")", e);
+                return null;
+            });
         });
     }
 

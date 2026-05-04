@@ -86,6 +86,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public final class AppController {
@@ -280,7 +281,7 @@ public final class AppController {
             try {
                 URI uri = URI.create(dragboard.getUrl().trim());
                 dragOperation = downloadReplayFileFromURL(uri).thenApply(result -> {
-                    app.getLogger().info("Finished downloading replay from URL: " + uri);
+                    App.LOGGER.info("Finished downloading replay from URL: " + uri);
                     return result;
                 });
             } catch (IllegalArgumentException e) {
@@ -296,7 +297,7 @@ public final class AppController {
         dragOperation.thenCompose(fileOperations::loadReplays)
                 .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
                 .exceptionally(e -> {
-                    e.printStackTrace();
+                    App.LOGGER.log(Level.SEVERE, "Could not load replays from URL: " + dragboard.getUrl(), e);
                     return null;
                 });
     }
@@ -393,26 +394,29 @@ public final class AppController {
             return;
         }
 
+        ReplayEntry replay = replayTable.getSelectionModel().getSelectedItems().getFirst();
         try {
-            String replayPath = replayTable.getSelectionModel().getSelectedItems().getFirst().getLiveReplayPath().toAbsolutePath().toString();
+            String replayPath = replay.getLiveReplayPath().toAbsolutePath().toString();
             new ProcessBuilder().command(replayEditorPath, "-open", replayPath)
                     .redirectError(Redirect.DISCARD)
                     .redirectOutput(Redirect.DISCARD)
                     .start();
         } catch (IOException e) {
-            e.printStackTrace();
+            App.LOGGER.log(Level.SEVERE, "Could not open replay with replay editor: " + replay.id() + " (name: \"" + replay.name() + "\"", e);
         }
     }
 
     private void onOpenFileLocation() {
+        ReplayEntry replay = replayTable.getSelectionModel().getSelectedItems().getFirst();
+
         try {
-            String selectedReplayFilePath = replayTable.getSelectionModel().getSelectedItems().getFirst().getLiveReplayPath().toAbsolutePath().toString();
+            String selectedReplayFilePath = replay.getLiveReplayPath().toAbsolutePath().toString();
             new ProcessBuilder("explorer.exe", "/select,", selectedReplayFilePath)
                     .redirectOutput(Redirect.DISCARD)
                     .redirectError(Redirect.DISCARD)
                     .start();
         } catch (IOException e) {
-            e.printStackTrace();
+            App.LOGGER.log(Level.SEVERE, "Could not open file location for replay: " + replay.id() + " (name: \"" + replay.name() + "\")", e);
         }
     }
 
@@ -463,11 +467,11 @@ public final class AppController {
 
             if (deleteLiveReplays) {
                 App.getInstance().getFileOperations().deleteReplays(selected.stream().map(ReplayEntry::getLiveReplayPath).toList())
-                        .thenRun(() -> App.getInstance().getLogger().info("Deleted " + selected.size() + " live replays! They've been added to the RecentlyDeleted directory!"))
-                        .exceptionally(e -> {
-                            e.printStackTrace();
-                            return null;
-                        });
+                    .thenRun(() -> App.LOGGER.info("Deleted " + selected.size() + " live replays! They've been added to the RecentlyDeleted directory!"))
+                    .exceptionally(e -> {
+                        App.LOGGER.log(Level.SEVERE, "Error deleting live replay files!", e);
+                        return null;
+                    });
             }
 
             selected.forEach(activeBin.getReplays()::remove);

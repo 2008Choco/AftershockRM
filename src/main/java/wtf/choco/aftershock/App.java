@@ -30,9 +30,19 @@ import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class App extends Application {
+
+    public static final Logger LOGGER = Logger.getLogger("AftershockRM");
+
+    static {
+        LOGGER.setUseParentHandlers(false);
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setFormatter(ColouredLogFormatter.get());
+        LOGGER.addHandler(handler);
+    }
 
     // https://www.flaticon.com
     public static final Gson GSON = new GsonBuilder()
@@ -58,23 +68,16 @@ public final class App extends Application {
     private final ObjectProperty<ReplayEntry> detailedReplay = new SimpleObjectProperty<>(this, "detailedReplay"); // TODO: Find a better place to hold this :/
 
     private final ExecutorService executorService = Executors.newCachedThreadPool();
-    private final Logger logger = Logger.getLogger("AftershockRM");
 
     @Override
     public void init() throws Exception {
         instance = this;
 
-        // Logger initialization
-        this.logger.setUseParentHandlers(false);
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(ColouredLogFormatter.get());
-        this.logger.addHandler(handler);
-
         this.fileStructure = new AftershockFileStructure(Path.of(System.getProperty("user.home")).resolve("AppData/Roaming/AftershockRM/"));
         this.fileOperations = new AftershockFileOperations(this, fileStructure);
 
         // Misc initialization
-        ApplicationSettings.init(this, fileStructure);
+        ApplicationSettings.init(fileStructure);
     }
 
     @Override
@@ -108,7 +111,7 @@ public final class App extends Application {
                 .thenAcceptAsync(binRegistry::addBins, Platform::runLater)
                 .thenRun(controller::popProgressStatus)
                 .exceptionally(e -> {
-                    e.printStackTrace();
+                    LOGGER.log(Level.SEVERE, "Error performing initial load!", e);
                     return null;
                 });
     }
@@ -123,10 +126,6 @@ public final class App extends Application {
         ApplicationSettings.save(fileStructure);
 
         ColouredLogFormatter.get().setLogFile(null);
-    }
-
-    public Logger getLogger() {
-        return logger;
     }
 
     public Stage getStage() {
