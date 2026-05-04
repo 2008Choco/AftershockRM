@@ -94,7 +94,7 @@ public final class App extends Application {
 
         // Stage loading
         this.stage = stage;
-        this.resources = ResourceBundle.getBundle("lang.", getLocale(ApplicationSettings.LOCALE.get()));
+        this.resources = ResourceBundle.getBundle("lang.", Locale.forLanguageTag(ApplicationSettings.LOCALE.get()));
 
         var appFXML = FXUtils.<Parent, AppController>loadFXML(AppResources.FXML_LAYOUT_ROOT.get(), resources);
         Scene scene = new Scene(appFXML.root());
@@ -233,16 +233,6 @@ public final class App extends Application {
 
     public void closeAboutStage() {
         this.aboutStage.close();
-    }
-
-    private Locale getLocale(String tag) {
-        // TODO: This is not safe at all and prone to exceptions. Improve this implementation
-        String[] parts = tag.split("_");
-        if (parts.length < 2) {
-            return Locale.US;
-        }
-
-        return Locale.of(parts[0], parts[1]);
     }
 
     public static App getInstance() {
