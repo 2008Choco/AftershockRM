@@ -57,7 +57,7 @@ public final class AftershockFileOperations {
         return Path.of(ApplicationSettings.REPLAY_DIRECTORY.get());
     }
 
-    public CompletionStage<Void> restoreUnloadedBackups(Collection<Path> unloadedReplayPaths) {
+    public CompletionStage<Void> restoreUnloadedReplays(Collection<Path> unloadedReplayPaths) {
         if (!Files.isDirectory(fileStructure.unloadedReplayDirectory()) || unloadedReplayPaths.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
@@ -119,7 +119,7 @@ public final class AftershockFileOperations {
     }
 
     /**
-     * Loads all replay files in the replay backups directory.
+     * Loads all known replay files in the live and unloaded replay directories.
      *
      * @return a future that completes when all replays have been loaded
      */
@@ -148,9 +148,9 @@ public final class AftershockFileOperations {
         }
     }
 
-    private ReplayEntry loadReplay(Path replayBackupPath) {
+    private ReplayEntry loadReplay(Path replayPath) {
         ReplayHeader header;
-        try (ReplayStreamReader reader = new ReplayStreamReader(Files.newInputStream(replayBackupPath))) {
+        try (ReplayStreamReader reader = new ReplayStreamReader(Files.newInputStream(replayPath))) {
             header = ReplayHeader.read(reader);
         } catch (IOException e) {
             throw new CompletionException(e);
@@ -158,9 +158,11 @@ public final class AftershockFileOperations {
 
         Replay replay = Replay.fromRLJPReplayHeader(header);
         ReplayMetadata replayMetadata = app.getReplayMetadataAccessor().getReplayMetadata(replay);
-        Path replayFileName = FileUtil.changeExtension(replayBackupPath.getFileName(), FILE_EXTENSION_REPLAY);
+        Path replayFileName = replayPath.getFileName();
         Path liveReplayPath = getLiveReplayDirectory().resolve(replayFileName);
-        return new ReplayEntry(liveReplayPath, replayBackupPath, replay, replayMetadata);
+        Path unloadedReplayPath = fileStructure.unloadedReplayDirectory().resolve(replayFileName);
+
+        return new ReplayEntry(liveReplayPath, unloadedReplayPath, replay, replayMetadata);
     }
 
     public CompletionStage<ReplayMetadataAccessor> readReplayMetadata() {
@@ -259,10 +261,10 @@ public final class AftershockFileOperations {
     }
 
     private CompletionStage<Void> deleteReplaysInParallel(Collection<Path> replayPaths, Path liveReplayDirectory) {
-        Path replayBackupsDirectory = fileStructure.unloadedReplayDirectory();
+        Path unloadedReplayDirectory = fileStructure.unloadedReplayDirectory();
         try (ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<CompletableFuture<Void>> futures = replayPaths.stream()
-                    .filter(path -> isValidReplay(path, liveReplayDirectory, replayBackupsDirectory))
+                    .filter(path -> isValidReplay(path, liveReplayDirectory, unloadedReplayDirectory))
                     .map(path -> CompletableFuture.runAsync(() -> deleteReplay(path), virtualThreadExecutor))
                     .toList();
 

@@ -22,20 +22,20 @@ import java.util.concurrent.TimeUnit;
 public class ReplayEntry implements IReplay {
 
     private final Path liveReplayPath;
-    private final Path backupReplayPath;
+    private final Path unloadedReplayPath;
     private final Replay replayData;
     private final ReplayMetadata metadata;
 
     public ReplayEntry(Path liveReplayPath, Path unloadedReplayPath, Replay replayData, ReplayMetadata metadata) {
         this.liveReplayPath = liveReplayPath;
-        this.backupReplayPath = unloadedReplayPath;
+        this.unloadedReplayPath = unloadedReplayPath;
         this.replayData = replayData;
         this.metadata = metadata;
 
         this.metadata.loadedProperty().addListener((_, _, newValue) -> {
             AftershockFileOperations fileOperations = App.getInstance().getFileOperations();
             if (newValue) {
-                fileOperations.restoreUnloadedBackups(List.of(unloadedReplayPath)).exceptionally(e -> {
+                fileOperations.restoreUnloadedReplays(List.of(unloadedReplayPath)).exceptionally(e -> {
                     e.printStackTrace();
                     return null;
                 });
@@ -52,8 +52,8 @@ public class ReplayEntry implements IReplay {
         return liveReplayPath;
     }
 
-    public Path getBackupReplayPath() {
-        return backupReplayPath;
+    public Path getUnloadedReplayPath() {
+        return unloadedReplayPath;
     }
 
     @Override
