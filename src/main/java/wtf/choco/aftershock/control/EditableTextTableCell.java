@@ -1,4 +1,4 @@
-package wtf.choco.aftershock.structure;
+package wtf.choco.aftershock.control;
 
 import javafx.scene.Node;
 import javafx.scene.control.TableCell;

@@ -1,8 +1,9 @@
-package wtf.choco.aftershock.structure;
+package wtf.choco.aftershock.control;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.util.Callback;
+import wtf.choco.aftershock.structure.ReplayEntry;
 
 import java.util.List;
 
