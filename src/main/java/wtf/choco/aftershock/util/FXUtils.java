@@ -7,7 +7,6 @@ import wtf.choco.aftershock.App;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public final class FXUtils {
@@ -43,16 +42,6 @@ public final class FXUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static <T> PublicTask<T> createTask(Consumer<PublicTask<T>> task) {
-        return new PublicTask<>() {
-            @Override
-            protected T call() throws Exception {
-                task.accept(this);
-                return null;
-            }
-        };
     }
 
 }
