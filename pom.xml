@@ -32,6 +32,9 @@
             <manifest>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
+            <manifestEntries>
+              <Build-Date>${maven.build.timestamp}</Build-Date>
+            </manifestEntries>
           </archive>
         </configuration>
       </plugin>

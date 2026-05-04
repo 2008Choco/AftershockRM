@@ -23,13 +23,21 @@ import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
+import wtf.choco.aftershock.util.lazy.LazyValue;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +64,7 @@ public final class App extends Application {
     private AppController controller;
     private ResourceBundle resources;
     private Stage settingsStage = null;
+    private Stage aboutStage = null;
 
     private KeybindRegistry keybindRegistry;
     private AftershockFileStructure fileStructure;
@@ -181,20 +190,10 @@ public final class App extends Application {
 
     public void openSettingsStage() {
         if (settingsStage == null) {
-            Parent root = FXUtils.loadFXMLRoot(AppResources.FXML_LAYOUT_SETTINGS_PANEL.get(), resources);
-            if (root == null) {
+            this.settingsStage = loadModalStage(AppResources.FXML_LAYOUT_SETTINGS_PANEL, resources.getString("ui.settings.title"));
+            if (settingsStage == null) {
                 return;
             }
-
-            Scene scene = new Scene(root);
-            Stage stage = new Stage();
-            stage.setTitle(resources.getString("ui.settings.title"));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setResizable(false);
-            stage.setScene(scene);
-            stage.getIcons().add(AppResources.IMAGE_APP_ICON_64X.get());
-
-            this.settingsStage = stage;
         }
 
         this.settingsStage.show();
@@ -202,6 +201,38 @@ public final class App extends Application {
 
     public void closeSettingsStage() {
         this.settingsStage.close();
+    }
+
+    public void openAboutStage() {
+        if (aboutStage == null) {
+            this.aboutStage = loadModalStage(AppResources.FXML_LAYOUT_ABOUT, resources.getString("ui.about.title").formatted(getAppName()));
+            if (aboutStage == null) {
+                return;
+            }
+        }
+
+        this.aboutStage.show();
+    }
+
+    private Stage loadModalStage(LazyValue<URL> fxmlUrl, String title) {
+        Parent root = FXUtils.loadFXMLRoot(fxmlUrl.get(), resources);
+        if (root == null) {
+            return null;
+        }
+
+        Scene scene = new Scene(root);
+        Stage stage = new Stage();
+        stage.setTitle(title);
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setResizable(false);
+        stage.setScene(scene);
+        stage.getIcons().add(AppResources.IMAGE_APP_ICON_64X.get());
+
+        return stage;
+    }
+
+    public void closeAboutStage() {
+        this.aboutStage.close();
     }
 
     private Locale getLocale(String tag) {
@@ -228,6 +259,32 @@ public final class App extends Application {
 
     public static String getAppVersion() {
         return Optional.ofNullable(App.class.getPackage().getImplementationVersion()).orElse("Dev");
+    }
+
+    public static LocalDateTime getAppBuildDate() {
+        JarInputStream jarStream = null;
+
+        try (InputStream stream = App.class.getResourceAsStream(JarFile.MANIFEST_NAME)) {
+            if (stream == null) {
+                return LocalDate.EPOCH.atTime(0, 0);
+            }
+
+            jarStream = new JarInputStream(stream);
+            return Optional.ofNullable(jarStream.getManifest().getMainAttributes().getValue("Build-Date"))
+                    .map(LocalDateTime::parse)
+                    .orElseGet(() -> LocalDate.EPOCH.atTime(0, 0));
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error reading manifest file!", e);
+            return LocalDate.EPOCH.atTime(0, 0);
+        } finally {
+            if (jarStream != null) {
+                try {
+                    jarStream.close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, "Error closing jar stream!", e);
+                }
+            }
+        }
     }
 
 }

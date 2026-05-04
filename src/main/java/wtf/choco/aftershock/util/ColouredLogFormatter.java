@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -95,6 +96,22 @@ public final class ColouredLogFormatter extends Formatter {
 
         if (logWriter != null) {
             this.logWriter.append(result);
+        }
+
+        String throwable = "";
+        if (record.getThrown() != null) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            pw.println();
+            record.getThrown().printStackTrace(pw);
+            pw.close();
+            throwable = sw.toString();
+
+            if (logWriter != null) {
+                this.logWriter.append(throwable);
+            }
+
+            result += throwable;
         }
 
         return result;

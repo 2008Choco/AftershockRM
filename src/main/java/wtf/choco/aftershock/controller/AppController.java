@@ -92,8 +92,8 @@ import java.util.stream.Collectors;
 public final class AppController {
 
     @FXML private ScrollPane infoPanel;
-    @FXML private TableView<ReplayEntry> replayTable;
 
+    @FXML private TableView<ReplayEntry> replayTable;
     @FXML private TableColumn<ReplayEntry, Boolean> columnLoaded;
     @FXML private TableColumn<ReplayEntry, String> columnReplayName;
     @FXML private TableColumn<ReplayEntry, String> columnDate;
@@ -106,6 +106,8 @@ public final class AppController {
     @FXML private TableColumn<ReplayEntry, List<Tag>> columnTags;
 
     @FXML private SplitPane splitPane;
+
+    @FXML private MenuItem menuItemToggleBinEditor;
 
     @FXML private Label labelListed, labelLoaded, labelSelected;
     @FXML private TextField filterBar;
@@ -144,6 +146,11 @@ public final class AppController {
 
         TableViewSelectionModel<ReplayEntry> selectionModel = replayTable.getSelectionModel();
         selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
+
+        this.menuItemToggleBinEditor.textProperty().bind(Bindings.when(replayBinDisplayPane.visibleProperty())
+            .then(resources.getString("ui.menu.view.hide_bin_editor"))
+            .otherwise(resources.getString("ui.menu.view.show_bin_editor"))
+        );
 
         StackPane root = FXUtils.loadFXMLRoot(AppResources.FXML_LAYOUT_FILTER_POPUP.get(), resources);
         this.popup.setAutoHide(true);
@@ -506,14 +513,28 @@ public final class AppController {
     }
 
     @FXML
-    public void openSettings(@SuppressWarnings("unused") ActionEvent event) {
+    public void openSettings(ActionEvent event) {
         App.getInstance().openSettingsStage();
+    }
+
+    @FXML
+    public void openAbout(ActionEvent event) {
+        App.getInstance().openAboutStage();
+    }
+
+    @FXML
+    public void exit(ActionEvent event) {
+        Platform.exit();
     }
 
     @FXML
     public void toggleBinEditor(@SuppressWarnings("unused") ActionEvent event) {
         ObservableList<Node> primaryDisplayChildren = primaryDisplay.getChildren();
-        if (!primaryDisplayChildren.remove(replayBinDisplayPane)) {
+        if (primaryDisplayChildren.contains(replayBinDisplayPane)) {
+            primaryDisplayChildren.remove(replayBinDisplayPane);
+            this.replayBinDisplayPane.setVisible(false);
+        } else {
+            this.replayBinDisplayPane.setVisible(true);
             primaryDisplayChildren.addFirst(replayBinDisplayPane);
         }
     }

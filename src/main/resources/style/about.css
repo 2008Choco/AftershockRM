@@ -1,0 +1,5 @@
+@import "common.css";
+
+#headerLabel {
+    -fx-font-size: 13pt;
+}

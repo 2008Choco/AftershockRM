@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefWidth="400.0" spacing="10.0" stylesheets="@../style/about.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.AboutController">
+  <padding>
+    <Insets bottom="20.0" left="10.0" right="10.0" top="20.0" />
+  </padding>
+
+  <HBox spacing="10.0">
+    <ImageView fitHeight="64.0" fitWidth="64.0" pickOnBounds="true" preserveRatio="true">
+      <image>
+        <Image url="@../app_icon_64x.png" />
+      </image>
+    </ImageView>
+
+    <VBox>
+      <Label fx:id="headerLabel"/>
+      <Label fx:id="builtOnLabel" />
+      <Label fx:id="runtimeLabel">
+        <padding>
+          <Insets top="20.0"/>
+        </padding>
+      </Label>
+      <Label fx:id="licenseLabel" />
+    </VBox>
+  </HBox>
+
+  <HBox alignment="CENTER_RIGHT" spacing="10.0">
+    <Button text="Close" onAction="#close" prefWidth="80.0" defaultButton="true" />
+  </HBox>
+</VBox>

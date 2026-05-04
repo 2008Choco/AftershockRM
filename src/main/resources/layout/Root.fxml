@@ -9,6 +9,7 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -23,13 +24,24 @@
 
 <VBox prefHeight="720.0" prefWidth="1280.0" stylesheets="@../style/index.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="wtf.choco.aftershock.controller.AppController">
   <MenuBar>
-    <Menu text="%ui.menu.replays" />
-    <Menu text="%ui.menu.options">
+    <Menu text="%ui.menu.file">
       <items>
-        <MenuItem onAction="#openSettings" text="%ui.menu.app_settings" />
+        <MenuItem onAction="#openSettings" text="%ui.menu.file.settings" />
+        <SeparatorMenuItem />
+        <MenuItem onAction="#exit" text="%ui.menu.file.exit" />
       </items>
     </Menu>
-    <Menu text="%ui.menu.help" />
+    <Menu text="%ui.menu.edit" />
+    <Menu text="%ui.menu.view">
+      <items>
+        <MenuItem fx:id="menuItemToggleBinEditor" onAction="#toggleBinEditor" text="Toggle Bin Editor" />
+      </items>
+    </Menu>
+    <Menu text="%ui.menu.help">
+      <items>
+        <MenuItem onAction="#openAbout" text="%ui.menu.help.about" />
+      </items>
+    </Menu>
   </MenuBar>
 
   <fx:define>

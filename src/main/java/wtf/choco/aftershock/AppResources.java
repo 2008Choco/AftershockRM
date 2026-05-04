@@ -12,6 +12,7 @@ public final class AppResources {
     public static final LazyValue<URL> FXML_LAYOUT_INFO_PANEL = LazyValue.urlResource("/layout/InfoPanel.fxml");
     public static final LazyValue<URL> FXML_LAYOUT_FILTER_POPUP =  LazyValue.urlResource("/layout/FilterPopup.fxml");
     public static final LazyValue<URL> FXML_LAYOUT_SETTINGS_PANEL = LazyValue.urlResource("/layout/SettingsPanel.fxml");
+    public static final LazyValue<URL> FXML_LAYOUT_ABOUT = LazyValue.urlResource("/layout/About.fxml");
     public static final LazyValue<URL> FXML_COMPONENT_REPLAY_BIN_DISPLAY = LazyValue.urlResource("/component/ReplayBinDisplay.fxml");
     public static final LazyValue<URL> FXML_COMPONENT_REPLAY_BIN_DISPLAY_PANE = LazyValue.urlResource("/component/ReplayBinDisplayPane.fxml");
 
