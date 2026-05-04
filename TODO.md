@@ -16,7 +16,6 @@ Included in this file are a list of features that I would like to introduce into
 - When InputMappings are out of incubation (JavaFX), use these across the app.
   - This would hopefully allow for action definitions (i.e. "delete replay", "rename bin", etc.) that different inputs could map to
   - For example, define a "rename bin" action that can then be triggered with either the F2 key, a context menu button, or a menu bar button
-- Improve the look-and-feel of the replay information tab. It's very barren, and has to be reconstructed for each replay. This sucks. Find a way to use property bindings on just one instance of a replay information tab
 - Revisit ReplayBin. Improve the way it holds replays. Ideally it holds a weak reference to a replay by its ID, then resolves the replay from the global bin when necessary. See ReplayBinTypeAdapter for the source of this issue
 
 ## Bug Fixes

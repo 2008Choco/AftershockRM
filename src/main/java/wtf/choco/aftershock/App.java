@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import fr.brouillard.oss.cssfx.CSSFX;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -18,6 +20,7 @@ import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.schema.AftershockTypeAdapterFactory;
 import wtf.choco.aftershock.structure.ReplayBin;
+import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
 import wtf.choco.aftershock.util.FXUtils;
 
@@ -52,6 +55,7 @@ public final class App extends Application {
 
     private final BinRegistry binRegistry = new BinRegistry();
     private final TagRegistry tagRegistry = new TagRegistry();
+    private final ObjectProperty<ReplayEntry> detailedReplay = new SimpleObjectProperty<>(this, "detailedReplay"); // TODO: Find a better place to hold this :/
 
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final Logger logger = Logger.getLogger("AftershockRM");
@@ -165,8 +169,16 @@ public final class App extends Application {
         return keybindRegistry;
     }
 
-    public Path getInstallDirectory() {
-        return fileStructure.installDirectory();
+    public ObjectProperty<ReplayEntry> detailedReplayProperty() {
+        return detailedReplay;
+    }
+
+    public void setDetailedReplay(ReplayEntry replay) {
+        this.detailedReplayProperty().set(replay);
+    }
+
+    public ReplayEntry getDetailedReplay() {
+        return detailedReplayProperty().get();
     }
 
     public void openSettingsStage() {

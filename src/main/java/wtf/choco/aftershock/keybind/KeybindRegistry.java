@@ -74,7 +74,7 @@ public class KeybindRegistry {
                 return;
             }
 
-            controller.closeInfoPanel();
+            registry.app.setDetailedReplay(null);
             table.getSelectionModel().clearSelection();
         });
 

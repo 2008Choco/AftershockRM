@@ -4,9 +4,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
-import javafx.scene.Parent;
 import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.controller.InfoPanelController;
 import wtf.choco.aftershock.files.AftershockFileOperations;
 import wtf.choco.aftershock.replay.ReplayMetadata;
 import wtf.choco.aftershock.replay.Goal;
@@ -19,12 +17,9 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
 public class ReplayEntry implements IReplay {
-
-    private Parent infoPanel;
 
     private final Path liveReplayPath;
     private final Path backupReplayPath;
@@ -120,12 +115,8 @@ public class ReplayEntry implements IReplay {
         return replayData.goals();
     }
 
-    public Parent getInfoPanel(ResourceBundle resources) {
-        if (infoPanel == null) {
-            this.infoPanel = InfoPanelController.createInfoPanelFor(replayData, resources);
-        }
-
-        return infoPanel;
+    public Replay getReplay() {
+        return replayData;
     }
 
     public ReplayMetadata getMetadata() {

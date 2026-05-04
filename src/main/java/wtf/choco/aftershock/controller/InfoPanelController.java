@@ -1,21 +1,25 @@
 package wtf.choco.aftershock.controller;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXML;
-import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-import wtf.choco.aftershock.AppResources;
+import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.replay.Goal;
 import wtf.choco.aftershock.replay.Player;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.Team;
-import wtf.choco.aftershock.util.FXUtils;
+import wtf.choco.aftershock.structure.ReplayEntry;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.ToIntFunction;
 
 public final class InfoPanelController {
 
@@ -39,31 +43,74 @@ public final class InfoPanelController {
 
     @FXML private ResourceBundle resources;
 
-    private void loadReplay(Replay replay) {
-        int teamSize = replay.teamSize();
-        this.blueGrid.getChildren().removeIf(node -> GridPane.getRowIndex(node) > teamSize);
-        this.blueGrid.getRowConstraints().remove(teamSize + 1, blueGrid.getRowCount());
-        this.orangeGrid.getChildren().removeIf(node -> GridPane.getRowIndex(node) > teamSize);
-        this.orangeGrid.getRowConstraints().remove(teamSize + 1, orangeGrid.getRowCount());
+    @FXML
+    public void initialize() {
+        ObjectProperty<ReplayEntry> replayProperty = App.getInstance().detailedReplayProperty();
 
-        this.replayName.setText(replay.name());
-        this.replayId.setText(replay.id());
+        this.replayName.textProperty().bind(replayProperty.map(ReplayEntry::name));
+        this.replayId.textProperty().bind(replayProperty.map(ReplayEntry::id));
 
-        this.blueHeader.setText(String.format(resources.getString("ui.replay.stats.team.blue"), replay.score(Team.BLUE)));
-        this.orangeHeader.setText(String.format(resources.getString("ui.replay.stats.team.orange"), replay.score(Team.ORANGE)));
+        this.blueHeader.textProperty().bind(replayProperty.map(entry -> String.format(resources.getString("ui.replay.stats.team.blue"), entry.score(Team.BLUE))));
+        this.orangeHeader.textProperty().bind(replayProperty.map(entry -> String.format(resources.getString("ui.replay.stats.team.orange"), entry.score(Team.ORANGE))));
 
-        List<Player> bluePlayers = replay.players(Team.BLUE);
-        this.setPlayer(bluePlayers, 0, bluePlayerOne, bluePlayerOneScore, bluePlayerOneGoals, bluePlayerOneAssists, bluePlayerOneSaves, bluePlayerOneShots);
-        this.setPlayer(bluePlayers, 1, bluePlayerTwo, bluePlayerTwoScore, bluePlayerTwoGoals, bluePlayerTwoAssists, bluePlayerTwoSaves, bluePlayerTwoShots);
-        this.setPlayer(bluePlayers, 2, bluePlayerThree, bluePlayerThreeScore, bluePlayerThreeGoals, bluePlayerThreeAssists, bluePlayerThreeSaves, bluePlayerThreeShots);
+        this.bindPlayerLabels(replayProperty, Team.BLUE, 0, bluePlayerOne, bluePlayerOneScore, bluePlayerOneGoals, bluePlayerOneAssists, bluePlayerOneSaves, bluePlayerOneShots);
+        this.bindPlayerLabels(replayProperty, Team.BLUE, 1, bluePlayerTwo, bluePlayerTwoScore, bluePlayerTwoGoals, bluePlayerTwoAssists, bluePlayerTwoSaves, bluePlayerTwoShots);
+        this.bindPlayerLabels(replayProperty, Team.BLUE, 2, bluePlayerThree, bluePlayerThreeScore, bluePlayerThreeGoals, bluePlayerThreeAssists, bluePlayerThreeSaves, bluePlayerThreeShots);
 
-        List<Player> orangePlayers = replay.players(Team.ORANGE);
-        this.setPlayer(orangePlayers, 0, orangePlayerOne, orangePlayerOneScore, orangePlayerOneGoals, orangePlayerOneAssists, orangePlayerOneSaves, orangePlayerOneShots);
-        this.setPlayer(orangePlayers, 1, orangePlayerTwo, orangePlayerTwoScore, orangePlayerTwoGoals, orangePlayerTwoAssists, orangePlayerTwoSaves, orangePlayerTwoShots);
-        this.setPlayer(orangePlayers, 2, orangePlayerThree, orangePlayerThreeScore, orangePlayerThreeGoals, orangePlayerThreeAssists, orangePlayerThreeSaves, orangePlayerThreeShots);
+        this.bindPlayerLabels(replayProperty, Team.ORANGE, 0, orangePlayerOne, orangePlayerOneScore, orangePlayerOneGoals, orangePlayerOneAssists, orangePlayerOneSaves, orangePlayerOneShots);
+        this.bindPlayerLabels(replayProperty, Team.ORANGE, 1, orangePlayerTwo, orangePlayerTwoScore, orangePlayerTwoGoals, orangePlayerTwoAssists, orangePlayerTwoSaves, orangePlayerTwoShots);
+        this.bindPlayerLabels(replayProperty, Team.ORANGE, 2, orangePlayerThree, orangePlayerThreeScore, orangePlayerThreeGoals, orangePlayerThreeAssists, orangePlayerThreeSaves, orangePlayerThreeShots);
 
-        int index = 1;
-        for (Goal goal : replay.goals()) {
+        // Listen for replay changes and update the goal timeline
+        replayProperty.addListener((_, _, newValue) -> updateGoalTimeline(newValue));
+    }
+
+    private void bindPlayerLabels(ObjectProperty<ReplayEntry> replayProperty, Team team, int playerIndex, Label name, Label score, Label goals, Label assists, Label saves, Label shots) {
+        name.textProperty().bind(Bindings.createStringBinding(() -> getPlayerLabelText(replayProperty, team, playerIndex, Player::name), replayProperty));
+        score.textProperty().bind(Bindings.createStringBinding(() -> getPlayerLabelText(replayProperty, team, playerIndex, Player::score), replayProperty));
+        goals.textProperty().bind(Bindings.createStringBinding(() -> getPlayerLabelText(replayProperty, team, playerIndex, Player::goals), replayProperty));
+        assists.textProperty().bind(Bindings.createStringBinding(() -> getPlayerLabelText(replayProperty, team, playerIndex, Player::assists), replayProperty));
+        saves.textProperty().bind(Bindings.createStringBinding(() -> getPlayerLabelText(replayProperty, team, playerIndex, Player::saves), replayProperty));
+        shots.textProperty().bind(Bindings.createStringBinding(() -> getPlayerLabelText(replayProperty, team, playerIndex, Player::shots), replayProperty));
+    }
+
+    private String getPlayerLabelText(ObjectProperty<ReplayEntry> replayProperty, Team team, int playerIndex, Function<Player, String> playerPropertyGetter) {
+        return getPlayer(replayProperty, team, playerIndex).map(playerPropertyGetter).orElse("");
+    }
+
+    private String getPlayerLabelText(ObjectProperty<ReplayEntry> replayProperty, Team team, int playerIndex, ToIntFunction<Player> playerPropertyGetter) {
+        return getPlayer(replayProperty, team, playerIndex).map(player -> NumberFormat.getIntegerInstance().format(playerPropertyGetter.applyAsInt(player))).orElse("");
+    }
+
+    private Optional<Player> getPlayer(ObjectProperty<ReplayEntry> replayProperty, Team team, int playerIndex) {
+        ReplayEntry replay = replayProperty.get();
+        if (replay == null || playerIndex >= replay.teamSize()) {
+            return Optional.empty();
+        }
+
+        List<Player> players = replay.players(team);
+        if (playerIndex >= players.size()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(players.get(playerIndex));
+    }
+
+    private void updateGoalTimeline(ReplayEntry newValue) {
+        if (newValue == null) {
+            return;
+        }
+
+        // Remove all rows except the header (row 0)
+        this.goalGrid.getChildren().removeIf(node -> {
+            Integer row = GridPane.getRowIndex(node);
+            return row != null && row > 0;
+        });
+
+        List<Goal> goals = newValue.goals();
+        Replay replay = newValue.getReplay();
+        for (int i = 0; i < goals.size(); i++) {
+            Goal goal = goals.get(i);
             long time = goal.timestamp(replay, TimeUnit.SECONDS);
             String styleClass = goal.team().name().toLowerCase() + "Team";
             String styleClassDark = styleClass + "Dark";
@@ -74,30 +121,9 @@ public final class InfoPanelController {
             Label playerLabel = new Label(goal.playerName());
             playerLabel.getStyleClass().add(styleClassDark);
 
-            this.goalGrid.add(timeLabel, 0, index);
-            this.goalGrid.add(playerLabel, 1, index++);
+            this.goalGrid.add(timeLabel, 0, i + 1);
+            this.goalGrid.add(playerLabel, 1, i + 1);
         }
-    }
-
-    private void setPlayer(List<Player> players, int playerIndex, Label name, Label score, Label goals, Label assists, Label saves, Label shots) {
-        if (playerIndex >= players.size()) {
-            return; // Just ignore it
-        }
-
-        Player player = players.get(playerIndex);
-
-        name.setText(player.name());
-        score.setText(String.valueOf(player.score()));
-        goals.setText(String.valueOf(player.goals()));
-        assists.setText(String.valueOf(player.assists()));
-        saves.setText(String.valueOf(player.saves()));
-        shots.setText(String.valueOf(player.shots()));
-    }
-
-    public static Parent createInfoPanelFor(Replay replay, ResourceBundle resources) {
-        var infoPanelFXML = FXUtils.<Parent, InfoPanelController>loadFXML(AppResources.FXML_LAYOUT_INFO_PANEL.get(), resources);
-        infoPanelFXML.controller().loadReplay(replay);
-        return infoPanelFXML.root();
     }
 
 }

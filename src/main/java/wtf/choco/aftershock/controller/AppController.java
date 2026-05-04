@@ -7,6 +7,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.ListProperty;
 import javafx.beans.value.ObservableIntegerValue;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -23,6 +24,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
@@ -88,6 +90,7 @@ import java.util.stream.Collectors;
 
 public final class AppController {
 
+    @FXML private ScrollPane infoPanel;
     @FXML private TableView<ReplayEntry> replayTable;
 
     @FXML private TableColumn<ReplayEntry, Boolean> columnLoaded;
@@ -150,6 +153,7 @@ public final class AppController {
         this.popup.setHeight(root.getPrefHeight());
 
         selectionModel.getSelectedItems().addListener(this::onSelectedItemsChange);
+        App.getInstance().detailedReplayProperty().addListener(this::onDetailedReplayChange);
 
         this.tableFilter = new ReplayTableFilter(ReplayBin.GLOBAL);
         this.tableFilter.replayBinProperty().bind(replayBinDisplayPane.activeBinProperty());
@@ -209,8 +213,8 @@ public final class AppController {
                 continue;
             }
 
-            this.openInfoPanel(change.getAddedSubList().getFirst());
-            this.splitPane.setDividerPosition(splitPane.getDividers().size() - 1, lastDividerPositionInfo);
+            App.getInstance().setDetailedReplay(change.getAddedSubList().getFirst());
+            this.openInfoPanel();
         }
     }
 
@@ -569,17 +573,33 @@ public final class AppController {
         return filterBar;
     }
 
-    public void openInfoPanel(ReplayEntry replay) {
-        this.closeInfoPanel();
-        this.splitPane.getItems().add(replay.getInfoPanel(resources));
+    private void onDetailedReplayChange(ObservableValue<? extends ReplayEntry> observable, ReplayEntry oldValue, ReplayEntry newValue) {
+        if (newValue != null) {
+            this.openInfoPanel();
+        } else {
+            this.closeInfoPanel();
+        }
     }
 
-    public void closeInfoPanel() {
-        ObservableList<Node> items = splitPane.getItems();
-        if (items.getLast() != replayTable) {
-            this.lastDividerPositionInfo = splitPane.getDividerPositions()[splitPane.getDividers().size() - 1];
-            items.removeLast();
+    private void openInfoPanel() {
+        ObservableList<Node> splitPaneItems = splitPane.getItems();
+        if (splitPaneItems.contains(infoPanel)) {
+            return;
         }
+
+        splitPaneItems.add(infoPanel);
+        this.splitPane.setDividerPosition(splitPane.getDividers().size() - 1, lastDividerPositionInfo);
+    }
+
+    private void closeInfoPanel() {
+        ObservableList<Node> splitPaneItems = splitPane.getItems();
+        int infoPanelIndex = splitPaneItems.indexOf(infoPanel);
+        if (infoPanelIndex == -1) {
+            return;
+        }
+
+        this.lastDividerPositionInfo = splitPane.getDividerPositions()[infoPanelIndex - 1];
+        splitPaneItems.remove(infoPanel);
     }
 
 }
