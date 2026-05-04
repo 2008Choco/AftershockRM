@@ -26,6 +26,7 @@ import wtf.choco.aftershock.util.FXUtils;
 
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,8 +49,6 @@ public final class App extends Application {
     public static final Gson GSON = new GsonBuilder()
             .registerTypeAdapterFactory(AftershockTypeAdapterFactory.INSTANCE)
             .create();
-
-    public static final String VERSION = "0.2.0-alpha";
 
     private static App instance;
 
@@ -97,7 +96,7 @@ public final class App extends Application {
         KeybindRegistry.registerDefaultKeybinds(keybindRegistry);
 
         // Stage setup
-        stage.setTitle("Aftershock Replay Manager v" + VERSION);
+        stage.setTitle(getAppName() + " v" + getAppVersion());
         stage.setScene(scene);
         stage.getIcons().add(AppResources.IMAGE_APP_ICON_64X.get());
         stage.show();
@@ -221,6 +220,14 @@ public final class App extends Application {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    public static String getAppName() {
+        return Optional.ofNullable(App.class.getPackage().getImplementationTitle()).orElse("Aftershock Replay Manager");
+    }
+
+    public static String getAppVersion() {
+        return Optional.ofNullable(App.class.getPackage().getImplementationVersion()).orElse("Dev");
     }
 
 }
