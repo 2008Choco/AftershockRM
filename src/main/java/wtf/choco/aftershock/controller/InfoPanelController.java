@@ -65,8 +65,14 @@ public final class InfoPanelController {
         int index = 1;
         for (Goal goal : replay.goals()) {
             long time = goal.timestamp(replay, TimeUnit.SECONDS);
+            String styleClass = goal.team().name().toLowerCase() + "Team";
+            String styleClassDark = styleClass + "Dark";
+
             Label timeLabel = new Label((time / 60) + ":" + TIME_FORMATTER.format((time % 60)));
+            timeLabel.getStyleClass().add(styleClass);
+
             Label playerLabel = new Label(goal.playerName());
+            playerLabel.getStyleClass().add(styleClassDark);
 
             this.goalGrid.add(timeLabel, 0, index);
             this.goalGrid.add(playerLabel, 1, index++);

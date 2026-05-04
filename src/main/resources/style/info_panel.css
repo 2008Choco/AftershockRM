@@ -1,5 +1,35 @@
 @import "common.css";
+@import "constants.css";
 
-.infoHeader {
+.topLevelInfo {
+    -fx-text-fill: darkgray;
+}
+
+.topLevelInfoLabel {
+    -fx-text-fill: gray;
+}
+
+.header {
+    -fx-font-size: 15px;
     -fx-font-weight: bold;
+}
+
+.subheader {
+    -fx-font-weight: bold;
+}
+
+.blueTeam {
+    -fx-text-fill: -blue-team-color;
+}
+
+.blueTeamDark {
+    -fx-text-fill: -blue-team-color-dark;
+}
+
+.orangeTeam {
+    -fx-text-fill: -orange-team-color;
+}
+
+.orangeTeamDark {
+    -fx-text-fill: -orange-team-color-dark;
 }
