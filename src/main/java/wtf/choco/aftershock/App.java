@@ -28,18 +28,19 @@ import wtf.choco.aftershock.util.FXUtils;
 import wtf.choco.aftershock.util.lazy.LazyValue;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -266,28 +267,19 @@ public final class App extends Application {
     }
 
     public static LocalDateTime getAppBuildDate() {
-        JarInputStream jarStream = null;
-
-        try (InputStream stream = App.class.getResourceAsStream(JarFile.MANIFEST_NAME)) {
-            if (stream == null) {
+        try {
+            Enumeration<URL> resources = App.class.getClassLoader().getResources(JarFile.MANIFEST_NAME);
+            if (!resources.hasMoreElements()) {
                 return LocalDate.EPOCH.atTime(0, 0);
             }
 
-            jarStream = new JarInputStream(stream);
-            return Optional.ofNullable(jarStream.getManifest().getMainAttributes().getValue("Build-Date"))
-                    .map(LocalDateTime::parse)
+            Manifest manifest = new Manifest(resources.nextElement().openStream());
+            return Optional.ofNullable(manifest.getMainAttributes().getValue("Build-Date"))
+                    .map(dateTimeString -> LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_DATE_TIME))
                     .orElseGet(() -> LocalDate.EPOCH.atTime(0, 0));
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error reading manifest file!", e);
             return LocalDate.EPOCH.atTime(0, 0);
-        } finally {
-            if (jarStream != null) {
-                try {
-                    jarStream.close();
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "Error closing jar stream!", e);
-                }
-            }
         }
     }
 
