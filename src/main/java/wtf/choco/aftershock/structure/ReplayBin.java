@@ -11,6 +11,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import wtf.choco.aftershock.App;
+import wtf.choco.aftershock.replay.IReplay;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -103,6 +104,10 @@ public class ReplayBin implements Iterable<ReplayEntry> {
 
     public boolean containsReplay(String id) {
         return replaysById.containsKey(id);
+    }
+
+    public boolean contains(IReplay replay) {
+        return containsReplay(replay.id());
     }
 
     public ObservableList<ReplayEntry> getReplays() {

@@ -168,4 +168,14 @@ public class ReplayEntry implements IReplay {
         return getMetadata().tagsProperty();
     }
 
+    @Override
+    public int hashCode() {
+        return id().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        return object == this || (object instanceof IReplay other && id().equals((other).id()));
+    }
+
 }

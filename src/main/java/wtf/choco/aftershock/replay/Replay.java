@@ -45,6 +45,17 @@ public record Replay(
         return (int) unit.convert(durationInMillis, TimeUnit.MILLISECONDS);
     }
 
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        // records generate hashCode() and equals() implementations for all fields. We only care about id()!
+        return object == this || (object instanceof IReplay replay && id().equals(replay.id()));
+    }
+
     private static final DateTimeFormatter DATE_PROPERTY_FORMAT = DateTimeFormatter.ofPattern("uuuu-MM-dd HH-mm-ss");
 
     public static Replay fromRLJPReplayHeader(ReplayHeader header) {

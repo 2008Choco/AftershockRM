@@ -2,7 +2,6 @@ package wtf.choco.aftershock.files;
 
 import com.google.gson.reflect.TypeToken;
 import wtf.choco.aftershock.App;
-import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.replay.Replay;
 import wtf.choco.aftershock.replay.ReplayMetadata;
 import wtf.choco.aftershock.structure.ReplayBin;
@@ -18,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -44,28 +44,16 @@ public final class AftershockFileOperations {
         this.fileStructure = fileStructure;
     }
 
-    /**
-     * Gets a {@link Path} to the directory holding live replay files that Rocket League reads from and
-     * loads into the game's saved replays screen.
-     * <p>
-     * <strong>WARNING:</strong> Adding/removing/mutating files in this directory is destructive!
-     *
-     * @return a path to the live replay directory
-     *
-     * @see ApplicationSettings#REPLAY_DIRECTORY
-     */
-    public Path getLiveReplayDirectory() {
-        return Path.of(ApplicationSettings.REPLAY_DIRECTORY.get());
-    }
-
     public CompletionStage<Void> restoreUnloadedReplays(Collection<Path> unloadedReplayPaths) {
         if (!Files.isDirectory(fileStructure.unloadedReplayDirectory()) || unloadedReplayPaths.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
 
-        Path liveReplayDirectory = getLiveReplayDirectory();
+        this.app.getReplayFileWatcher().pushIgnoreIncomingEventsTicket();
+        Path liveReplayDirectory = fileStructure.liveReplayDirectory();
         return CompletableFuture.runAsync(() -> FileUtil.createDirectoryIfDoesntExist(liveReplayDirectory), app.getExecutor())
-            .thenCompose(_ -> restoreUnloadedReplaysInParallel(unloadedReplayPaths, liveReplayDirectory));
+            .thenCompose(_ -> restoreUnloadedReplaysInParallel(unloadedReplayPaths, liveReplayDirectory))
+            .whenComplete((_, _) -> app.getReplayFileWatcher().popIgnoreIncomingEventsTicket());
     }
 
     private CompletionStage<Void> restoreUnloadedReplaysInParallel(Collection<Path> unloadedReplayPaths, Path liveReplayDirectory) {
@@ -98,7 +86,7 @@ public final class AftershockFileOperations {
      * @return a future that completes when all replays have been loaded
      */
     public CompletionStage<Collection<ReplayEntry>> loadReplays(Collection<Path> replayPaths) {
-        Path liveReplayDirectory = getLiveReplayDirectory();
+        Path liveReplayDirectory = fileStructure.liveReplayDirectory();
         Path unloadedReplayDirectory = fileStructure.unloadedReplayDirectory();
         if ((!Files.isDirectory(liveReplayDirectory) && !Files.isDirectory(unloadedReplayDirectory)) || replayPaths.isEmpty()) {
             return CompletableFuture.completedFuture(Collections.emptyList());
@@ -125,7 +113,7 @@ public final class AftershockFileOperations {
      * @return a future that completes when all replays have been loaded
      */
     public CompletionStage<Collection<ReplayEntry>> loadReplays() {
-        Path liveReplayDirectory = getLiveReplayDirectory();
+        Path liveReplayDirectory = fileStructure.liveReplayDirectory();
         Path unloadedReplayDirectory = fileStructure.unloadedReplayDirectory();
         boolean liveReplayDirectoryExists = Files.isDirectory(liveReplayDirectory);
         boolean unloadedReplayDirectoryExists = Files.isDirectory(unloadedReplayDirectory);
@@ -160,8 +148,12 @@ public final class AftershockFileOperations {
         Replay replay = Replay.fromRLJPReplayHeader(header);
         ReplayMetadata replayMetadata = app.getReplayMetadataAccessor().getReplayMetadata(replay);
         Path replayFileName = replayPath.getFileName();
-        Path liveReplayPath = getLiveReplayDirectory().resolve(replayFileName);
+        Path liveReplayPath = fileStructure.liveReplayDirectory().resolve(replayFileName);
         Path unloadedReplayPath = fileStructure.unloadedReplayDirectory().resolve(replayFileName);
+
+        // We'll update the loaded state based on the directory the replay was in. Probably not ideal, but should suffice in most cases
+        boolean loaded = liveReplayPath.equals(replayPath);
+        replayMetadata.setLoaded(loaded);
 
         return new ReplayEntry(liveReplayPath, unloadedReplayPath, replay, replayMetadata);
     }
@@ -220,13 +212,15 @@ public final class AftershockFileOperations {
     }
 
     public CompletionStage<Void> unloadReplays(Collection<Path> liveReplayPaths) {
-        Path liveReplayDirectory = getLiveReplayDirectory();
+        Path liveReplayDirectory = fileStructure.liveReplayDirectory();
         if (!Files.isDirectory(liveReplayDirectory) || liveReplayPaths.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
 
+        this.app.getReplayFileWatcher().pushIgnoreIncomingEventsTicket();
         return CompletableFuture.runAsync(() -> FileUtil.createDirectoryIfDoesntExist(fileStructure.unloadedReplayDirectory()), app.getExecutor())
-            .thenCompose(_ -> unloadReplaysInParallel(liveReplayPaths, liveReplayDirectory));
+            .thenCompose(_ -> unloadReplaysInParallel(liveReplayPaths, liveReplayDirectory))
+            .whenComplete((_, _) -> app.getReplayFileWatcher().popIgnoreIncomingEventsTicket());
     }
 
     private CompletionStage<Void> unloadReplaysInParallel(Collection<Path> liveReplayPaths, Path liveReplayDirectory) {
@@ -251,14 +245,16 @@ public final class AftershockFileOperations {
     }
 
     public CompletionStage<Void> deleteReplays(Collection<ReplayEntry> replays) {
-        Path liveReplayDirectory = getLiveReplayDirectory();
+        Path liveReplayDirectory = fileStructure.liveReplayDirectory();
         Path unloadedReplayDirectory = fileStructure.unloadedReplayDirectory();
         if ((!Files.isDirectory(liveReplayDirectory) && !Files.isDirectory(unloadedReplayDirectory)) || replays.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
 
+        this.app.getReplayFileWatcher().pushIgnoreIncomingEventsTicket();
         return CompletableFuture.runAsync(() -> FileUtil.createDirectoryIfDoesntExist(fileStructure.recentlyDeletedDirectory()), app.getExecutor())
-            .thenCompose(_ -> deleteReplaysInParallel(replays, liveReplayDirectory));
+            .thenCompose(_ -> deleteReplaysInParallel(replays, liveReplayDirectory))
+            .whenComplete((_, _) -> app.getReplayFileWatcher().popIgnoreIncomingEventsTicket());
     }
 
     private CompletionStage<Void> deleteReplaysInParallel(Collection<ReplayEntry> replays, Path liveReplayDirectory) {
@@ -299,6 +295,7 @@ public final class AftershockFileOperations {
 
     private boolean isValidReplay(Path filePath, Path... expectedDirectories) {
         if (!Files.isRegularFile(filePath) || !FileUtil.getExtension(filePath).equals(FILE_EXTENSION_REPLAY)) {
+            App.LOGGER.info("File is not valid (" + filePath + ")");
             return false;
         }
 
@@ -308,6 +305,7 @@ public final class AftershockFileOperations {
             }
         }
 
+        App.LOGGER.info("File is not in expected directories (" + Arrays.toString(expectedDirectories) + ")");
         return false;
     }
 

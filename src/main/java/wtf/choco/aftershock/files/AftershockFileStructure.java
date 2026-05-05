@@ -1,5 +1,7 @@
 package wtf.choco.aftershock.files;
 
+import wtf.choco.aftershock.ApplicationSettings;
+
 import java.nio.file.Path;
 
 public final class AftershockFileStructure {
@@ -33,6 +35,21 @@ public final class AftershockFileStructure {
      */
     public Path installDirectory() {
         return installDirectory;
+    }
+
+    /**
+     * Gets a {@link Path} to the directory holding live replay files that Rocket League reads from and
+     * loads into the game's saved replays screen. Note that this path is reconstructed on each call, so
+     * it should be called as few times as possible in any given method call.
+     * <p>
+     * <strong>WARNING:</strong> Adding/removing/mutating files in this directory is destructive!
+     *
+     * @return the directory where live Rocket League replays are stored
+     *
+     * @see ApplicationSettings#REPLAY_DIRECTORY
+     */
+    public Path liveReplayDirectory() {
+        return Path.of(ApplicationSettings.REPLAY_DIRECTORY.get());
     }
 
     /**

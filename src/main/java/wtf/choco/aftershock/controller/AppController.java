@@ -321,7 +321,7 @@ public final class AppController {
         return CompletableFuture.supplyAsync(() -> {
             List<Path> newPaths = new ArrayList<>(files.size());
 
-            Path liveReplayDirectory = App.getInstance().getFileOperations().getLiveReplayDirectory();
+            Path liveReplayDirectory = App.getInstance().getFileStructure().liveReplayDirectory();
             for (File file : files) {
                 Path targetPath = liveReplayDirectory.resolve(file.getName());
                 try {
@@ -339,7 +339,7 @@ public final class AppController {
     private CompletionStage<Collection<Path>> downloadReplayFileFromURL(URI uri) {
         String replayName = getReplayNameFromURI(uri);
         return CompletableFuture.supplyAsync(() -> {
-            Path targetPath = App.getInstance().getFileOperations().getLiveReplayDirectory().resolve(replayName);
+            Path targetPath = App.getInstance().getFileStructure().liveReplayDirectory().resolve(replayName);
             try (ReadableByteChannel channelIn = Channels.newChannel(uri.toURL().openStream());
                  FileChannel channelOut = FileChannel.open(targetPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
             ) {

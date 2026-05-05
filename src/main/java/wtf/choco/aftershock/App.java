@@ -14,6 +14,8 @@ import javafx.stage.Stage;
 import wtf.choco.aftershock.controller.AppController;
 import wtf.choco.aftershock.files.AftershockFileOperations;
 import wtf.choco.aftershock.files.AftershockFileStructure;
+import wtf.choco.aftershock.files.ReplayFileWatcher;
+import wtf.choco.aftershock.files.ReplayFileWatcherListener;
 import wtf.choco.aftershock.files.ReplayMetadataAccessor;
 import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
@@ -69,6 +71,7 @@ public final class App extends Application {
     private KeybindRegistry keybindRegistry;
     private AftershockFileStructure fileStructure;
     private AftershockFileOperations fileOperations;
+    private ReplayFileWatcher replayFileWatcher;
     private ReplayMetadataAccessor replayMetadataAccessor;
 
     private final BinRegistry binRegistry = new BinRegistry();
@@ -86,6 +89,12 @@ public final class App extends Application {
 
         // Misc initialization
         ApplicationSettings.init(fileStructure);
+
+        // File watcher initialization
+        this.replayFileWatcher = new ReplayFileWatcher(this);
+        Thread replayFileWatcherThread = new Thread(replayFileWatcher, "Replay File Watcher");
+        replayFileWatcherThread.setDaemon(true);
+        replayFileWatcherThread.start();
     }
 
     @Override
@@ -131,6 +140,7 @@ public final class App extends Application {
         this.keybindRegistry.clearKeybinds();
         this.fileOperations.saveReplayBins();
         this.fileOperations.saveReplayMetadata();
+        this.replayFileWatcher.stop();
         ApplicationSettings.save(fileStructure);
 
         ColouredLogFormatter.get().setLogFile(null);
@@ -150,6 +160,10 @@ public final class App extends Application {
 
     public AftershockFileOperations getFileOperations() {
         return fileOperations;
+    }
+
+    public ReplayFileWatcherListener getReplayFileWatcher() {
+        return replayFileWatcher;
     }
 
     public ReplayMetadataAccessor getReplayMetadataAccessor() {
