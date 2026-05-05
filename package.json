@@ -5,29 +5,39 @@
     "main": "index.js",
     "preferGlobal": true,
     "repository": {"url": "https://github.com/2008Choco/AftershockRM"},
-    "version": "0.2.0-alpha",
+    "version": "0.3.0-alpha",
     "jdeploy": {
         "singleton": true,
+        "installers": [
+            "mac-x64",
+            "mac-arm64",
+            "win",
+            "linux"
+        ],
+        "generateLegacyBundles": false,
+        "javaVersion": "25",
+        "title": "AftershockRM",
+        "downloadPage": {"platforms": ["default"]},
         "args": ["--enable-native-access=javafx.graphics"],
         "fallbackToUniversal": false,
-        "generateLegacyBundles": false,
         "publishTargets": [{
             "name": "github: github",
             "type": "GITHUB",
             "url": "https://github.com/2008Choco/AftershockRM"
         }],
-        "javaVersion": "25",
         "permissions": [{
             "name": "documents_folder",
             "description": "Access to Rocket League replay files on the system."
         }],
+        "bundles": [
+            "mac-x64",
+            "mac-arm64",
+            "win",
+            "linux"
+        ],
         "jar": "target/AftershockRM.jar",
         "javafx": true,
-        "title": "AftershockRM",
-        "platformBundlesEnabled": false,
-        "downloadPage": {"platforms": ["default"]},
-        "bundles": [ "mac-x64", "mac-arm64", "win", "linux" ],
-        "installers" : ["mac-x64", "mac-arm64", "win", "linux"]
+        "platformBundlesEnabled": false
     },
     "dependencies": {
         "command-exists-promise": "^2.0.2",
