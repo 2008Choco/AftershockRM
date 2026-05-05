@@ -4,8 +4,35 @@
   <groupId>wtf.choco</groupId>
   <artifactId>AftershockRM</artifactId>
   <name>Aftershock Replay Manager</name>
+  <description>A simple yet elegant and featureful manager for Rocket League replay files.</description>
+  <url>https://github.com/2008Choco/AftershockRM</url>
   <version>0.2.0-alpha</version>
-  
+
+  <developers>
+    <developer>
+      <name>Parker Hawke</name>
+      <email>hawkeboyz2@hotmail.com</email>
+      <roles>
+        <role>Project Lead</role>
+        <role>Developer</role>
+      </roles>
+      <timezone>America/Toronto</timezone>
+      <url>https://choco.wtf/</url>
+    </developer>
+  </developers>
+
+  <issueManagement>
+    <url>${project.url}/issues</url>
+    <system>GitHub Issues</system>
+  </issueManagement>
+
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>${project.url}/blob/master/LICENSE</url>
+    </license>
+  </licenses>
+
   <properties>
     <javafx.version>25</javafx.version>
     <mainClass>wtf.choco.aftershock.App</mainClass>
