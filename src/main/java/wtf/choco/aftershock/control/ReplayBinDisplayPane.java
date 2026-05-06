@@ -106,7 +106,7 @@ public final class ReplayBinDisplayPane extends VBox {
         this.replayBinsProperty().bindBidirectional(App.getInstance().getBinRegistry().binsProperty());
 
         this.labelHiddenBins.visibleProperty().bind(Bindings.greaterThan(hiddenBinCount, 0));
-        this.labelHiddenBins.textProperty().bind(hiddenBinCount.map(value -> resources.getString("ui.bin_editor.hidden_bins").formatted(value)));
+        this.labelHiddenBins.textProperty().bind(hiddenBinCount.map(resources.getString("ui.bin_editor.hidden_bins")::formatted));
 
         this.menuItemUnhideBins.disableProperty().bind(Bindings.equal(hiddenBinCount, 0));
         this.selectionModel.clearAndSelect(getActiveBin());

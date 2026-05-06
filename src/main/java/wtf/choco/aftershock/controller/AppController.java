@@ -189,9 +189,9 @@ public final class AppController {
         tableFilter.searchTermProperty().addListener(_ -> forceRefilterTable(filteredReplays));
 
         ObservableIntegerValue loadedCount = ComplexBindings.createIntegerBindingCountingBooleanProperties(replayTable.getItems(), ReplayEntry::loadedProperty);
-        this.labelListed.textProperty().bind(Bindings.size(replayTable.getItems()).map(listed -> resources.getString("ui.footer.listed").formatted(listed)));
-        this.labelLoaded.textProperty().bind(loadedCount.map(loaded -> resources.getString("ui.footer.loaded").formatted(loaded)));
-        this.labelSelected.textProperty().bind(Bindings.size(replayTable.getSelectionModel().getSelectedItems()).map(selected -> resources.getString("ui.footer.selected").formatted(selected)));
+        this.labelListed.textProperty().bind(Bindings.size(replayTable.getItems()).map(resources.getString("ui.footer.listed")::formatted));
+        this.labelLoaded.textProperty().bind(loadedCount.map(resources.getString("ui.footer.loaded")::formatted));
+        this.labelSelected.textProperty().bind(Bindings.size(replayTable.getSelectionModel().getSelectedItems()).map(resources.getString("ui.footer.selected")::formatted));
     }
 
     @FXML
