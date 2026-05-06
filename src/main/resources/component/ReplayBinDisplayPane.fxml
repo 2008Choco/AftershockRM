@@ -35,7 +35,7 @@
         </ImageView>
       </graphic>
     </Button>
-    <Button HBox.hgrow="ALWAYS" maxWidth="100" focusTraversable="false" onAction="#onClickDeleteBin">
+    <Button fx:id="buttonDeleteBin" HBox.hgrow="ALWAYS" maxWidth="100" focusTraversable="false" onAction="#onClickDeleteBin">
       <graphic>
         <ImageView>
           <image>

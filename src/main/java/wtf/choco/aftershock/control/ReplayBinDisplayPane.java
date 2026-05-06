@@ -12,6 +12,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -40,11 +41,12 @@ public final class ReplayBinDisplayPane extends VBox {
     @FXML private VBox binEditorList;
 
     @FXML private MenuItem menuItemUnhideBins;
+    @FXML private Button buttonDeleteBin;
 
     @FXML private ResourceBundle resources;
 
     private final ReplayBinSelectionModel selectionModel = new ReplayBinSelectionModel();
-    private final Map<ReplayBin, Node> replayBinDisplayNodes = new HashMap<>();
+    private final Map<ReplayBin, ReplayBinDisplay> replayBinDisplayNodes = new HashMap<>();
 
     private final ListProperty<ReplayBin> replayBins  = new SimpleListProperty<>(this, "replayBins", FXCollections.observableArrayList());
     private final ObjectProperty<ReplayBin> activeBin = new SimpleObjectProperty<>(this, "activeBin", ReplayBin.GLOBAL);
@@ -108,6 +110,11 @@ public final class ReplayBinDisplayPane extends VBox {
 
         this.menuItemUnhideBins.disableProperty().bind(Bindings.equal(hiddenBinCount, 0));
         this.selectionModel.clearAndSelect(getActiveBin());
+        this.buttonDeleteBin.disableProperty().bind(Bindings.createBooleanBinding(() -> {
+            ReplayBin activeBin = activeBinProperty().get();
+            ReplayBinDisplay activeBinDisplay = replayBinDisplayNodes.get(activeBin);
+            return activeBinDisplay == null || !activeBinDisplay.isMutable();
+        }, activeBinProperty()));
     }
 
     @FXML
