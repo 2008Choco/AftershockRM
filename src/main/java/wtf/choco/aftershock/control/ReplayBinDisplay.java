@@ -216,29 +216,6 @@ public final class ReplayBinDisplay extends VBox {
         this.setOnDragDropped(this::onDragDropped);
     }
 
-    public void openNameTextField() {
-        this.nameTextField.setText(nameLabel.getText());
-        this.nameTextField.selectAll();
-        this.setEditingName(true);
-        this.nameTextField.requestFocus();
-    }
-
-    public void closeNameTextField(boolean updateName) {
-        String newName = nameTextField.getText().strip();
-
-        if (updateName) {
-            this.setName(newName);
-        }
-
-        this.setEditingName(false);
-    }
-
-    private void onClickAwayFromNameTextField() {
-        if (isEditingName() && !nameTextField.isHover()) {
-            this.closeNameTextField(true);
-        }
-    }
-
     @FXML
     private void onNameLabelMouseClicked(MouseEvent event) {
         // They might be selecting other components, so disallow editing the name while doing this
@@ -263,12 +240,12 @@ public final class ReplayBinDisplay extends VBox {
     }
 
     @FXML
-    private void onLoadAllReplays(ActionEvent event) {
+    private void onLoadAllReplays() {
         this.getReplays().forEach(replay -> replay.setLoaded(true));
     }
 
     @FXML
-    private void onUnloadAllReplays(ActionEvent event) {
+    private void onUnloadAllReplays() {
         this.getReplays().forEach(replay -> replay.setLoaded(false));
     }
 
@@ -278,12 +255,12 @@ public final class ReplayBinDisplay extends VBox {
     }
 
     @FXML
-    private void onRenameBin(ActionEvent event) {
+    private void onRenameBin() {
         this.openNameTextField();
     }
 
     @FXML
-    private void onClearBin(ActionEvent event) {
+    private void onClearBin() {
         this.getReplays().clear();
     }
 
@@ -296,6 +273,29 @@ public final class ReplayBinDisplay extends VBox {
     @FXML
     private void onHideBin(ActionEvent event) {
         this.fireEvent(new ReplayBinDisplayEvent(event.getSource(), this, ReplayBinDisplayEvent.HIDE));
+    }
+
+    public void openNameTextField() {
+        this.nameTextField.setText(nameLabel.getText());
+        this.nameTextField.selectAll();
+        this.setEditingName(true);
+        this.nameTextField.requestFocus();
+    }
+
+    public void closeNameTextField(boolean updateName) {
+        String newName = nameTextField.getText().strip();
+
+        if (updateName) {
+            this.setName(newName);
+        }
+
+        this.setEditingName(false);
+    }
+
+    private void onClickAwayFromNameTextField() {
+        if (isEditingName() && !nameTextField.isHover()) {
+            this.closeNameTextField(true);
+        }
     }
 
     private void onDragOver(DragEvent event) {

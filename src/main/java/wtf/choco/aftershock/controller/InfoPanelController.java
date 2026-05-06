@@ -2,7 +2,6 @@ package wtf.choco.aftershock.controller;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -52,7 +51,7 @@ public final class InfoPanelController {
     @FXML private ResourceBundle resources;
 
     @FXML
-    public void initialize() {
+    private void initialize() {
         ObjectProperty<ReplayEntry> replayProperty = App.getInstance().detailedReplayProperty();
 
         this.replayName.textProperty().bind(replayProperty.map(ReplayEntry::name));
@@ -149,7 +148,7 @@ public final class InfoPanelController {
     }
 
     @FXML
-    private void closePanel(ActionEvent event) {
+    private void onClosePanel() {
         App.getInstance().setDetailedReplay(null);
     }
 

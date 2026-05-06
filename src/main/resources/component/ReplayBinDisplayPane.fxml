@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<fx:root type="javafx.scene.layout.VBox" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" stylesheets="@../style/component/ReplayBinDisplayPane.css" minWidth="75.0">
+<fx:root type="javafx.scene.layout.VBox" minWidth="75.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" stylesheets="@../style/component/ReplayBinDisplayPane.css">
   <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
     <contextMenu>
       <ContextMenu>
@@ -26,7 +26,7 @@
   <Label fx:id="labelHiddenBins" text="%ui.bin_editor.hidden_bins" alignment="CENTER" maxWidth="100" visible="false" />
 
   <HBox fx:id="replayBinDisplayContainer" alignment="CENTER_LEFT" prefHeight="25.0">
-    <Button HBox.hgrow="ALWAYS" maxWidth="100" focusTraversable="false" onAction="#createBin">
+    <Button HBox.hgrow="ALWAYS" maxWidth="100" focusTraversable="false" onAction="#onClickCreateBin">
       <graphic>
         <ImageView>
           <image>
@@ -35,7 +35,7 @@
         </ImageView>
       </graphic>
     </Button>
-    <Button HBox.hgrow="ALWAYS" maxWidth="100" focusTraversable="false" onAction="#deleteBin">
+    <Button HBox.hgrow="ALWAYS" maxWidth="100" focusTraversable="false" onAction="#onClickDeleteBin">
       <graphic>
         <ImageView>
           <image>

@@ -1,7 +1,6 @@
 package wtf.choco.aftershock.controller;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -18,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class SettingsPanelController {
 
@@ -26,15 +24,15 @@ public final class SettingsPanelController {
     @FXML private ComboBox<String> languageSelector;
 
     @FXML
-    public void initialize() {
+    private void initialize() {
         this.fieldReplayFolder.setText(ApplicationSettings.REPLAY_DIRECTORY.get());
         this.fieldReplayEditorPath.setText(ApplicationSettings.REPLAY_EDITOR_PATH.get());
         this.languageSelector.setValue(ApplicationSettings.LOCALE.get());
+        this.languageSelector.getItems().add("en_US"); // TODO: Temporarily hard-coded. Should pull from available lang files
     }
 
     @FXML
-    @SuppressWarnings("unused")
-    public void selectReplayFolder(ActionEvent event) {
+    private void onClickSelectReplayDirectory() {
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle("Select Replay Directory");
 
@@ -50,8 +48,7 @@ public final class SettingsPanelController {
     }
 
     @FXML
-    @SuppressWarnings("unused")
-    public void selectReplayEditorFile(ActionEvent event) {
+    private void onClickSelectReplayEditorFile() {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Select Replay Editor Executable");
         chooser.setSelectedExtensionFilter(new ExtensionFilter("Executable File", "exe"));
@@ -68,13 +65,12 @@ public final class SettingsPanelController {
     }
 
     @FXML
-    @SuppressWarnings("unused")
-    public void close(ActionEvent event) {
+    private void onClickCloseWithoutSaving() {
         App.getInstance().closeSettingsStage();
     }
 
     @FXML
-    public void applyAndClose(ActionEvent event) {
+    private void onClickApplyAndClose() {
         boolean replayDirectoryChanged = setIfValid(ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
         this.setIfValid(ApplicationSettings.REPLAY_EDITOR_PATH, fieldReplayEditorPath.getText());
         this.setIfValid(ApplicationSettings.LOCALE, languageSelector.getValue());
@@ -102,7 +98,7 @@ public final class SettingsPanelController {
         App.LOGGER.info("Replay Editor Path: " + ApplicationSettings.REPLAY_EDITOR_PATH.get());
         App.LOGGER.info("Language: " + ApplicationSettings.LOCALE.get());
 
-        this.close(event);
+        App.getInstance().closeSettingsStage();
     }
 
     private boolean setIfValid(Setting setting, String value) {

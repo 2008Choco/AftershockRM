@@ -5,14 +5,12 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.IntegerBinding;
-import javafx.beans.property.ListProperty;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
@@ -20,7 +18,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -49,21 +46,20 @@ import javafx.stage.Popup;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.AppResources;
 import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.control.EditableTextTableCell;
 import wtf.choco.aftershock.control.ReplayBinDisplayPane;
+import wtf.choco.aftershock.control.StringListTableCell;
 import wtf.choco.aftershock.files.AftershockFileOperations;
 import wtf.choco.aftershock.replay.IReplay;
 import wtf.choco.aftershock.replay.Team;
-import wtf.choco.aftershock.control.EditableTextTableCell;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
-import wtf.choco.aftershock.control.StringListTableCell;
 import wtf.choco.aftershock.structure.Tag;
 import wtf.choco.aftershock.util.ComplexBindings;
 import wtf.choco.aftershock.util.FXUtils;
 import wtf.choco.aftershock.util.ReplayTableFilter;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
@@ -94,6 +90,8 @@ public final class AppController {
 
     private static final String URL_BUG_REPORT = "https://github.com/2008Choco/AftershockRM/issues/new?template=bug_report.md";
     private static final String URL_FEATURE_REQUEST = "https://github.com/2008Choco/AftershockRM/issues/new?template=feature_request.md";
+    public static final String URL_PAYPAL_DONATION = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=hawkeboyz%40hotmail.com&currency_code=USD&source=Aftershock";
+    public static final String URL_SOURCE_CODE = "https://www.github.com/2008Choco/AftershockRM";
 
     @FXML private Parent infoPanel;
 
@@ -130,10 +128,8 @@ public final class AppController {
 
     private final Popup popup = new Popup();
 
-    private ReplayTableFilter tableFilter;
-
     @FXML
-    public void initialize() {
+    private void initialize() {
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
         this.columnLoaded.setCellValueFactory(new PropertyValueFactory<>("loaded"));
         this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::name));
@@ -167,28 +163,20 @@ public final class AppController {
         selectionModel.getSelectedItems().addListener(this::onSelectedItemsChange);
         App.getInstance().detailedReplayProperty().addListener(this::onDetailedReplayChange);
 
-        this.tableFilter = new ReplayTableFilter(ReplayBin.GLOBAL);
-        this.tableFilter.replayBinProperty().bind(replayBinDisplayPane.activeBinProperty());
-        this.tableFilter.searchTermProperty().bind(filterBar.textProperty());
+        ReplayTableFilter tableFilter = new ReplayTableFilter(ReplayBin.GLOBAL);
+        tableFilter.replayBinProperty().bind(replayBinDisplayPane.activeBinProperty());
+        tableFilter.searchTermProperty().bind(filterBar.textProperty());
 
-        ListProperty<ReplayEntry> replays = ReplayBin.GLOBAL.replaysProperty();
-        FilteredList<ReplayEntry> filteredReplays = new FilteredList<>(replays, tableFilter);
+        FilteredList<ReplayEntry> filteredReplays = ReplayBin.GLOBAL.replaysProperty().filtered(tableFilter);
         SortedList<ReplayEntry> sortedReplays = new SortedList<>(filteredReplays);
-        this.replayTable.setItems(sortedReplays);
         sortedReplays.comparatorProperty().bind(replayTable.comparatorProperty());
-
-        this.replayTable.setOnMouseClicked(_ -> replayTable.requestFocus());
-        this.replayTable.setOnDragDetected(_ -> onReplayTableDragStart());
-        this.replayTable.setOnDragOver(this::onReplayTableDragEnter);
-        this.replayTable.setOnDragDropped(this::onReplayTableDragDropped);
-
+        this.replayTable.setItems(sortedReplays);
         this.replayTable.setContextMenu(createReplayTableContextMenu());
-        this.replayTable.setOnContextMenuRequested(this::onReplayTableContextMenuRequested);
 
         // Refresh the table when the search term changes and when we change active bins
-        ListChangeListener<ReplayEntry> forceRefilterListener = _ -> forceRefilter(filteredReplays, tableFilter);
+        ListChangeListener<ReplayEntry> forceRefilterListener = _ -> forceRefilterTable(filteredReplays);
         this.replayBinDisplayPane.activeBinProperty().addListener((_, oldValue, newValue) -> {
-            this.forceRefilter(filteredReplays, tableFilter);
+            this.forceRefilterTable(filteredReplays);
 
             if (oldValue != null) {
                 oldValue.replaysProperty().removeListener(forceRefilterListener);
@@ -198,7 +186,7 @@ public final class AppController {
                 newValue.replaysProperty().addListener(forceRefilterListener);
             }
         });
-        this.tableFilter.searchTermProperty().addListener(_ -> forceRefilter(filteredReplays, tableFilter));
+        tableFilter.searchTermProperty().addListener(_ -> forceRefilterTable(filteredReplays));
 
         ObservableIntegerValue loadedCount = ComplexBindings.createIntegerBindingCountingBooleanProperties(replayTable.getItems(), ReplayEntry::loadedProperty);
         this.labelListed.textProperty().bind(Bindings.size(replayTable.getItems()).map(listed -> resources.getString("ui.footer.listed").formatted(listed)));
@@ -206,17 +194,66 @@ public final class AppController {
         this.labelSelected.textProperty().bind(Bindings.size(replayTable.getSelectionModel().getSelectedItems()).map(selected -> resources.getString("ui.footer.selected").formatted(selected)));
     }
 
-    /*
-     * Unfortunately, FilteredList#refilter() is private, so to get around this we force a call to it by invalidating
-     * the property by setting it to null then re-setting it to our filter. It sucks, but it's the only way unless I
-     * want to invoke refilter() via reflection...
-     * ...
-     * ...
-     * which isn't the worst idea? :)
-     */
-    private <T> void forceRefilter(FilteredList<T> list, Predicate<T> filter) {
-        list.setPredicate(null);
-        list.setPredicate(filter);
+    @FXML
+    private void onOpenSettings() {
+        App.getInstance().openSettingsStage();
+    }
+
+    @FXML
+    private void onExit() {
+        Platform.exit();
+    }
+
+    @FXML
+    private void onToggleBinEditor() {
+        ObservableList<Node> primaryDisplayChildren = primaryDisplay.getChildren();
+        if (primaryDisplayChildren.contains(replayBinDisplayPane)) {
+            primaryDisplayChildren.remove(replayBinDisplayPane);
+            this.replayBinDisplayPane.setVisible(false);
+        } else {
+            this.replayBinDisplayPane.setVisible(true);
+            primaryDisplayChildren.addFirst(replayBinDisplayPane);
+        }
+    }
+
+    @FXML
+    private void onSubmitBugReport() {
+        App.getInstance().getHostServices().showDocument(URL_BUG_REPORT);
+    }
+
+    @FXML
+    private void onSubmitFeedback() {
+        App.getInstance().getHostServices().showDocument(URL_FEATURE_REQUEST);
+    }
+
+    @FXML
+    private void onOpenAboutPage() {
+        App.getInstance().openAboutStage();
+    }
+
+    @FXML
+    private void onFilterBarKeyPressed(KeyEvent event) {
+        KeyCode pressed = event.getCode();
+
+        // If we pressed escape or enter, consider us done typing in the filter bar and restore focus to the replay table
+        if (pressed == KeyCode.ESCAPE || pressed == KeyCode.ENTER) {
+            this.replayTable.requestFocus();
+            event.consume();
+        }
+    }
+
+    @FXML
+    public void onFilterOptionsMouseClick(MouseEvent event) {
+        if (!(event.getSource() instanceof ImageView image)) {
+            return;
+        }
+
+        if (!popup.isShowing()) {
+            Bounds imageBounds = image.localToScreen(image.getBoundsInLocal());
+            this.popup.show(image, imageBounds.getCenterX() - (popup.getWidth() / 2), imageBounds.getCenterY() - 15 - popup.getHeight());
+        } else {
+            this.popup.hide();
+        }
     }
 
     private void onSelectedItemsChange(ListChangeListener.Change<? extends ReplayEntry> change) {
@@ -228,127 +265,6 @@ public final class AppController {
             App.getInstance().setDetailedReplay(change.getAddedSubList().getFirst());
             this.openInfoPanel();
         }
-    }
-
-    private void onReplayTableDragStart() {
-        var selection = replayTable.getSelectionModel();
-        if (selection.isEmpty()) {
-            return;
-        }
-
-        Dragboard dragboard = replayTable.startDragAndDrop(TransferMode.COPY_OR_MOVE);
-        dragboard.setDragView(AppResources.IMAGE_FILE.get());
-
-        ClipboardContent clipboard = new ClipboardContent();
-        StringJoiner replays = new StringJoiner(";");
-        List<File> files = new ArrayList<>(selection.getSelectedItems().size());
-        for (ReplayEntry replay : selection.getSelectedItems()) {
-            replays.add(replay.id());
-            files.add(replay.getLiveReplayPath().toFile());
-        }
-
-        clipboard.putFiles(files);
-        clipboard.putString(replays.toString());
-        dragboard.setContent(clipboard);
-    }
-
-    private void onReplayTableDragEnter(DragEvent event) {
-        Dragboard dragboard = event.getDragboard();
-        if (event.getGestureSource() == replayTable) {
-            return;
-        }
-
-        if (dragboard.hasFiles()) {
-            for (File file : dragboard.getFiles()) {
-                if (!file.getName().endsWith(".replay")) {
-                    return;
-                }
-            }
-
-            event.acceptTransferModes(TransferMode.COPY);
-        } else if (dragboard.hasUrl()) {
-            try {
-                String replayName = getReplayNameFromURI(URI.create(dragboard.getUrl().trim()));
-                if (!replayName.endsWith(".replay")) {
-                    return;
-                }
-
-                event.acceptTransferModes(TransferMode.COPY);
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-    }
-
-    private void onReplayTableDragDropped(DragEvent event) {
-        App app = App.getInstance();
-        Dragboard dragboard = event.getDragboard();
-
-        CompletionStage<Collection<Path>> dragOperation;
-        if (dragboard.hasFiles()) {
-            dragOperation = copyReplayFilesToLiveReplayDirectory(dragboard.getFiles());
-            event.setDropCompleted(true);
-        } else if (dragboard.hasUrl()) {
-            try {
-                URI uri = URI.create(dragboard.getUrl().trim());
-                dragOperation = downloadReplayFileFromURL(uri).thenApply(result -> {
-                    App.LOGGER.info("Finished downloading replay from URL: " + uri);
-                    return result;
-                });
-            } catch (IllegalArgumentException e) {
-                dragOperation = CompletableFuture.failedFuture(e);
-            }
-
-            event.setDropCompleted(true);
-        } else {
-            dragOperation = CompletableFuture.completedFuture(Collections.emptyList());
-        }
-
-        AftershockFileOperations fileOperations = app.getFileOperations();
-        dragOperation.thenCompose(fileOperations::loadReplays)
-                .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
-                .exceptionally(e -> {
-                    App.LOGGER.log(Level.SEVERE, "Could not load replays from URL: " + dragboard.getUrl(), e);
-                    return null;
-                });
-    }
-
-    private CompletionStage<Collection<Path>> copyReplayFilesToLiveReplayDirectory(Collection<File> files) {
-        if (files.isEmpty()) {
-            return CompletableFuture.completedFuture(Collections.emptyList());
-        }
-
-        return CompletableFuture.supplyAsync(() -> {
-            List<Path> newPaths = new ArrayList<>(files.size());
-
-            Path liveReplayDirectory = App.getInstance().getFileStructure().liveReplayDirectory();
-            for (File file : files) {
-                Path targetPath = liveReplayDirectory.resolve(file.getName());
-                try {
-                    Files.copy(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-                    newPaths.add(targetPath);
-                } catch (IOException e) {
-                    throw new CompletionException(e);
-                }
-            }
-
-            return newPaths;
-        }, App.getInstance().getExecutor());
-    }
-
-    private CompletionStage<Collection<Path>> downloadReplayFileFromURL(URI uri) {
-        String replayName = getReplayNameFromURI(uri);
-        return CompletableFuture.supplyAsync(() -> {
-            Path targetPath = App.getInstance().getFileStructure().liveReplayDirectory().resolve(replayName);
-            try (ReadableByteChannel channelIn = Channels.newChannel(uri.toURL().openStream());
-                 FileChannel channelOut = FileChannel.open(targetPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
-            ) {
-                channelOut.transferFrom(channelIn, 0, Long.MAX_VALUE);
-                return List.of(targetPath);
-            } catch (IOException e) {
-                throw new CompletionException(e);
-            }
-        }, App.getInstance().getExecutor());
     }
 
     private String getReplayNameFromURI(URI uri) {
@@ -431,6 +347,7 @@ public final class AppController {
         }
     }
 
+    @FXML
     private void onReplayTableContextMenuRequested(ContextMenuEvent event) {
         // If there are no selected items, we don't need to show the context menu
         if (replayTable.getSelectionModel().isEmpty()) {
@@ -440,7 +357,7 @@ public final class AppController {
     }
 
     @FXML
-    public void tableKeyboardControl(KeyEvent event) {
+    private void onReplayTableKeyPressed(KeyEvent event) {
         KeyCode key = event.getCode();
 
         if (key == KeyCode.A && event.isControlDown()) {
@@ -504,84 +421,142 @@ public final class AppController {
     }
 
     @FXML
-    public void openLink(ActionEvent event) {
-        String toOpen = switch (((Hyperlink) event.getTarget()).getId()) {
-            case "donation" -> "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=hawkeboyz%40hotmail.com&currency_code=USD&source=Aftershock";
-            case "source" -> "https://www.github.com/2008Choco/AftershockRM";
-            default -> null;
-        };
-
-        if (toOpen != null) {
-            App.getInstance().getHostServices().showDocument(toOpen);
-        }
+    private void onReplayTableMouseClicked() {
+        this.replayTable.requestFocus();
     }
 
     @FXML
-    public void openSettings(ActionEvent event) {
-        App.getInstance().openSettingsStage();
-    }
-
-    @FXML
-    public void submitBugReport(ActionEvent event) {
-        try {
-            Desktop.getDesktop().browse(URI.create(URL_BUG_REPORT));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @FXML
-    public void submitFeedback(ActionEvent event) {
-        try {
-            Desktop.getDesktop().browse(URI.create(URL_FEATURE_REQUEST));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @FXML
-    public void openAbout(ActionEvent event) {
-        App.getInstance().openAboutStage();
-    }
-
-    @FXML
-    public void exit(ActionEvent event) {
-        Platform.exit();
-    }
-
-    @FXML
-    public void toggleBinEditor(@SuppressWarnings("unused") ActionEvent event) {
-        ObservableList<Node> primaryDisplayChildren = primaryDisplay.getChildren();
-        if (primaryDisplayChildren.contains(replayBinDisplayPane)) {
-            primaryDisplayChildren.remove(replayBinDisplayPane);
-            this.replayBinDisplayPane.setVisible(false);
-        } else {
-            this.replayBinDisplayPane.setVisible(true);
-            primaryDisplayChildren.addFirst(replayBinDisplayPane);
-        }
-    }
-
-    @FXML
-    public void exitFilter(KeyEvent event) {
-        KeyCode pressed = event.getCode();
-        if (pressed == KeyCode.ESCAPE || pressed == KeyCode.ENTER) {
-            this.replayTable.requestFocus();
-            event.consume();
-        }
-    }
-
-    @FXML
-    public void toggleFilterMenu(MouseEvent event) {
-        if (!(event.getSource() instanceof ImageView image)) {
+    private void onReplayTableDragDetected() {
+        var selection = replayTable.getSelectionModel();
+        if (selection.isEmpty()) {
             return;
         }
 
-        if (!popup.isShowing()) {
-            Bounds imageBounds = image.localToScreen(image.getBoundsInLocal());
-            this.popup.show(image, imageBounds.getCenterX() - (popup.getWidth() / 2), imageBounds.getCenterY() - 15 - popup.getHeight());
-        } else {
-            this.popup.hide();
+        Dragboard dragboard = replayTable.startDragAndDrop(TransferMode.COPY_OR_MOVE);
+        dragboard.setDragView(AppResources.IMAGE_FILE.get());
+
+        ClipboardContent clipboard = new ClipboardContent();
+        StringJoiner replays = new StringJoiner(";");
+        List<File> files = new ArrayList<>(selection.getSelectedItems().size());
+        for (ReplayEntry replay : selection.getSelectedItems()) {
+            replays.add(replay.id());
+            files.add(replay.getLiveReplayPath().toFile());
         }
+
+        clipboard.putFiles(files);
+        clipboard.putString(replays.toString());
+        dragboard.setContent(clipboard);
+    }
+
+    @FXML
+    private void onReplayTableDragOver(DragEvent event) {
+        Dragboard dragboard = event.getDragboard();
+        if (event.getGestureSource() == replayTable) {
+            return;
+        }
+
+        if (dragboard.hasFiles()) {
+            for (File file : dragboard.getFiles()) {
+                if (!file.getName().endsWith(".replay")) {
+                    return;
+                }
+            }
+
+            event.acceptTransferModes(TransferMode.COPY);
+        } else if (dragboard.hasUrl()) {
+            try {
+                String replayName = getReplayNameFromURI(URI.create(dragboard.getUrl().trim()));
+                if (!replayName.endsWith(".replay")) {
+                    return;
+                }
+
+                event.acceptTransferModes(TransferMode.COPY);
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    @FXML
+    private void onReplayTableDragDropped(DragEvent event) {
+        App app = App.getInstance();
+        Dragboard dragboard = event.getDragboard();
+
+        CompletionStage<Collection<Path>> dragOperation;
+        if (dragboard.hasFiles()) {
+            dragOperation = copyReplayFilesToLiveReplayDirectory(dragboard.getFiles());
+            event.setDropCompleted(true);
+        } else if (dragboard.hasUrl()) {
+            try {
+                URI uri = URI.create(dragboard.getUrl().trim());
+                dragOperation = downloadReplayFileFromURL(uri).thenApply(result -> {
+                    App.LOGGER.info("Finished downloading replay from URL: " + uri);
+                    return result;
+                });
+            } catch (IllegalArgumentException e) {
+                dragOperation = CompletableFuture.failedFuture(e);
+            }
+
+            event.setDropCompleted(true);
+        } else {
+            dragOperation = CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        AftershockFileOperations fileOperations = app.getFileOperations();
+        dragOperation.thenCompose(fileOperations::loadReplays)
+                .thenAcceptAsync(ReplayBin.GLOBAL.getReplays()::addAll, Platform::runLater)
+                .exceptionally(e -> {
+                    App.LOGGER.log(Level.SEVERE, "Could not load replays from URL: " + dragboard.getUrl(), e);
+                    return null;
+                });
+    }
+
+    private CompletionStage<Collection<Path>> copyReplayFilesToLiveReplayDirectory(Collection<File> files) {
+        if (files.isEmpty()) {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+
+        return CompletableFuture.supplyAsync(() -> {
+            List<Path> newPaths = new ArrayList<>(files.size());
+
+            Path liveReplayDirectory = App.getInstance().getFileStructure().liveReplayDirectory();
+            for (File file : files) {
+                Path targetPath = liveReplayDirectory.resolve(file.getName());
+                try {
+                    Files.copy(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                    newPaths.add(targetPath);
+                } catch (IOException e) {
+                    throw new CompletionException(e);
+                }
+            }
+
+            return newPaths;
+        }, App.getInstance().getExecutor());
+    }
+
+    private CompletionStage<Collection<Path>> downloadReplayFileFromURL(URI uri) {
+        String replayName = getReplayNameFromURI(uri);
+        return CompletableFuture.supplyAsync(() -> {
+            Path targetPath = App.getInstance().getFileStructure().liveReplayDirectory().resolve(replayName);
+            try (ReadableByteChannel channelIn = Channels.newChannel(uri.toURL().openStream());
+                 FileChannel channelOut = FileChannel.open(targetPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
+            ) {
+                channelOut.transferFrom(channelIn, 0, Long.MAX_VALUE);
+                return List.of(targetPath);
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            }
+        }, App.getInstance().getExecutor());
+    }
+
+    @FXML
+    private void onClickSupportHyperlink() {
+        App.getInstance().getHostServices().showDocument(URL_PAYPAL_DONATION);
+    }
+
+    @FXML
+    private void onClickSourceCodeHyperlink() {
+        App.getInstance().getHostServices().showDocument(URL_SOURCE_CODE);
     }
 
     public TableView<ReplayEntry> getReplayTable() {
@@ -643,6 +618,17 @@ public final class AppController {
 
         this.lastDividerPositionInfo = splitPane.getDividerPositions()[infoPanelIndex - 1];
         splitPaneItems.remove(infoPanel);
+    }
+
+    /*
+     * Unfortunately, FilteredList#refilter() is private, so to get around this we force a call to it by invalidating
+     * the property by setting it to null then re-setting it to our filter. It sucks, but modularization prevents us
+     * from calling this method with reflection.
+     */
+    private <T> void forceRefilterTable(FilteredList<T> list) {
+        Predicate<? super T> predicate = list.getPredicate();
+        list.setPredicate(null);
+        list.setPredicate(predicate);
     }
 
 }

@@ -26,23 +26,23 @@
   <MenuBar>
     <Menu text="%ui.menu.file">
       <items>
-        <MenuItem onAction="#openSettings" text="%ui.menu.file.settings" />
+        <MenuItem text="%ui.menu.file.settings" onAction="#onOpenSettings" />
         <SeparatorMenuItem />
-        <MenuItem onAction="#exit" text="%ui.menu.file.exit" />
+        <MenuItem text="%ui.menu.file.exit" onAction="#onExit" />
       </items>
     </Menu>
     <Menu text="%ui.menu.edit" />
     <Menu text="%ui.menu.view">
       <items>
-        <MenuItem fx:id="menuItemToggleBinEditor" onAction="#toggleBinEditor" text="Toggle Bin Editor" />
+        <MenuItem fx:id="menuItemToggleBinEditor" text="%ui.menu.view.hide_bin_editor" onAction="#onToggleBinEditor" />
       </items>
     </Menu>
     <Menu text="%ui.menu.help">
       <items>
-        <MenuItem onAction="#submitBugReport" text="%ui.menu.help.submit_bug_report" />
-        <MenuItem onAction="#submitFeedback" text="%ui.menu.help.submit_feedback" />
+        <MenuItem text="%ui.menu.help.submit_bug_report" onAction="#onSubmitBugReport" />
+        <MenuItem text="%ui.menu.help.submit_feedback" onAction="#onSubmitFeedback" />
         <SeparatorMenuItem />
-        <MenuItem onAction="#openAbout" text="%ui.menu.help.about" />
+        <MenuItem text="%ui.menu.help.about" onAction="#onOpenAboutPage" />
       </items>
     </Menu>
   </MenuBar>
@@ -55,7 +55,13 @@
     <ReplayBinDisplayPane fx:id="replayBinDisplayPane"/>
 
     <SplitPane fx:id="splitPane" HBox.hgrow="ALWAYS">
-      <TableView fx:id="replayTable" editable="true" focusTraversable="false" sortOrder="$columnDate" onKeyPressed="#tableKeyboardControl">
+      <TableView fx:id="replayTable" editable="true" focusTraversable="false" sortOrder="$columnDate"
+          onContextMenuRequested="#onReplayTableContextMenuRequested"
+          onKeyPressed="#onReplayTableKeyPressed"
+          onMouseClicked="#onReplayTableMouseClicked"
+          onDragDetected="#onReplayTableDragDetected"
+          onDragOver="#onReplayTableDragOver"
+          onDragDropped="#onReplayTableDragDropped">
         <placeholder>
           <Label text="%ui.table.empty" />
         </placeholder>
@@ -77,7 +83,7 @@
 
   <HBox prefHeight="25.0">
     <HBox alignment="CENTER_LEFT" spacing="15.0">
-      <Button focusTraversable="false" graphicTextGap="10.0" onAction="#toggleBinEditor" prefWidth="75.0" text="%ui.footer.toggle_bin_editor">
+      <Button focusTraversable="false" graphicTextGap="10.0" prefWidth="75.0" text="%ui.footer.toggle_bin_editor" onAction="#onToggleBinEditor">
         <graphic>
           <ImageView>
             <image>
@@ -97,12 +103,12 @@
         <Insets left="10.0" right="10.0" />
       </padding>
 
-      <Label fx:id="progressStatus" text="Status..." visible="false" />
+      <Label fx:id="progressStatus" visible="false" />
       <ProgressBar fx:id="progressBar" focusTraversable="false" prefWidth="200.0" progress="0.0" visible="false" />
 
       <StackPane alignment="CENTER_RIGHT">
-        <TextField fx:id="filterBar" focusTraversable="false" onKeyPressed="#exitFilter" prefHeight="25.0" prefWidth="200.0" promptText="%ui.table.filter.name" />
-        <ImageView fx:id="filterOptionsImage" onMouseClicked="#toggleFilterMenu" opacity="0.25" pickOnBounds="true">
+        <TextField fx:id="filterBar" focusTraversable="false" prefHeight="25.0" prefWidth="200.0" promptText="%ui.table.filter.name" onKeyPressed="#onFilterBarKeyPressed" />
+        <ImageView fx:id="filterOptionsImage" opacity="0.25" pickOnBounds="true" onMouseClicked="#onFilterOptionsMouseClick">
           <StackPane.margin>
             <Insets right="10.0" />
           </StackPane.margin>
@@ -117,7 +123,7 @@
         </ImageView>
       </StackPane>
 
-      <Hyperlink id="donation" contentDisplay="RIGHT" onAction="#openLink" text="%ui.footer.support">
+      <Hyperlink contentDisplay="RIGHT" text="%ui.footer.support" onAction="#onClickSupportHyperlink">
         <tooltip>
           <Tooltip text="%ui.footer.support.tooltip" />
         </tooltip>
@@ -131,7 +137,7 @@
         </graphic>
       </Hyperlink>
 
-      <Hyperlink id="source" contentDisplay="RIGHT" onAction="#openLink" text="%ui.footer.source">
+      <Hyperlink contentDisplay="RIGHT" text="%ui.footer.source" onAction="#onClickSourceCodeHyperlink">
         <tooltip>
           <Tooltip text="%ui.footer.source.tooltip" />
         </tooltip>

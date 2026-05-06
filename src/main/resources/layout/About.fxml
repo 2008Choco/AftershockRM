@@ -39,6 +39,6 @@
   </HBox>
 
   <HBox alignment="CENTER_RIGHT" spacing="10.0">
-    <Button text="Close" onAction="#close" prefWidth="80.0" defaultButton="true" />
+    <Button text="Close" prefWidth="80.0" defaultButton="true" onAction="#onClose" />
   </HBox>
 </VBox>

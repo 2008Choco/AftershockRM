@@ -1,6 +1,5 @@
 package wtf.choco.aftershock.controller;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import wtf.choco.aftershock.App;
@@ -20,7 +19,7 @@ public final class AboutController {
     @FXML private ResourceBundle resources;
 
     @FXML
-    public void initialize() {
+    private void initialize() {
         this.headerLabel.setText(App.getAppName() + " v" + App.getAppVersion());
         this.builtOnLabel.setText(resources.getString("ui.about.built_on").formatted(App.getAppBuildDate().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))));
         this.runtimeLabel.setText(resources.getString("ui.about.runtime").formatted(System.getProperty("java.runtime.version")));
@@ -29,7 +28,7 @@ public final class AboutController {
     }
 
     @FXML
-    public void close(ActionEvent event) {
+    private void onClose() {
         App.getInstance().closeAboutStage();
     }
 

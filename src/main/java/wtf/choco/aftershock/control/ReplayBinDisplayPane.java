@@ -9,7 +9,6 @@ import javafx.beans.value.ObservableIntegerValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -111,6 +110,33 @@ public final class ReplayBinDisplayPane extends VBox {
         this.selectionModel.clearAndSelect(getActiveBin());
     }
 
+    @FXML
+    private void onUnhideBins() {
+        App.getInstance().getBinRegistry().getBins().forEach(bin -> {
+            if (bin.isHidden()) {
+                bin.setHidden(false);
+            }
+        });
+    }
+
+    @FXML
+    private void onClickCreateBin() {
+        int count = 0;
+        String binName = "New Bin";
+
+        BinRegistry binRegistry = App.getInstance().getBinRegistry();
+        ReplayBin bin = null;
+        while ((bin = binRegistry.createBin(binName + (count++ >= 1 ? " (" + count + ")" : ""))) == null);
+
+        this.setActiveBin(bin);
+        this.selectionModel.clearAndSelect(bin);
+    }
+
+    @FXML
+    private void onClickDeleteBin() {
+        this.deleteMultipleBins(selectionModel.getSelectedItems());
+    }
+
     private ReplayBinDisplay createReplayBinDisplay(ReplayBin bin) {
         ReplayBinDisplay display = new ReplayBinDisplay();
 
@@ -172,33 +198,6 @@ public final class ReplayBinDisplayPane extends VBox {
                 this.selectionModel.clearAndSelect(bin);
             }
         }
-    }
-
-    @FXML
-    private void createBin(ActionEvent event) {
-        int count = 0;
-        String binName = "New Bin";
-
-        BinRegistry binRegistry = App.getInstance().getBinRegistry();
-        ReplayBin bin = null;
-        while ((bin = binRegistry.createBin(binName + (count++ >= 1 ? " (" + count + ")" : ""))) == null);
-
-        this.setActiveBin(bin);
-        this.selectionModel.clearAndSelect(bin);
-    }
-
-    @FXML
-    private void deleteBin(ActionEvent event) {
-        this.deleteMultipleBins(selectionModel.getSelectedItems());
-    }
-
-    @FXML
-    private void onUnhideBins(ActionEvent event) {
-        App.getInstance().getBinRegistry().getBins().forEach(bin -> {
-            if (bin.isHidden()) {
-                bin.setHidden(false);
-            }
-        });
     }
 
     private void deleteBin(ReplayBin bin) {
