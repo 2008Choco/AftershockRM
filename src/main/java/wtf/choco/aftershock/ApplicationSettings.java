@@ -3,6 +3,7 @@ package wtf.choco.aftershock;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import wtf.choco.aftershock.files.AftershockFileStructure;
+import wtf.choco.aftershock.settings.ReplayDateFormat;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +21,8 @@ public final class ApplicationSettings {
 
     public static final Setting REPLAY_DIRECTORY = createSetting("replay_directory");
     public static final Setting REPLAY_EDITOR_PATH = createSetting("replay_editor_path");
+    public static final Setting REPLAY_DATE_FORMAT = createSetting("replay_date_format", ReplayDateFormat.DAY_MONTH_YEAR_SHORT.name().toUpperCase());
+    public static final Setting REPLAY_24_HOUR_TIME = createSetting("replay_24_hour_time", "true");
     public static final Setting LOCALE = createSetting("locale_code", "en_US");
 
     public static void init(AftershockFileStructure fileStructure) throws IOException {

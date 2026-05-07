@@ -22,6 +22,7 @@ module wtf.choco.aftershock {
     exports wtf.choco.aftershock.keybind;
     exports wtf.choco.aftershock.manager;
     exports wtf.choco.aftershock.replay;
+    exports wtf.choco.aftershock.settings;
     exports wtf.choco.aftershock.structure;
     exports wtf.choco.aftershock.util;
     exports wtf.choco.aftershock.util.function;

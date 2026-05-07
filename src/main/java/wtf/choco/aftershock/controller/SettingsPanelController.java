@@ -1,7 +1,9 @@
 package wtf.choco.aftershock.controller;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
@@ -11,7 +13,9 @@ import javafx.stage.Stage;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.ApplicationSettings;
 import wtf.choco.aftershock.ApplicationSettings.Setting;
+import wtf.choco.aftershock.settings.ReplayDateFormat;
 import wtf.choco.aftershock.structure.ReplayBin;
+import wtf.choco.aftershock.util.TranslatableStringConverter;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,15 +24,22 @@ import java.util.logging.Level;
 
 public final class SettingsPanelController {
 
-    @FXML private TextField fieldReplayFolder, fieldReplayEditorPath;
-    @FXML private ComboBox<String> languageSelector;
+    @FXML private TextField fieldReplayFolder;
+    @FXML private TextField fieldReplayEditorPath;
+    @FXML private ComboBox<ReplayDateFormat> comboBoxDateFormat;
+    @FXML private CheckBox checkbox24HourTime;
+    @FXML private ComboBox<String> comboBoxLanguage;
 
     @FXML
     private void initialize() {
         this.fieldReplayFolder.setText(ApplicationSettings.REPLAY_DIRECTORY.get());
         this.fieldReplayEditorPath.setText(ApplicationSettings.REPLAY_EDITOR_PATH.get());
-        this.languageSelector.setValue(ApplicationSettings.LOCALE.get());
-        this.languageSelector.getItems().add("en_US"); // TODO: Temporarily hard-coded. Should pull from available lang files
+        this.comboBoxDateFormat.setValue(Enum.valueOf(ReplayDateFormat.class, ApplicationSettings.REPLAY_DATE_FORMAT.get()));
+        this.comboBoxDateFormat.setItems(FXCollections.observableArrayList(ReplayDateFormat.values()));
+        this.comboBoxDateFormat.setConverter(TranslatableStringConverter.get());
+        this.checkbox24HourTime.setSelected(Boolean.parseBoolean(ApplicationSettings.REPLAY_24_HOUR_TIME.get()));
+        this.comboBoxLanguage.setValue(ApplicationSettings.LOCALE.get());
+        this.comboBoxLanguage.getItems().add("en_US"); // TODO: Temporarily hard-coded. Should pull from available lang files
     }
 
     @FXML
@@ -73,7 +84,9 @@ public final class SettingsPanelController {
     private void onClickApplyAndClose() {
         boolean replayDirectoryChanged = setIfValid(ApplicationSettings.REPLAY_DIRECTORY, fieldReplayFolder.getText());
         this.setIfValid(ApplicationSettings.REPLAY_EDITOR_PATH, fieldReplayEditorPath.getText());
-        this.setIfValid(ApplicationSettings.LOCALE, languageSelector.getValue());
+        this.setIfValid(ApplicationSettings.REPLAY_DATE_FORMAT, comboBoxDateFormat.getValue().name());
+        this.setIfValid(ApplicationSettings.REPLAY_24_HOUR_TIME, Boolean.toString(checkbox24HourTime.isSelected()));
+        this.setIfValid(ApplicationSettings.LOCALE, comboBoxLanguage.getValue());
 
         App app = App.getInstance();
         app.getExecutor().execute(() -> {
@@ -96,6 +109,8 @@ public final class SettingsPanelController {
         App.LOGGER.info("Settings updated to: ");
         App.LOGGER.info("Replay Directory: " + ApplicationSettings.REPLAY_DIRECTORY.get());
         App.LOGGER.info("Replay Editor Path: " + ApplicationSettings.REPLAY_EDITOR_PATH.get());
+        App.LOGGER.info("Replay DateFormat: " + ApplicationSettings.REPLAY_DATE_FORMAT.get());
+        App.LOGGER.info("Replay 24 Hour Time: " + ApplicationSettings.REPLAY_24_HOUR_TIME.get());
         App.LOGGER.info("Language: " + ApplicationSettings.LOCALE.get());
 
         App.getInstance().closeSettingsStage();

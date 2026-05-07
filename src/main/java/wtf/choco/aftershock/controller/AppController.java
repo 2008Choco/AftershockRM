@@ -5,6 +5,8 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.IntegerBinding;
+import javafx.beans.binding.ObjectBinding;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
@@ -46,12 +48,14 @@ import javafx.stage.Popup;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.AppResources;
 import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.control.DateTimeTableCell;
 import wtf.choco.aftershock.control.EditableTextTableCell;
 import wtf.choco.aftershock.control.ReplayBinDisplayPane;
 import wtf.choco.aftershock.control.StringListTableCell;
 import wtf.choco.aftershock.files.AftershockFileOperations;
 import wtf.choco.aftershock.replay.IReplay;
 import wtf.choco.aftershock.replay.Team;
+import wtf.choco.aftershock.settings.ReplayDateFormat;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.structure.ReplayPropertyFetcher;
@@ -71,6 +75,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -98,7 +105,7 @@ public final class AppController {
     @FXML private TableView<ReplayEntry> replayTable;
     @FXML private TableColumn<ReplayEntry, Boolean> columnLoaded;
     @FXML private TableColumn<ReplayEntry, String> columnReplayName;
-    @FXML private TableColumn<ReplayEntry, String> columnDate;
+    @FXML private TableColumn<ReplayEntry, LocalDateTime> columnDate;
     @FXML private TableColumn<ReplayEntry, String> columnMode;
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreBlue;
     @FXML private TableColumn<ReplayEntry, Integer> columnScoreOrange;
@@ -130,10 +137,25 @@ public final class AppController {
 
     @FXML
     private void initialize() {
+        StringProperty replayDateFormatProperty = ApplicationSettings.REPLAY_DATE_FORMAT.property();
+        StringProperty replay24HourProperty = ApplicationSettings.REPLAY_24_HOUR_TIME.property();
+
+        ObjectBinding<DateTimeFormatter> dateTimeFormatterBinding = Bindings.createObjectBinding(() -> {
+            ReplayDateFormat replayDateFormat = ReplayDateFormat.valueOf(replayDateFormatProperty.get());
+            boolean use24HourTime = Boolean.parseBoolean(replay24HourProperty.get());
+            return new DateTimeFormatterBuilder()
+                    .append(replayDateFormat.getDateFormatter())
+                    .appendLiteral(' ')
+                    .appendPattern(use24HourTime ? "HH:mm:ss" : "hh:mm:ss a")
+                    .toFormatter();
+        }, replayDateFormatProperty, replay24HourProperty);
+        dateTimeFormatterBinding.addListener(_ -> replayTable.refresh());
+
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
         this.columnLoaded.setCellValueFactory(new PropertyValueFactory<>("loaded"));
         this.columnReplayName.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::name));
-        this.columnDate.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.date().toString().replace('T', ' ')));
+        this.columnDate.setCellValueFactory(new ReplayPropertyFetcher<>(IReplay::date));
+        this.columnDate.setCellFactory(DateTimeTableCell.getFactoryCallback(dateTimeFormatterBinding));
         this.columnMode.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> String.format("%dv%1$d", replay.teamSize())));
         this.columnScoreBlue.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.score(Team.BLUE)));
         this.columnScoreOrange.setCellValueFactory(new ReplayPropertyFetcher<>(replay -> replay.score(Team.ORANGE)));

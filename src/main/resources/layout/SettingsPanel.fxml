@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
@@ -31,7 +32,9 @@
 
     <Label text="%ui.settings.replay_folder" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.vgrow="NEVER" />
     <Label text="%ui.settings.replay_editor_path" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="NEVER" />
-    <Label text="%ui.settings.language" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.vgrow="NEVER" />
+    <Label text="%ui.settings.date_format" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.vgrow="NEVER" />
+    <Label text="%ui.settings.24_hour_time" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.vgrow="NEVER" />
+    <Label text="%ui.settings.language" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.vgrow="NEVER" />
 
     <TextField fx:id="fieldReplayFolder" GridPane.columnIndex="1" GridPane.rowIndex="0" />
     <TextField fx:id="fieldReplayEditorPath" GridPane.columnIndex="1" GridPane.rowIndex="1" />
@@ -55,7 +58,9 @@
       </graphic>
     </Button>
 
-    <ComboBox fx:id="languageSelector" prefWidth="75.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+    <ComboBox fx:id="comboBoxDateFormat" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+    <CheckBox fx:id="checkbox24HourTime" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+    <ComboBox fx:id="comboBoxLanguage" prefWidth="75.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
   </GridPane>
 
   <HBox alignment="CENTER_RIGHT" spacing="10">
