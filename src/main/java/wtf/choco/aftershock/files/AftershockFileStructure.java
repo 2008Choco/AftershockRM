@@ -1,6 +1,6 @@
 package wtf.choco.aftershock.files;
 
-import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.settings.ApplicationSettings;
 
 import java.nio.file.Path;
 
@@ -49,7 +49,7 @@ public final class AftershockFileStructure {
      * @see ApplicationSettings#REPLAY_DIRECTORY
      */
     public Path liveReplayDirectory() {
-        return Path.of(ApplicationSettings.REPLAY_DIRECTORY.get());
+        return ApplicationSettings.REPLAY_DIRECTORY.getValue();
     }
 
     /**

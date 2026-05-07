@@ -13,6 +13,7 @@ module wtf.choco.aftershock {
     opens wtf.choco.aftershock to javafx.fxml;
     opens wtf.choco.aftershock.control to javafx.fxml;
     opens wtf.choco.aftershock.controller to javafx.fxml;
+    opens wtf.choco.aftershock.settings to javafx.fxml;
 
     exports wtf.choco.aftershock;
     exports wtf.choco.aftershock.control;

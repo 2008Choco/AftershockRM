@@ -6,7 +6,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
@@ -47,7 +48,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Popup;
 import wtf.choco.aftershock.App;
 import wtf.choco.aftershock.AppResources;
-import wtf.choco.aftershock.ApplicationSettings;
+import wtf.choco.aftershock.settings.ApplicationSettings;
 import wtf.choco.aftershock.control.DateTimeTableCell;
 import wtf.choco.aftershock.control.EditableTextTableCell;
 import wtf.choco.aftershock.control.ReplayBinDisplayPane;
@@ -137,18 +138,15 @@ public final class AppController {
 
     @FXML
     private void initialize() {
-        StringProperty replayDateFormatProperty = ApplicationSettings.REPLAY_DATE_FORMAT.property();
-        StringProperty replay24HourProperty = ApplicationSettings.REPLAY_24_HOUR_TIME.property();
+        ObjectProperty<ReplayDateFormat> replayDateFormatProperty = ApplicationSettings.REPLAY_DATE_FORMAT.property();
+        BooleanProperty replay24HourProperty = ApplicationSettings.REPLAY_24_HOUR_TIME.property();
 
-        ObjectBinding<DateTimeFormatter> dateTimeFormatterBinding = Bindings.createObjectBinding(() -> {
-            ReplayDateFormat replayDateFormat = ReplayDateFormat.valueOf(replayDateFormatProperty.get());
-            boolean use24HourTime = Boolean.parseBoolean(replay24HourProperty.get());
-            return new DateTimeFormatterBuilder()
-                    .append(replayDateFormat.getDateFormatter())
-                    .appendLiteral(' ')
-                    .appendPattern(use24HourTime ? "HH:mm:ss" : "hh:mm:ss a")
-                    .toFormatter();
-        }, replayDateFormatProperty, replay24HourProperty);
+        ObjectBinding<DateTimeFormatter> dateTimeFormatterBinding = Bindings.createObjectBinding(() -> new DateTimeFormatterBuilder()
+            .append(replayDateFormatProperty.get().getDateFormatter())
+            .appendLiteral(' ')
+            .appendPattern(replay24HourProperty.get() ? "HH:mm:ss" : "hh:mm:ss a")
+            .toFormatter()
+        , replayDateFormatProperty, replay24HourProperty);
         dateTimeFormatterBinding.addListener(_ -> replayTable.refresh());
 
         this.columnLoaded.setCellFactory(CheckBoxTableCell.forTableColumn(columnLoaded));
@@ -300,7 +298,7 @@ public final class AppController {
 
         MenuItem openWithReplayEditor = new MenuItem(resources.getString("ui.table.context_menu.open_with_replay_editor"));
         openWithReplayEditor.setOnAction(_ -> onOpenWithReplayEditor());
-        openWithReplayEditor.disableProperty().bind(ApplicationSettings.REPLAY_EDITOR_PATH.property().isEmpty());
+        openWithReplayEditor.disableProperty().bind(ApplicationSettings.REPLAY_EDITOR_PATH.property().isNull());
 
         // "Send to..." bins menu item (conditional!)
         // We only want to add the "Send to..." context menu if there is at least one bin
@@ -338,15 +336,15 @@ public final class AppController {
     }
 
     private void onOpenWithReplayEditor() {
-        String replayEditorPath = ApplicationSettings.REPLAY_EDITOR_PATH.get();
-        if (replayEditorPath == null || replayEditorPath.isBlank()) {
+        Path replayEditorPath = ApplicationSettings.REPLAY_EDITOR_PATH.getValue();
+        if (replayEditorPath == null) {
             return;
         }
 
         ReplayEntry replay = replayTable.getSelectionModel().getSelectedItems().getFirst();
         try {
             String replayPath = replay.getLiveReplayPath().toAbsolutePath().toString();
-            new ProcessBuilder().command(replayEditorPath, "-open", replayPath)
+            new ProcessBuilder().command(replayEditorPath.toAbsolutePath().toString(), "-open", replayPath)
                     .redirectError(Redirect.DISCARD)
                     .redirectOutput(Redirect.DISCARD)
                     .start();

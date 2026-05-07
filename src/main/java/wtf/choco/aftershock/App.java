@@ -21,6 +21,7 @@ import wtf.choco.aftershock.keybind.KeybindRegistry;
 import wtf.choco.aftershock.manager.BinRegistry;
 import wtf.choco.aftershock.manager.TagRegistry;
 import wtf.choco.aftershock.schema.AftershockTypeAdapterFactory;
+import wtf.choco.aftershock.settings.ApplicationSettings;
 import wtf.choco.aftershock.structure.ReplayBin;
 import wtf.choco.aftershock.structure.ReplayEntry;
 import wtf.choco.aftershock.util.ColouredLogFormatter;
@@ -104,7 +105,7 @@ public final class App extends Application {
 
         // Stage loading
         this.stage = stage;
-        this.resources = ResourceBundle.getBundle("lang.", Locale.forLanguageTag(ApplicationSettings.LOCALE.get()));
+        this.resources = ResourceBundle.getBundle("lang.", ApplicationSettings.LOCALE.getValue());
 
         var appFXML = FXUtils.<Parent, AppController>loadFXML(AppResources.FXML_LAYOUT_ROOT.get(), resources);
         Scene scene = new Scene(appFXML.root());
