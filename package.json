@@ -5,7 +5,7 @@
     "main": "index.js",
     "preferGlobal": true,
     "repository": {"url": "https://github.com/2008Choco/AftershockRM"},
-    "version": "0.3.0-alpha",
+    "version": "0.3.1-alpha",
     "jdeploy": {
         "singleton": true,
         "installers": [
